@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel GIS Frontend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        .icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #1e293b;
+            font-size: 42px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            font-size: 20px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: #f8fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+            border-radius: 8px;
+        }
+        
+        .info-box h2 {
+            color: #1e293b;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            color: #475569;
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .tech-badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .note {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #92400e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📍</div>
+        <h1>Laravel GIS Frontend</h1>
+        <p class="subtitle">Frontend views and assets for the Laravel GIS application</p>
+        
+        <div class="info-box">
+            <h2>📁 Repository Contents</h2>
+            <ul>
+                <li><strong>Blade Templates:</strong> <code>resources/views/frontend/</code>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li>Admin views</li>
+                        <li>Authentication views (login, register, password reset)</li>
+                        <li>GIS location views</li>
+                        <li>Member views</li>
+                        <li>Profile views</li>
+                        <li>Staff views</li>
+                    </ul>
+                </li>
+                <li><strong>Public Assets:</strong> <code>public/</code>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li><code>index.php</code> - Laravel entry point</li>
+                        <li><code>.htaccess</code> - Web server configuration</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="tech-stack">
+            <span class="tech-badge">Laravel Blade</span>
+            <span class="tech-badge">HTML5</span>
+            <span class="tech-badge">CSS3</span>
+            <span class="tech-badge">JavaScript</span>
+            <span class="tech-badge">Responsive Design</span>
+        </div>
+        
+        <div class="note">
+            <strong>ℹ️ Note:</strong>
+            This is the frontend part of a Laravel application. The backend is deployed separately on Hostinger (bytevortexz.com). 
+            This repository contains only the Blade templates and static assets.
+        </div>
+    </div>
+</body>
+</html>
+
