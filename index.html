@@ -3,166 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel GIS Frontend</title>
+    <meta name="generator" content="Laravel Framework">
+    <title>GeoCRUD - Login</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-header {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .auth-header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-header .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            gap: 8px;
         }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
-            width: 100%;
-            padding: 60px 40px;
-            text-align: center;
-        }
-        
-        .icon {
-            font-size: 80px;
-            margin-bottom: 30px;
-        }
-        
-        h1 {
-            color: #1e293b;
-            font-size: 42px;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-        
-        .subtitle {
-            color: #64748b;
-            font-size: 20px;
-            margin-bottom: 40px;
-            line-height: 1.6;
-        }
-        
-        .info-box {
-            background: #f8fafc;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 30px 0;
-            text-align: left;
+
+        .auth-header .header-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border: 2px solid white;
             border-radius: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
         }
-        
-        .info-box h2 {
-            color: #1e293b;
-            font-size: 18px;
-            margin-bottom: 15px;
+
+        .auth-header .header-btn:hover {
+            background: white;
+            color: #0d6efd;
+        }
+
+        .auth-container {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
+            min-height: calc(100vh - 70px);
+            padding: 40px 20px;
         }
-        
-        .info-box ul {
-            list-style: none;
-            padding-left: 0;
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px 45px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
-        
-        .info-box li {
-            color: #475569;
-            margin: 10px 0;
-            padding-left: 25px;
+
+        .auth-icon {
+            text-align: center;
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #0d6efd;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
             position: relative;
         }
-        
-        .info-box li:before {
-            content: "✓";
+
+        .input-icon {
             position: absolute;
-            left: 0;
-            color: #10b981;
-            font-weight: bold;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
         }
-        
-        .tech-stack {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .tech-badge {
-            background: #e0e7ff;
-            color: #4338ca;
-            padding: 8px 16px;
-            border-radius: 20px;
+
+        .form-group input[type="text"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             font-size: 14px;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            color: #2c3e50;
+        }
+
+        .form-group input.with-icon {
+            padding-left: 45px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #9ca3af;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-link a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .forgot-link a:hover {
+            color: #0d6efd;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .auth-footer a {
+            color: #0d6efd;
+            text-decoration: none;
             font-weight: 500;
         }
-        
-        .note {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
-            color: #92400e;
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .demo-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
             padding: 15px;
             border-radius: 8px;
-            margin-top: 30px;
-            font-size: 14px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
         }
-        
-        .note strong {
-            display: block;
-            margin-bottom: 5px;
+
+        @media (max-width: 640px) {
+            .auth-card {
+                padding: 35px 25px;
+            }
+
+            .auth-title {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">📍</div>
-        <h1>Laravel GIS Frontend</h1>
-        <p class="subtitle">Frontend views and assets for the Laravel GIS application</p>
-        
-        <div class="info-box">
-            <h2>📁 Repository Contents</h2>
-            <ul>
-                <li><strong>Blade Templates:</strong> <code>resources/views/frontend/</code>
-                    <ul style="margin-top: 10px; padding-left: 20px;">
-                        <li>Admin views</li>
-                        <li>Authentication views (login, register, password reset)</li>
-                        <li>GIS location views</li>
-                        <li>Member views</li>
-                        <li>Profile views</li>
-                        <li>Staff views</li>
-                    </ul>
-                </li>
-                <li><strong>Public Assets:</strong> <code>public/</code>
-                    <ul style="margin-top: 10px; padding-left: 20px;">
-                        <li><code>index.php</code> - Laravel entry point</li>
-                        <li><code>.htaccess</code> - Web server configuration</li>
-                    </ul>
-                </li>
-            </ul>
+    <header class="auth-header">
+        <div class="container">
+            <a href="/" class="logo">
+                <span>📍</span> GeoCRUD
+            </a>
+            <a href="#" class="header-btn">
+                <span>👤</span> Sign Up
+            </a>
         </div>
-        
-        <div class="tech-stack">
-            <span class="tech-badge">Laravel Blade</span>
-            <span class="tech-badge">HTML5</span>
-            <span class="tech-badge">CSS3</span>
-            <span class="tech-badge">JavaScript</span>
-            <span class="tech-badge">Responsive Design</span>
-        </div>
-        
-        <div class="note">
-            <strong>ℹ️ Note:</strong>
-            This is the frontend part of a Laravel application. The backend is deployed separately on Hostinger (bytevortexz.com). 
-            This repository contains only the Blade templates and static assets.
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="demo-notice">
+                <strong>⚠️ Demo Version:</strong> This is a static preview. The actual login requires the Laravel backend at <strong>bytevortexz.com</strong>
+            </div>
+
+            <div class="auth-icon">📍</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to manage your geographic locations</p>
+
+            <form method="POST" action="#" onsubmit="event.preventDefault(); alert('This is a demo. Actual login requires the Laravel backend.');">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="username" name="username" required 
+                               class="with-icon"
+                               placeholder="Enter your username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="password" name="password" required 
+                               class="with-icon"
+                               placeholder="Enter your password">
+                    </div>
+                </div>
+
+                <div class="forgot-link">
+                    <a href="#">
+                        <span>❓</span> Forgot Password?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <span>🚪</span> Sign In
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="#">Sign up here</a>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8;">
+                        <span>Powered by</span>
+                        <a href="https://laravel.com" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Laravel Framework">
+                            <svg width="75" height="20" viewBox="0 0 75 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
+                                <rect x="0" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="4" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="8" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="12" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="16" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="20" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="24" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
+                                <rect x="0" y="15" width="26" height="2.5" fill="#ff2d20" rx="0.5"/>
+                                <text x="30" y="14" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#ff2d20">Laravel</text>
+                            </svg>
+                        </a>
+                        <span style="color: #ff2d20; font-weight: 600;">Framework</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script>
+        // Clear localStorage on login page to ensure clean state
+        localStorage.clear();
+        console.log('localStorage cleared on login page');
+    </script>
 </body>
 </html>
-
