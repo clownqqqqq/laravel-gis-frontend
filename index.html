@@ -187,10 +187,15 @@
             gap: 8px;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             background: #0b5ed7;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .btn-primary:active {
@@ -214,15 +219,43 @@
             text-decoration: underline;
         }
 
-        .demo-notice {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
+        .alert {
             padding: 15px;
-            border-radius: 8px;
             margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+
+        .alert-success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+        }
+
+        #alert-container {
+            margin-bottom: 20px;
+        }
+
+        .test-accounts {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
             font-size: 13px;
-            text-align: center;
+            color: #64748b;
+        }
+
+        .test-accounts strong {
+            color: #2c3e50;
         }
 
         @media (max-width: 640px) {
@@ -242,7 +275,7 @@
             <a href="/" class="logo">
                 <span>📍</span> GeoCRUD
             </a>
-            <a href="#" class="header-btn">
+            <a href="register.html" class="header-btn">
                 <span>👤</span> Sign Up
             </a>
         </div>
@@ -250,22 +283,21 @@
 
     <div class="auth-container">
         <div class="auth-card">
-            <div class="demo-notice">
-                <strong>⚠️ Demo Version:</strong> This is a static preview. The actual login requires the Laravel backend at <strong>bytevortexz.com</strong>
-            </div>
-
             <div class="auth-icon">📍</div>
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">Sign in to manage your geographic locations</p>
 
-            <form method="POST" action="#" onsubmit="event.preventDefault(); alert('This is a demo. Actual login requires the Laravel backend.');">
+            <div id="alert-container"></div>
+
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <div class="input-wrapper">
                         <span class="input-icon">👤</span>
                         <input type="text" id="username" name="username" required 
                                class="with-icon"
-                               placeholder="Enter your username">
+                               placeholder="Enter your username"
+                               autocomplete="username">
                     </div>
                 </div>
 
@@ -275,50 +307,88 @@
                         <span class="input-icon">🔒</span>
                         <input type="password" id="password" name="password" required 
                                class="with-icon"
-                               placeholder="Enter your password">
+                               placeholder="Enter your password"
+                               autocomplete="current-password">
                     </div>
                 </div>
 
                 <div class="forgot-link">
-                    <a href="#">
+                    <a href="forgot-password.html">
                         <span>❓</span> Forgot Password?
                     </a>
                 </div>
 
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-primary" id="loginBtn">
                     <span>🚪</span> Sign In
                 </button>
             </form>
 
             <div class="auth-footer">
-                Don't have an account? <a href="#">Sign up here</a>
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-                    <div style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #94a3b8;">
-                        <span>Powered by</span>
-                        <a href="https://laravel.com" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Laravel Framework">
-                            <svg width="75" height="20" viewBox="0 0 75 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
-                                <rect x="0" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="4" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="8" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="12" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="16" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="20" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="24" y="3" width="2.5" height="14" fill="#ff2d20" rx="0.5"/>
-                                <rect x="0" y="15" width="26" height="2.5" fill="#ff2d20" rx="0.5"/>
-                                <text x="30" y="14" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="bold" fill="#ff2d20">Laravel</text>
-                            </svg>
-                        </a>
-                        <span style="color: #ff2d20; font-weight: 600;">Framework</span>
-                    </div>
-                </div>
+                Don't have an account? <a href="register.html">Sign up here</a>
+            </div>
+
+            <div class="test-accounts">
+                <strong>Test Accounts:</strong><br>
+                Admin: kiya / kiya123<br>
+                Staff: wew / wew123<br>
+                Member: justin / justin123
             </div>
         </div>
     </div>
     
+    <script src="config.js"></script>
+    <script src="api.js"></script>
     <script>
-        // Clear localStorage on login page to ensure clean state
-        localStorage.clear();
-        console.log('localStorage cleared on login page');
+        // Check if already logged in
+        if (isLoggedIn()) {
+            const user = getCurrentUser();
+            redirectByRole(user);
+        }
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Clear previous alerts
+            document.getElementById('alert-container').innerHTML = '';
+            
+            // Validate inputs
+            if (!username || !password) {
+                showAlert('Please enter both username and password', 'error');
+                return;
+            }
+            
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span>⏳</span> Signing In...';
+            
+            try {
+                const result = await login(username, password);
+                
+                if (result.success && result.user) {
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect based on role after 1 second
+                    setTimeout(() => {
+                        redirectByRole(result.user);
+                    }, 1000);
+                } else {
+                    showAlert(result.message || 'Login failed. Please check your credentials.', 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<span>🚪</span> Sign In';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Connection error: ' + error.message, 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<span>🚪</span> Sign In';
+            }
+        });
     </script>
 </body>
 </html>
+
