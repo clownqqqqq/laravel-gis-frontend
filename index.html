@@ -369,6 +369,17 @@
             try {
                 const result = await login(username, password);
                 
+                // Debug: Log login response
+                console.log('=== LOGIN RESPONSE DEBUG ===');
+                console.log('Full response:', result);
+                console.log('Has success:', result.success);
+                console.log('Has user:', !!result.user);
+                console.log('Has auth_token:', !!result.auth_token);
+                console.log('Has token:', !!result.token);
+                console.log('Token value:', result.auth_token || result.token || 'NONE');
+                console.log('Token in localStorage after login:', localStorage.getItem('auth_token'));
+                console.log('================================');
+                
                 if (result.success && result.user) {
                     showAlert('Login successful! Redirecting...', 'success');
                     
@@ -391,4 +402,6 @@
     </script>
 </body>
 </html>
+
+
 
