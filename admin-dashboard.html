@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GeoCRUD</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #dc3545;
+            padding: 15px 0;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .navbar .nav-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .navbar button {
+            background: white;
+            color: #dc3545;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .section-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-card h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .btn-approve {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>🔴 Admin Dashboard</h1>
+            <div class="nav-right">
+                <span id="userName">Admin</span>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="stats" class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="value" id="totalUsers">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending Locations</h3>
+                <div class="value" id="pendingLocations">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Locations</h3>
+                <div class="value" id="totalLocations">-</div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>Pending Location Reviews</h2>
+            <div id="alert-container"></div>
+            <div id="loading" class="loading">Loading pending locations...</div>
+            <div id="pendingTable"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // Check if user is logged in and is admin
+        if (!isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        const user = getCurrentUser();
+        if (user && user.role !== 'admin') {
+            alert('Access denied. Admin only.');
+            redirectByRole(user);
+        }
+
+        document.getElementById('userName').textContent = user?.username || 'Admin';
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const [dashboardData, pendingData] = await Promise.all([
+                    getAdminDashboard(),
+                    getPendingLocations()
+                ]);
+
+                // Update stats
+                if (dashboardData.success && dashboardData.data) {
+                    document.getElementById('totalUsers').textContent = 
+                        dashboardData.data.total_users || dashboardData.data.users?.length || 0;
+                    document.getElementById('pendingLocations').textContent = 
+                        dashboardData.data.pending_locations || 0;
+                    document.getElementById('totalLocations').textContent = 
+                        dashboardData.data.total_locations || 0;
+                }
+
+                // Show pending locations
+                const loading = document.getElementById('loading');
+                const tableDiv = document.getElementById('pendingTable');
+
+                loading.style.display = 'none';
+
+                if (pendingData.success && pendingData.data && pendingData.data.length > 0) {
+                    let tableHTML = '<table><thead><tr><th>Location</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                    
+                    pendingData.data.forEach(location => {
+                        tableHTML += `
+                            <tr>
+                                <td>${location.location || 'N/A'}</td>
+                                <td>${location.category || 'N/A'}</td>
+                                <td><span class="status-pending">${location.status || 'Pending'}</span></td>
+                                <td>
+                                    <button class="btn btn-approve" onclick="approveLocation(${location.id})">Approve</button>
+                                    <button class="btn btn-reject" onclick="rejectLocation(${location.id})">Reject</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += '</tbody></table>';
+                    tableDiv.innerHTML = tableHTML;
+                } else {
+                    tableDiv.innerHTML = '<p style="text-align: center; color: #64748b;">No pending locations.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showAlert('Error loading dashboard: ' + error.message, 'error');
+            }
+        }
+
+        async function approveLocation(id) {
+            if (confirm('Approve this location?')) {
+                try {
+                    const result = await approveLocation(id);
+                    if (result.success) {
+                        showAlert('Location approved!', 'success');
+                        loadDashboard();
+                    }
+                } catch (error) {
+                    showAlert('Error: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function rejectLocation(id) {
+            if (confirm('Reject this location?')) {
+                try {
+                    const result = await rejectLocation(id);
+                    if (result.success) {
+                        showAlert('Location rejected!', 'success');
+                        loadDashboard();
+                    }
+                } catch (error) {
+                    showAlert('Error: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Logout?')) {
+                await logout();
+                window.location.href = 'index.html';
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
+

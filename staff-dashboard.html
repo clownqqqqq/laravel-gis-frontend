@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - GeoCRUD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #f59e0b;
+            padding: 15px 0;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .navbar button {
+            background: white;
+            color: #f59e0b;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .section-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-card h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1>🟡 Staff Dashboard</h1>
+            <div>
+                <span id="userName">Staff</span>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-card">
+            <h2>Welcome, <span id="displayName">Staff</span>!</h2>
+            <p>Manage location submissions and view your assigned areas.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>My Submissions</h2>
+            <div id="loading" class="loading">Loading submissions...</div>
+            <div id="submissions"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script>
+        if (!isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        const user = getCurrentUser();
+        if (user && user.role !== 'staff') {
+            redirectByRole(user);
+        }
+
+        document.getElementById('userName').textContent = user?.username || 'Staff';
+        document.getElementById('displayName').textContent = user?.username || 'Staff';
+
+        async function loadSubmissions() {
+            try {
+                const result = await getStaffSubmissions();
+                document.getElementById('loading').style.display = 'none';
+                
+                if (result.success && result.data) {
+                    document.getElementById('submissions').innerHTML = 
+                        '<p>' + (result.data.length || 0) + ' submissions</p>';
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Logout?')) {
+                await logout();
+                window.location.href = 'index.html';
+            }
+        }
+
+        loadSubmissions();
+    </script>
+</body>
+</html>
+
