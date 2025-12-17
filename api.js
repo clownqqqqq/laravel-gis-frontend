@@ -64,8 +64,14 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         if (!response.ok) {
             // Include backend debug info if available
             const errorMsg = result.message || result.error || 'API request failed';
-            const debugInfo = result.debug ? ` (${JSON.stringify(result.debug)})` : '';
-            throw new Error(errorMsg + debugInfo);
+            if (result.debug) {
+                console.error('Backend Debug Info:', result.debug);
+                console.error('Token sent:', token ? token.substring(0, 20) + '...' : 'NONE');
+                console.error('Token length sent:', token ? token.length : 0);
+                console.error('Token length in backend:', result.debug.token_length);
+                console.error('Token preview in backend:', result.debug.token_preview);
+            }
+            throw new Error(errorMsg);
         }
         
         return result;
