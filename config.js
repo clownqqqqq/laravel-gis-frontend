@@ -4,7 +4,7 @@
  */
 const API_CONFIG = {
     // Your Hostinger backend URL
-    BASE_URL: 'https://bytevortexz.com/geocrud',
+    BASE_URL: 'https://bytevortexz.com/geocrud/api',
     
     // API endpoints
     ENDPOINTS: {
