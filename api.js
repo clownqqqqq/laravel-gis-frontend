@@ -62,7 +62,10 @@ async function apiCall(endpoint, method = 'GET', data = null) {
         
         // Handle errors
         if (!response.ok) {
-            throw new Error(result.message || result.error || 'API request failed');
+            // Include backend debug info if available
+            const errorMsg = result.message || result.error || 'API request failed';
+            const debugInfo = result.debug ? ` (${JSON.stringify(result.debug)})` : '';
+            throw new Error(errorMsg + debugInfo);
         }
         
         return result;
