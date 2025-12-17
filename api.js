@@ -63,7 +63,11 @@ async function login(username, password) {
     // Store user data and token
     if (result.success && result.user) {
         localStorage.setItem('user', JSON.stringify(result.user));
-        if (result.token) {
+        // Backend returns 'auth_token', not 'token'
+        if (result.auth_token) {
+            localStorage.setItem('auth_token', result.auth_token);
+        } else if (result.token) {
+            // Fallback for compatibility
             localStorage.setItem('auth_token', result.token);
         }
     }
@@ -311,4 +315,6 @@ function showAlert(message, type = 'error', containerId = 'alert-container') {
         alertDiv.remove();
     }, 5000);
 }
+
+
 
