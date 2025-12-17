@@ -26,6 +26,8 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     const token = localStorage.getItem('auth_token');
     if (token) {
         options.headers['Authorization'] = 'Bearer ' + token;
+    } else {
+        console.warn('No auth token found in localStorage for request to:', endpoint);
     }
     
     // Add body for POST/PUT requests
@@ -35,11 +37,32 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     
     try {
         const response = await fetch(url, options);
-        const result = await response.json();
+        
+        // Log token for debugging (only in development)
+        if (!response.ok) {
+            console.warn('API Request Failed:', {
+                url: url,
+                status: response.status,
+                statusText: response.statusText,
+                hasToken: !!token,
+                tokenLength: token ? token.length : 0,
+                tokenPreview: token ? token.substring(0, 20) + '...' : 'none'
+            });
+        }
+        
+        // Try to parse JSON, but handle non-JSON responses
+        let result;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            result = await response.json();
+        } else {
+            const text = await response.text();
+            result = { message: text || 'API request failed' };
+        }
         
         // Handle errors
         if (!response.ok) {
-            throw new Error(result.message || 'API request failed');
+            throw new Error(result.message || result.error || 'API request failed');
         }
         
         return result;
@@ -66,10 +89,16 @@ async function login(username, password) {
         // Backend returns 'auth_token', not 'token'
         if (result.auth_token) {
             localStorage.setItem('auth_token', result.auth_token);
+            console.log('Token stored successfully:', result.auth_token.substring(0, 20) + '...');
         } else if (result.token) {
             // Fallback for compatibility
             localStorage.setItem('auth_token', result.token);
+            console.log('Token stored (fallback):', result.token.substring(0, 20) + '...');
+        } else {
+            console.warn('No token in login response:', result);
         }
+    } else {
+        console.warn('Login response missing success or user:', result);
     }
     
     return result;
