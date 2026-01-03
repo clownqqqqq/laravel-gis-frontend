@@ -204,26 +204,20 @@ async function loadLocations(searchTerm = '') {
             }
             
             // Token exists but was rejected
-            showMessage(`⚠️ ${error.message}. Please log in again.`, 'error');
+            showMessage(`⚠️ Authentication failed: ${error.message}. Please log out and log in again.`, 'error');
             
-            const retryBtn = document.createElement('button');
-            retryBtn.textContent = '🔄 Retry';
-            retryBtn.className = 'btn btn-primary';
-            retryBtn.style.marginTop = '10px';
-            retryBtn.onclick = () => loadLocations(currentSearch);
-            container.appendChild(retryBtn);
-            
-            const loginBtn = document.createElement('button');
-            loginBtn.textContent = '🚪 Login Again';
-            loginBtn.className = 'btn';
-            loginBtn.style.marginLeft = '10px';
-            loginBtn.style.background = '#ef4444';
-            loginBtn.onclick = () => {
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = '🚪 Logout and Login Again';
+            logoutBtn.className = 'btn';
+            logoutBtn.style.marginTop = '10px';
+            logoutBtn.style.background = '#ef4444';
+            logoutBtn.style.color = 'white';
+            logoutBtn.onclick = () => {
                 removeAuthToken();
                 removeUserData();
                 window.location.href = 'login.html';
             };
-            container.appendChild(loginBtn);
+            container.appendChild(logoutBtn);
             return;
         }
         
