@@ -573,14 +573,8 @@
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
-        // Check authentication
-        if (!isAuthenticated()) {
-            window.location.href = 'login.html';
-        }
-
-        // User info will be loaded by loadUserInfo() function from dashboard.js
-
-        // Logout function
+        // Authentication check is handled in dashboard.js on DOMContentLoaded
+        // Just define logout function here
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 removeAuthToken();
