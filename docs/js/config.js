@@ -86,58 +86,24 @@ async function apiRequest(url, options = {}) {
             throw new Error(text || 'Server error');
         }
         
-        // Handle authentication errors
+        // Handle authentication errors - DON'T AUTO-LOGOUT
         if (response.status === 401) {
-            // Only auto-logout if we're not already on login page
-            const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login.html';
+            const existingToken = getAuthToken();
             
-            if (!isLoginPage) {
-                // Check if token exists - if not, don't show error (user already logged out)
-                const existingToken = getAuthToken();
-                if (existingToken) {
-                    console.error('401 Error - Token rejected by backend:', {
-                        url: url,
-                        tokenPreview: existingToken.substring(0, 30) + '...',
-                        tokenLength: existingToken.length,
-                        responseData: data,
-                        fullToken: existingToken // Log full token for debugging
-                    });
-                    
-                    // Don't immediately logout - might be a timing issue
-                    // Only logout after multiple failed attempts or explicit error message
-                    const errorMsg = data.message || data.error || '';
-                    
-                    // Check if error explicitly says token is invalid/expired
-                    if (errorMsg.toLowerCase().includes('expired') || 
-                        errorMsg.toLowerCase().includes('invalid') ||
-                        errorMsg.toLowerCase().includes('unauthorized')) {
-                        
-                        // Track failed attempts
-                        if (!window.authFailCount) window.authFailCount = 0;
-                        window.authFailCount++;
-                        
-                        // Only logout after 2 failed attempts (to avoid premature logout)
-                        if (window.authFailCount >= 2) {
-                            console.error('Multiple auth failures detected. Logging out...');
-                            removeAuthToken();
-                            removeUserData();
-                            window.authFailCount = 0;
-                            alert('Authentication failed. Please log in again.');
-                            window.location.href = 'login.html';
-                            throw new Error('Authentication failed. Please log in again.');
-                        } else {
-                            console.warn('Auth failure (attempt ' + window.authFailCount + '). Will retry...');
-                            // Don't logout yet, just throw error
-                        }
-                    }
+            console.error('⚠️ 401 Unauthorized Error:', {
+                url: url,
+                tokenExists: !!existingToken,
+                tokenPreview: existingToken ? existingToken.substring(0, 30) + '...' : 'NO TOKEN',
+                tokenLength: existingToken ? existingToken.length : 0,
+                responseData: data,
+                headersSent: {
+                    'Authorization': existingToken ? `Bearer ${existingToken.substring(0, 30)}...` : 'NOT SENT'
                 }
-            }
-            throw new Error(data.message || data.error || 'Authentication failed. Please log in again.');
-        }
-        
-        // Reset failure counter on successful request
-        if (response.ok && window.authFailCount) {
-            window.authFailCount = 0;
+            });
+            
+            // DO NOT AUTO-LOGOUT - Let user see the error and decide
+            // This prevents immediate logout after login
+            throw new Error(data.message || data.error || 'Authentication failed. Please check your credentials or refresh the page.');
         }
         
         // Handle authorization errors
