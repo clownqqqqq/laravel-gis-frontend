@@ -8,11 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.pageLoadTime = Date.now();
     
     // Check authentication
-    const token = getAuthToken();
-    console.log('Dashboard loaded - Token check:', token ? 'YES (' + token.substring(0, 20) + '...)' : 'NO');
-    
-    if (!token || !isAuthenticated()) {
-        console.log('Not authenticated, redirecting to login...');
+    if (!isAuthenticated()) {
         window.location.href = 'login.html';
         return;
     }
@@ -30,23 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            console.log('✅ Token verified, starting data load...');
-            console.log('Token preview:', verifyToken.substring(0, 40) + '...');
-            console.log('Token length:', verifyToken.length);
-            
-            // Load user info first (non-blocking)
-            loadUserInfo().catch(err => {
-                console.warn('⚠️ User info load failed (non-critical):', err);
-            });
-            
-            // Then load locations
-            console.log('Loading locations from:', API_ENDPOINTS.GIS_INDEX);
-            loadLocations().then(() => {
-                console.log('✅ Locations loaded successfully!');
-            }).catch(error => {
-                console.error('❌ Error loading locations:', error);
-                // Error handling is done inside loadLocations function
-            });
+            // Load user info and locations
+            loadUserInfo().catch(() => {}); // Non-critical
+            loadLocations();
             
             // Search on Enter key
             const searchInput = document.getElementById('search');
@@ -57,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-        }, 800); // Delay to ensure token is ready
+        }, 300); // Small delay to ensure everything is ready
 });
 
 // Load user information and profile
@@ -136,6 +118,18 @@ function updateUIWithUserData(userData) {
         };
     }
     
+    // Show admin access panel if user is admin
+    const adminAccessPanel = document.getElementById('admin-access-panel');
+    if (adminAccessPanel && userData.role === 'admin') {
+        adminAccessPanel.style.display = 'block';
+    }
+    
+    // Show Manage Users button if user is admin
+    const manageUsersBtn = document.getElementById('manage-users-btn');
+    if (manageUsersBtn && userData.role === 'admin') {
+        manageUsersBtn.style.display = 'inline-block';
+    }
+    
     // Update add location button visibility based on role
     const addLocationBtn = document.querySelector('.btn-add-location');
     if (addLocationBtn) {
@@ -164,145 +158,91 @@ async function loadLocations(searchTerm = '') {
         return;
     }
     
-    console.log('📡 Loading locations...');
-    console.log('- Token exists:', !!token);
-    console.log('- Token preview:', token ? token.substring(0, 40) + '...' : 'NONE');
-    console.log('- Token length:', token ? token.length : 0);
-    
     loadingDiv.style.display = 'block';
     container.innerHTML = '';
     emptyState.style.display = 'none';
     
     try {
         let url = API_ENDPOINTS.GIS_INDEX;
-        if (searchTerm) {
-            url += `?search=${encodeURIComponent(searchTerm)}`;
+        if (searchTerm && searchTerm.trim()) {
+            url += `?search=${encodeURIComponent(searchTerm.trim())}`;
         }
-        
-        console.log('🌐 Fetching from:', url);
-        console.log('📤 Headers being sent:', {
-            'Authorization': `Bearer ${token.substring(0, 40)}...`,
-            'Accept': 'application/json'
-        });
         
         const data = await apiRequest(url);
-        console.log('✅ Locations data received:', data);
         
-        // Handle different response formats - API returns {success: true, data: [...]}
-        if (data.success && data.data) {
-            currentLocations = Array.isArray(data.data) ? data.data : [];
-            console.log(`✅ Found ${currentLocations.length} locations in data.data`);
-        } else if (data.locations) {
-            currentLocations = Array.isArray(data.locations) ? data.locations : [];
-            console.log(`✅ Found ${currentLocations.length} locations in data.locations`);
+        // Handle API response format: {success: true, data: [...]}
+        if (data.success && Array.isArray(data.data)) {
+            currentLocations = data.data;
+        } else if (Array.isArray(data.locations)) {
+            currentLocations = data.locations;
         } else if (Array.isArray(data)) {
             currentLocations = data;
-            console.log(`✅ Found ${currentLocations.length} locations (direct array)`);
         } else {
             currentLocations = [];
-            console.warn('⚠️ Unexpected response format:', data);
-            console.warn('Full response:', JSON.stringify(data, null, 2));
         }
-        
-        // Store locations for later use
-        currentLocations = currentLocations || [];
         
         loadingDiv.style.display = 'none';
         
         if (currentLocations.length === 0) {
-            console.log('ℹ️ No locations found - showing empty state');
             emptyState.style.display = 'block';
-            showMessage('No locations found. Add your first location using the "Add Location" button.', 'info');
             return;
         }
         
-        console.log('🎨 Rendering', currentLocations.length, 'locations...');
         renderLocations(currentLocations);
-        console.log('✅ Locations rendered successfully!');
         
-        } catch (error) {
+    } catch (error) {
         loadingDiv.style.display = 'none';
         
         // Check if it's an authentication error
-        if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
-            console.error('❌ Authentication error when loading locations');
-            
+        if (error.message && (error.message.includes('Authentication') || error.message.includes('401'))) {
             const currentToken = getAuthToken();
             
             if (!currentToken) {
-                // No token at all - user needs to login
-                showMessage('⚠️ Not logged in. Please log in to view locations.', 'error');
-                setTimeout(() => {
-                    if (confirm('You are not logged in. Would you like to go to the login page?')) {
-                        window.location.href = 'login.html';
-                    }
-                }, 2000);
+                showMessage('⚠️ Not logged in. Redirecting to login...', 'error');
+                setTimeout(() => window.location.href = 'login.html', 2000);
                 return;
             }
             
-            // Token exists but was rejected - show helpful error
-            showMessage(`⚠️ Authentication Error: ${error.message}. Please refresh the page or log in again.`, 'error');
+            // Token exists but was rejected
+            showMessage(`⚠️ ${error.message}. Please log in again.`, 'error');
             
-            console.error('🔍 DEBUG INFO - Token exists but API rejected:');
-            console.error('- Token:', currentToken.substring(0, 40) + '...');
-            console.error('- Token Length:', currentToken.length);
-            console.error('- API URL:', url);
-            console.error('- Error:', error.message);
-            console.error('- Full Token (for debugging):', currentToken);
-            
-            // Show a retry button instead of auto-logout
             const retryBtn = document.createElement('button');
-            retryBtn.textContent = '🔄 Retry Loading Locations';
-            retryBtn.className = 'btn';
+            retryBtn.textContent = '🔄 Retry';
+            retryBtn.className = 'btn btn-primary';
             retryBtn.style.marginTop = '10px';
-            retryBtn.onclick = function() {
-                this.disabled = true;
-                this.textContent = 'Retrying...';
-                loadLocations(currentSearch);
-            };
+            retryBtn.onclick = () => loadLocations(currentSearch);
             container.appendChild(retryBtn);
             
-            // Also show manual logout option
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = '🚪 Logout and Login Again';
-            logoutBtn.className = 'btn';
-            logoutBtn.style.marginLeft = '10px';
-            logoutBtn.style.background = '#ef4444';
-            logoutBtn.onclick = function() {
-                if (confirm('Logout and return to login page?')) {
-                    removeAuthToken();
-                    removeUserData();
-                    window.location.href = 'login.html';
-                }
+            const loginBtn = document.createElement('button');
+            loginBtn.textContent = '🚪 Login Again';
+            loginBtn.className = 'btn';
+            loginBtn.style.marginLeft = '10px';
+            loginBtn.style.background = '#ef4444';
+            loginBtn.onclick = () => {
+                removeAuthToken();
+                removeUserData();
+                window.location.href = 'login.html';
             };
-            container.appendChild(logoutBtn);
-            
+            container.appendChild(loginBtn);
             return;
         }
         
-        const errorMessage = error.message || 'Failed to load locations. Please try again.';
-        showMessage('Error loading locations: ' + errorMessage, 'error');
-        console.error('Error loading locations:', error);
-        
-        // Show empty state if there was an error
+        // Other errors
+        showMessage('Error loading locations: ' + (error.message || 'Unknown error'), 'error');
         container.innerHTML = '';
         emptyState.style.display = 'block';
     }
 }
 
-// Render locations in the grid
 function renderLocations(locations) {
     const container = document.getElementById('locations-container');
     const userData = getUserData();
     const userRole = userData?.role || 'member';
     
     if (!Array.isArray(locations) || locations.length === 0) {
-        console.warn('No locations to render or invalid data:', locations);
         document.getElementById('empty-state').style.display = 'block';
         return;
     }
-    
-    console.log(`🎨 Rendering ${locations.length} locations...`);
     
     container.innerHTML = locations.map((location, index) => {
         // Handle location data - ensure we have required fields
@@ -323,7 +263,7 @@ function renderLocations(locations) {
                 <div class="location-content">
                     ${imageUrl ? `
                     <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:200px;height:200px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;border:3px solid #0d6efd;\\'><span style=\\'font-size:48px;\\'>📍</span></div>';">
+                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'">
                     </div>
                     ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
                     <div class="location-details">
@@ -353,8 +293,6 @@ function renderLocations(locations) {
             </div>
         `;
     }).join('');
-    
-    console.log(`✅ Successfully rendered ${locations.length} locations!`);
 }
 
 // Get status badge HTML
