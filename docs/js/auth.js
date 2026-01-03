@@ -41,14 +41,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok && data.success) {
                     // Save token and user data
                     if (data.auth_token) {
-                        setAuthToken(data.auth_token);
+                        // Save token FIRST
+                        const token = data.auth_token;
+                        setAuthToken(token);
+                        
+                        // Verify token was saved
+                        const savedToken = getAuthToken();
+                        console.log('Token saved:', savedToken ? 'YES' : 'NO', savedToken ? savedToken.substring(0, 20) + '...' : '');
                         
                         // Save user data (including role for permissions)
                         if (data.user) {
-                            setUserData(data.user);
+                            // Ensure we have all user data
+                            const userData = {
+                                id: data.user.id,
+                                username: data.user.username || username,
+                                email: data.user.email || null,
+                                role: data.user.role || 'member', // Try to get role, default to member
+                                is_activated: data.user.is_activated || false
+                            };
+                            setUserData(userData);
+                            console.log('User data saved:', userData);
                         } else {
                             // If user data not in response, create minimal user object
-                            // Role will be loaded from profile later
                             setUserData({
                                 id: null,
                                 username: username,
@@ -60,10 +74,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Show success message
                         alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
                         
-                        // Redirect to dashboard
+                        // Wait a moment to ensure localStorage is saved, then redirect
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
-                        }, 1000);
+                            // Double-check token before redirect
+                            const verifyToken = getAuthToken();
+                            if (verifyToken) {
+                                window.location.href = 'dashboard.html';
+                            } else {
+                                alert('Error: Token not saved. Please try logging in again.');
+                                console.error('Token lost after save!');
+                            }
+                        }, 500);
                     } else {
                         throw new Error('No authentication token received');
                     }
