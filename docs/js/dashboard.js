@@ -16,18 +16,82 @@ document.addEventListener('DOMContentLoaded', function() {
     loadLocations();
     
     // Search on Enter key
-    document.getElementById('search-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchLocations();
-        }
-    });
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchLocations(e);
+            }
+        });
+    }
 });
 
-// Load user information
-function loadUserInfo() {
+// Load user information and profile
+async function loadUserInfo() {
     const userData = getUserData();
-    if (userData) {
-        document.getElementById('user-name').textContent = userData.name || userData.email;
+    
+    // Try to load full user profile from API to get latest role and data
+    if (userData && userData.id) {
+        try {
+            const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+            if (profileData && profileData.user) {
+                // Update user data with latest from server
+                setUserData(profileData.user);
+                updateUIWithUserData(profileData.user);
+            } else {
+                // Fallback to stored data
+                updateUIWithUserData(userData);
+            }
+        } catch (error) {
+            console.warn('Could not load user profile:', error);
+            // Fallback to stored data
+            if (userData) {
+                updateUIWithUserData(userData);
+            }
+        }
+    } else if (userData) {
+        updateUIWithUserData(userData);
+    }
+}
+
+// Update UI with user data
+function updateUIWithUserData(userData) {
+    // Update profile picture if exists
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
+    
+    if (userData.profile_picture) {
+        if (profileAvatar) {
+            profileAvatar.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
+            profileAvatar.style.display = 'block';
+            if (profilePlaceholder) {
+                profilePlaceholder.style.display = 'none';
+            }
+            profileAvatar.onerror = function() {
+                this.style.display = 'none';
+                if (profilePlaceholder) {
+                    profilePlaceholder.style.display = 'flex';
+                }
+            };
+        }
+    }
+    
+    // Show admin button if user is admin
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn && userData.role === 'admin') {
+        adminBtn.style.display = 'flex';
+        adminBtn.onclick = function() {
+            alert('Admin panel - Would redirect to admin dashboard in full implementation');
+        };
+    }
+    
+    // Update add location button visibility based on role
+    const addLocationBtn = document.querySelector('.btn-add-location');
+    if (addLocationBtn) {
+        // Only admin and staff can add locations
+        if (userData.role !== 'admin' && userData.role !== 'staff') {
+            addLocationBtn.style.display = 'none';
+        }
     }
 }
 
@@ -48,7 +112,17 @@ async function loadLocations(searchTerm = '') {
         }
         
         const data = await apiRequest(url);
-        currentLocations = data.locations || data.data || [];
+        
+        // Handle different response formats
+        if (data.success && data.data) {
+            currentLocations = Array.isArray(data.data) ? data.data : [];
+        } else if (data.locations) {
+            currentLocations = Array.isArray(data.locations) ? data.locations : [];
+        } else if (Array.isArray(data)) {
+            currentLocations = data;
+        } else {
+            currentLocations = [];
+        }
         
         loadingDiv.style.display = 'none';
         
@@ -61,8 +135,20 @@ async function loadLocations(searchTerm = '') {
         
     } catch (error) {
         loadingDiv.style.display = 'none';
-        showMessage('Error loading locations: ' + error.message, 'error');
-        console.error('Error:', error);
+        
+        // Check if it's an authentication error
+        if (error.message && error.message.includes('Authentication failed')) {
+            // Already handled by apiRequest - will redirect to login
+            return;
+        }
+        
+        const errorMessage = error.message || 'Failed to load locations. Please try again.';
+        showMessage('Error loading locations: ' + errorMessage, 'error');
+        console.error('Error loading locations:', error);
+        
+        // Show empty state if there was an error
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
     }
 }
 
@@ -82,55 +168,69 @@ function renderLocations(locations) {
             ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
             : '';
         
-        const statusBadge = getStatusBadge(location.status);
+        const statusBadge = getStatusBadge(location.status, userRole);
+        const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
         
         return `
-            <div class="location-card">
-                ${imageUrl ? `<img src="${imageUrl}" alt="${location.location}" class="location-image" onerror="this.style.display='none'">` : ''}
-                <h3 class="location-name">
-                    ${location.location}
-                    ${statusBadge}
-                </h3>
-                <p class="location-coords">
-                    📍 Lat: ${location.latitude} | Lng: ${location.longitude}
-                </p>
-                ${location.category ? `<span class="location-category">${location.category}</span>` : ''}
-                ${location.notes ? `<p class="location-notes">${location.notes.substring(0, 100)}${location.notes.length > 100 ? '...' : ''}</p>` : ''}
-                <div class="location-actions">
-                    ${(userRole === 'admin' || userRole === 'staff' || (location.user_id === userData?.id)) 
-                        ? `<button onclick="editLocation(${location.id})" class="btn btn-small btn-edit">✏️ Edit</button>
-                           <button onclick="deleteLocation(${location.id})" class="btn btn-small btn-delete">🗑️ Delete</button>`
-                        : ''
-                    }
-                    <button onclick="viewLocation(${location.id})" class="btn btn-small btn-view">👁️ View</button>
+            <div class="card location-card">
+                <div class="location-content">
+                    ${imageUrl ? `
+                    <div class="location-image-wrapper">
+                        <img src="${imageUrl}" alt="${location.location}" class="location-image" onerror="this.style.display='none'">
+                    </div>
+                    ` : ''}
+                    <div class="location-details">
+                        <h3 class="location-name">
+                            ${location.location}
+                            ${statusBadge}
+                        </h3>
+                        <p class="location-coords">
+                            Lat: ${location.latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${location.longitude}
+                        </p>
+                        ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
+                        ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
+                    </div>
                 </div>
+                ${canEdit ? `
+                <div class="location-actions">
+                    <a href="edit-location.html?id=${location.id}" class="btn btn-edit">
+                        <span>✏️</span> Edit
+                    </a>
+                    <form class="location-delete-form" onsubmit="deleteLocation(${location.id}); return false;">
+                        <button type="submit" class="btn btn-delete">
+                            <span>🗑️</span> Delete
+                        </button>
+                    </form>
+                </div>
+                ` : ''}
             </div>
         `;
     }).join('');
 }
 
 // Get status badge HTML
-function getStatusBadge(status) {
-    if (!status || status === 'approved') return '';
+function getStatusBadge(status, userRole) {
+    if (!status || status === 'approved' || userRole !== 'admin') return '';
     
     const badges = {
-        'pending': '<span class="status-badge status-pending">⏳ Pending</span>',
-        'rejected': '<span class="status-badge status-rejected">✗ Rejected</span>'
+        'pending': '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fde047;">⏳ Pending Approval</span>',
+        'rejected': '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fca5a5;">✗ Rejected</span>'
     };
     
     return badges[status] || '';
 }
 
 // Search locations
-function searchLocations() {
-    const searchTerm = document.getElementById('search-input').value.trim();
+function searchLocations(event) {
+    if (event) event.preventDefault();
+    const searchTerm = document.getElementById('search').value.trim();
     currentSearch = searchTerm;
     loadLocations(searchTerm);
 }
 
-// Clear search
+// Clear search (if needed in future)
 function clearSearch() {
-    document.getElementById('search-input').value = '';
+    document.getElementById('search').value = '';
     currentSearch = '';
     loadLocations();
 }
@@ -147,8 +247,9 @@ function viewLocation(id) {
 
 // Delete location
 async function deleteLocation(id) {
-    if (!confirm('Are you sure you want to delete this location?')) {
-        return;
+    const locationName = currentLocations.find(loc => loc.id === id)?.location || 'this location';
+    if (!confirm(`Are you sure you want to delete ${locationName}? This action cannot be undone.`)) {
+        return false;
     }
     
     try {
@@ -162,6 +263,7 @@ async function deleteLocation(id) {
     } catch (error) {
         showMessage('Error deleting location: ' + error.message, 'error');
     }
+    return false;
 }
 
 // Show message
