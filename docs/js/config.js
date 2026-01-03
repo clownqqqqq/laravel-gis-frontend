@@ -88,12 +88,30 @@ async function apiRequest(url, options = {}) {
         
         // Handle authentication errors
         if (response.status === 401) {
-            // Token expired or invalid
-            removeAuthToken();
-            removeUserData();
-            if (window.location.pathname !== '/login.html' && !window.location.pathname.includes('login.html')) {
-                alert('Your session has expired. Please log in again.');
-                window.location.href = 'login.html';
+            // Only auto-logout if we're not already on login page and it's not the first API call
+            // This prevents immediate logout right after login
+            const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login.html';
+            
+            if (!isLoginPage) {
+                // Check if token exists - if not, don't show error (user already logged out)
+                const existingToken = getAuthToken();
+                if (existingToken) {
+                    console.error('401 Error - Token invalid:', {
+                        url: url,
+                        tokenPreview: existingToken.substring(0, 20) + '...',
+                        responseData: data
+                    });
+                    
+                    removeAuthToken();
+                    removeUserData();
+                    
+                    // Don't redirect if we just logged in (give it a moment)
+                    const timeSinceLoad = Date.now() - (window.pageLoadTime || 0);
+                    if (timeSinceLoad > 2000) { // Only redirect if page has been loaded for more than 2 seconds
+                        alert('Your session has expired. Please log in again.');
+                        window.location.href = 'login.html';
+                    }
+                }
             }
             throw new Error(data.message || data.error || 'Authentication failed. Please log in again.');
         }
