@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Authentication - GeoCRUD</title>
+    <script src="js/config.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .log {
+            background: #252526;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #007acc;
+        }
+        .error { border-left-color: #f48771; }
+        .success { border-left-color: #4ec9b0; }
+        .info { border-left-color: #569cd6; }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #005a9e; }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Authentication Debug Tool</h1>
+    <button onclick="checkStorage()">Check localStorage</button>
+    <button onclick="testToken()">Test Token</button>
+    <button onclick="testAPI()">Test API Call</button>
+    <button onclick="clearAll()">Clear All</button>
+    
+    <div id="logs"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `<pre>${new Date().toLocaleTimeString()} - ${message}</pre>`;
+            logs.insertBefore(div, logs.firstChild);
+        }
+
+        function checkStorage() {
+            log('=== Checking localStorage ===', 'info');
+            const token = localStorage.getItem('auth_token');
+            const userData = localStorage.getItem('user_data');
+            
+            log(`Token: ${token ? token.substring(0, 30) + '...' : 'NOT FOUND'}`, token ? 'success' : 'error');
+            log(`Token length: ${token ? token.length : 0}`, 'info');
+            log(`User data: ${userData ? JSON.stringify(JSON.parse(userData), null, 2) : 'NOT FOUND'}`, userData ? 'success' : 'error');
+            
+            if (token) {
+                log(`getAuthToken() returns: ${getAuthToken() ? getAuthToken().substring(0, 30) + '...' : 'null'}`, 'info');
+                log(`isAuthenticated() returns: ${isAuthenticated()}`, 'info');
+            }
+        }
+
+        async function testToken() {
+            log('=== Testing Token with Backend ===', 'info');
+            const token = getAuthToken();
+            
+            if (!token) {
+                log('ERROR: No token found!', 'error');
+                return;
+            }
+            
+            log(`Sending token to backend: ${token.substring(0, 30)}...`, 'info');
+            
+            try {
+                const response = await fetch('https://geocrud.bytevortexz.com/api/gis', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Response data: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+                
+                if (response.status === 401) {
+                    log('ERROR: Token rejected by backend!', 'error');
+                    log('Possible causes:', 'error');
+                    log('1. Token not saved to database', 'error');
+                    log('2. Token mismatch between frontend and backend', 'error');
+                    log('3. Token expired', 'error');
+                }
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAPI() {
+            log('=== Testing Full API Request ===', 'info');
+            
+            try {
+                const data = await apiRequest(API_ENDPOINTS.GIS_INDEX);
+                log(`SUCCESS: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log(`ERROR: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            log('Cleared all localStorage data', 'info');
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            log('=== Debug Tool Loaded ===', 'info');
+            checkStorage();
+        });
+    </script>
+</body>
+</html>
+
