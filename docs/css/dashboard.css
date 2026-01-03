@@ -1,324 +1,391 @@
-/* Dashboard Styles */
-.top-nav {
-    background: #0d6efd;
-    color: white;
-    padding: 1rem 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+// Dashboard JavaScript
+let currentLocations = [];
+let currentSearch = '';
 
-.nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    color: white;
-    font-size: 1.5rem;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.nav-links {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-}
-
-.nav-link {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: background 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.active {
-    background: rgba(255,255,255,0.2);
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.btn-logout {
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border: 1px solid white;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.btn-logout:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.page-header h1 {
-    font-size: 2rem;
-    color: #1f2937;
-    margin: 0;
-}
-
-.header-actions {
-    display: flex;
-    gap: 1rem;
-}
-
-.card {
-    background: white;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
-}
-
-.search-wrapper {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.search-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
-}
-
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.2s;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.btn-primary {
-    background: #0d6efd;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #0b5ed7;
-}
-
-.btn-search {
-    background: #10b981;
-    color: white;
-}
-
-.btn-search:hover {
-    background: #059669;
-}
-
-.btn-secondary {
-    background: #6b7280;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #4b5563;
-}
-
-.locations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.location-card {
-    background: white;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.location-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.location-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.location-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 0.5rem;
-}
-
-.location-coords {
-    color: #6b7280;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.location-category {
-    display: inline-block;
-    background: #e0f2fe;
-    color: #0369a1;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-}
-
-.location-notes {
-    color: #475569;
-    font-size: 0.9rem;
-    margin: 0.5rem 0;
-    line-height: 1.5;
-}
-
-.location-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-
-.btn-small {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
-.btn-edit {
-    background: #f59e0b;
-    color: white;
-}
-
-.btn-edit:hover {
-    background: #d97706;
-}
-
-.btn-delete {
-    background: #ef4444;
-    color: white;
-}
-
-.btn-delete:hover {
-    background: #dc2626;
-}
-
-.btn-view {
-    background: #8b5cf6;
-    color: white;
-}
-
-.btn-view:hover {
-    background: #7c3aed;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: 0.5rem;
-}
-
-.status-pending {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-approved {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.status-rejected {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.loading {
-    text-align: center;
-    padding: 3rem;
-    color: #6b7280;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    color: #6b7280;
-    font-size: 1.125rem;
-}
-
-.alert {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.alert-success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #10b981;
-}
-
-.alert-error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #ef4444;
-}
-
-@media (max-width: 768px) {
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark page load time for auth error handling
+    window.pageLoadTime = Date.now();
+    
+    // Check authentication
+    if (!isAuthenticated()) {
+        window.location.href = 'login.html';
+        return;
     }
     
-    .nav-container {
-        flex-direction: column;
-        gap: 1rem;
+        // Wait a moment to ensure token is properly set, then load data
+        setTimeout(() => {
+            // Verify token is still there
+            const verifyToken = getAuthToken();
+            if (!verifyToken) {
+                console.error('❌ No token found! Redirecting to login...');
+                showMessage('⚠️ No authentication token found. Please log in.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            // Load user info and locations
+            loadUserInfo().catch(() => {}); // Non-critical
+            loadLocations();
+            
+            // Search on Enter key
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchLocations(e);
+                    }
+                });
+            }
+        }, 300); // Small delay to ensure everything is ready
+});
+
+// Load user information and profile
+async function loadUserInfo() {
+    const userData = getUserData();
+    const token = getAuthToken();
+    
+    console.log('Loading user info - Token:', token ? 'Present' : 'Missing');
+    console.log('Loading user info - User data:', userData);
+    
+    // Try to load full user profile from API to get latest role and data
+    if (userData && userData.id && token) {
+        try {
+            console.log('Fetching user profile from API...');
+            const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+            console.log('Profile data received:', profileData);
+            
+            if (profileData && profileData.user) {
+                // Update user data with latest from server
+                const updatedUser = {
+                    ...userData,
+                    ...profileData.user,
+                    role: profileData.user.role || userData.role || 'member'
+                };
+                setUserData(updatedUser);
+                updateUIWithUserData(updatedUser);
+            } else {
+                // Fallback to stored data
+                console.log('Using stored user data (no profile data)');
+                updateUIWithUserData(userData);
+            }
+        } catch (error) {
+            console.warn('Could not load user profile (non-fatal):', error);
+            // Don't fail completely - use stored data
+            if (userData) {
+                console.log('Using stored user data (API error)');
+                updateUIWithUserData(userData);
+            }
+        }
+    } else if (userData) {
+        console.log('Using stored user data (no ID or token)');
+        updateUIWithUserData(userData);
+    } else {
+        console.warn('No user data found');
+    }
+}
+
+// Update UI with user data
+function updateUIWithUserData(userData) {
+    // Update profile picture if exists
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
+    
+    if (userData.profile_picture) {
+        if (profileAvatar) {
+            profileAvatar.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
+            profileAvatar.style.display = 'block';
+            if (profilePlaceholder) {
+                profilePlaceholder.style.display = 'none';
+            }
+            profileAvatar.onerror = function() {
+                this.style.display = 'none';
+                if (profilePlaceholder) {
+                    profilePlaceholder.style.display = 'flex';
+                }
+            };
+        }
     }
     
-    .locations-grid {
-        grid-template-columns: 1fr;
+    // Show admin button if user is admin
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn && userData.role === 'admin') {
+        adminBtn.style.display = 'flex';
+        adminBtn.onclick = function() {
+            alert('Admin panel - Would redirect to admin dashboard in full implementation');
+        };
+    }
+    
+    // Update add location button visibility based on role
+    const addLocationBtn = document.querySelector('.btn-add-location');
+    if (addLocationBtn) {
+        // Only admin and staff can add locations
+        if (userData.role !== 'admin' && userData.role !== 'staff') {
+            addLocationBtn.style.display = 'none';
+        }
+    }
+}
+
+// Load all locations from API
+async function loadLocations(searchTerm = '') {
+    const loadingDiv = document.getElementById('loading');
+    const container = document.getElementById('locations-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Verify token before making request
+    const token = getAuthToken();
+    if (!token) {
+        console.error('No token found when loading locations!');
+        loadingDiv.style.display = 'none';
+        showMessage('Authentication error. Please log in again.', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+    
+    loadingDiv.style.display = 'block';
+    container.innerHTML = '';
+    emptyState.style.display = 'none';
+    
+    try {
+        let url = API_ENDPOINTS.GIS_INDEX;
+        if (searchTerm && searchTerm.trim()) {
+            url += `?search=${encodeURIComponent(searchTerm.trim())}`;
+        }
+        
+        const data = await apiRequest(url);
+        
+        // Handle API response format: {success: true, data: [...]}
+        if (data.success && Array.isArray(data.data)) {
+            currentLocations = data.data;
+        } else if (Array.isArray(data.locations)) {
+            currentLocations = data.locations;
+        } else if (Array.isArray(data)) {
+            currentLocations = data;
+        } else {
+            currentLocations = [];
+        }
+        
+        loadingDiv.style.display = 'none';
+        
+        if (currentLocations.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        renderLocations(currentLocations);
+        
+        } catch (error) {
+        loadingDiv.style.display = 'none';
+        
+        // Check if it's an authentication error
+        if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
+            console.error('❌ Authentication error when loading locations');
+            
+            const currentToken = getAuthToken();
+            const apiUrl = API_ENDPOINTS.GIS_INDEX;
+            
+            if (!currentToken) {
+                // No token at all - user needs to login
+                showMessage('⚠️ Not logged in. Please log in to view locations.', 'error');
+                setTimeout(() => {
+                    if (confirm('You are not logged in. Would you like to go to the login page?')) {
+                        window.location.href = 'login.html';
+                    }
+                }, 2000);
+                return;
+            }
+            
+            // Token exists but was rejected - show helpful error
+            showMessage(`⚠️ Authentication Error: ${error.message}. Please refresh the page or log in again.`, 'error');
+            
+            console.error('🔍 DEBUG INFO - Token exists but API rejected:');
+            console.error('- Token:', currentToken.substring(0, 40) + '...');
+            console.error('- Token Length:', currentToken.length);
+            console.error('- API URL:', apiUrl);
+            console.error('- Error:', error.message);
+            console.error('- Full Token (for debugging):', currentToken);
+            
+            // Show a retry button instead of auto-logout
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = '🔄 Retry Loading Locations';
+            retryBtn.className = 'btn';
+            retryBtn.style.marginTop = '10px';
+            retryBtn.onclick = function() {
+                this.disabled = true;
+                this.textContent = 'Retrying...';
+                loadLocations(currentSearch);
+            };
+            container.appendChild(retryBtn);
+            
+            // Also show manual logout option
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = '🚪 Logout and Login Again';
+            logoutBtn.className = 'btn';
+            logoutBtn.style.marginLeft = '10px';
+            logoutBtn.style.background = '#ef4444';
+            logoutBtn.onclick = function() {
+                if (confirm('Logout and return to login page?')) {
+                    removeAuthToken();
+                    removeUserData();
+                    window.location.href = 'login.html';
+                }
+            };
+            container.appendChild(logoutBtn);
+            
+            return;
+        }
+        
+        const errorMessage = error.message || 'Failed to load locations. Please try again.';
+        showMessage('Error loading locations: ' + errorMessage, 'error');
+        console.error('Error loading locations:', error);
+        
+        // Show empty state if there was an error
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+    }
+}
+
+// Render locations in the grid
+function renderLocations(locations) {
+    const container = document.getElementById('locations-container');
+    const userData = getUserData();
+    const userRole = userData?.role || 'member';
+    
+    if (!Array.isArray(locations) || locations.length === 0) {
+        document.getElementById('empty-state').style.display = 'block';
+        return;
+    }
+    
+    container.innerHTML = locations.map((location, index) => {
+        // Handle location data - ensure we have required fields
+        const locationName = location.location || location.name || 'Unnamed Location';
+        const latitude = location.latitude || 0;
+        const longitude = location.longitude || 0;
+        const locationId = location.id || index;
+        const imageUrl = location.image 
+            ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
+            : null;
+        
+        const statusBadge = getStatusBadge(location.status, userRole);
+        // Admin and staff can edit approved locations
+        const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
+        
+        return `
+            <div class="card location-card">
+                <div class="location-content">
+                    ${imageUrl ? `
+                    <div class="location-image-wrapper">
+                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:200px;height:200px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;border:3px solid #0d6efd;\\'><span style=\\'font-size:48px;\\'>📍</span></div>';">
+                    </div>
+                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
+                    <div class="location-details">
+                        <h3 class="location-name">
+                            ${locationName}
+                            ${statusBadge}
+                        </h3>
+                        <p class="location-coords">
+                            Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
+                        </p>
+                        ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
+                        ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
+                    </div>
+                </div>
+                ${canEdit ? `
+                <div class="location-actions">
+                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
+                        <span>✏️</span> Edit
+                    </a>
+                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
+                        <button type="submit" class="btn btn-delete">
+                            <span>🗑️</span> Delete
+                        </button>
+                    </form>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// Get status badge HTML
+function getStatusBadge(status, userRole) {
+    if (!status || status === 'approved' || userRole !== 'admin') return '';
+    
+    const badges = {
+        'pending': '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fde047;">⏳ Pending Approval</span>',
+        'rejected': '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fca5a5;">✗ Rejected</span>'
+    };
+    
+    return badges[status] || '';
+}
+
+// Search locations
+function searchLocations(event) {
+    if (event) event.preventDefault();
+    const searchTerm = document.getElementById('search').value.trim();
+    currentSearch = searchTerm;
+    loadLocations(searchTerm);
+}
+
+// Clear search (if needed in future)
+function clearSearch() {
+    document.getElementById('search').value = '';
+    currentSearch = '';
+    loadLocations();
+}
+
+// Edit location
+function editLocation(id) {
+    window.location.href = `edit-location.html?id=${id}`;
+}
+
+// View location
+function viewLocation(id) {
+    window.location.href = `view-location.html?id=${id}`;
+}
+
+// Delete location
+async function deleteLocation(id) {
+    const locationName = currentLocations.find(loc => loc.id === id)?.location || 'this location';
+    if (!confirm(`Are you sure you want to delete ${locationName}? This action cannot be undone.`)) {
+        return false;
+    }
+    
+    try {
+        await apiRequest(API_ENDPOINTS.GIS_DELETE(id), {
+            method: 'DELETE'
+        });
+        
+        showMessage('Location deleted successfully!', 'success');
+        loadLocations(currentSearch);
+        
+    } catch (error) {
+        showMessage('Error deleting location: ' + error.message, 'error');
+    }
+    return false;
+}
+
+// Show message
+function showMessage(message, type = 'success') {
+    const messagesDiv = document.getElementById('messages');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    
+    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    
+    setTimeout(() => {
+        messagesDiv.innerHTML = '';
+    }, 5000);
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        removeAuthToken();
+        window.location.href = 'index.html';
     }
 }
 
