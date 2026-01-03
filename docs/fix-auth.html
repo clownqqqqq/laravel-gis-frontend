@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Authentication - GeoCRUD</title>
+    <script src="js/config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        .step.success { border-left-color: #10b981; }
+        .step.error { border-left-color: #ef4444; }
+        .step.warning { border-left-color: #f59e0b; }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #005a9e; }
+        .code {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .fix-btn {
+            background: #10b981;
+            margin-top: 10px;
+        }
+        .fix-btn:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Authentication Fix Tool</h1>
+    <p>This tool will diagnose and attempt to fix authentication issues.</p>
+    
+    <button onclick="diagnoseAndFix()">🔍 Diagnose & Fix</button>
+    <button onclick="clearAll()">Clear All Data</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addStep(message, status = 'pending') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `step ${status}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            div.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            addStep('✅ Cleared all localStorage data', 'success');
+        }
+
+        async function diagnoseAndFix() {
+            document.getElementById('results').innerHTML = '';
+            addStep('<h3>Step 1: Check Current Token</h3>', 'pending');
+            
+            const token = getAuthToken();
+            const userData = getUserData();
+            
+            if (!token) {
+                addStep('❌ No token found. Please <a href="login.html">log in</a> first.', 'error');
+                return;
+            }
+            
+            addStep(`✅ Token found: <div class="code">${token.substring(0, 50)}... (length: ${token.length})</div>`, 'success');
+            
+            if (userData) {
+                addStep(`✅ User data found: ${userData.username || userData.email} (Role: ${userData.role || 'unknown'})`, 'success');
+            }
+            
+            addStep('<h3>Step 2: Test Token with Backend</h3>', 'pending');
+            
+            try {
+                const response = await fetch('https://geocrud.bytevortexz.com/api/gis', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token.trim()}`,
+                        'Accept': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    addStep(`❌ Token rejected (401): ${data.message || data.error || 'Unknown error'}`, 'error');
+                    addStep(`<div class="code">Response: ${JSON.stringify(data, null, 2)}</div>`, 'error');
+                    
+                    addStep('<h3>⚠️ Problem Found: Token Not Valid</h3>', 'warning');
+                    addStep(`
+                        <p><strong>Possible causes:</strong></p>
+                        <ul>
+                            <li>Token not saved to database on backend</li>
+                            <li>Token mismatch between frontend and backend</li>
+                            <li>Backend authentication middleware issue</li>
+                        </ul>
+                        <p><strong>Solution:</strong></p>
+                        <ol>
+                            <li>Log out and log in again to get a fresh token</li>
+                            <li>Check backend logs on Hostinger</li>
+                            <li>Verify token exists in users table in database</li>
+                        </ol>
+                        <button class="fix-btn" onclick="window.location.href='login.html'">🔑 Go to Login Page</button>
+                    `, 'warning');
+                } else if (response.ok) {
+                    const locations = data.data || data.locations || [];
+                    addStep(`✅ Token works! Found ${locations.length} locations`, 'success');
+                    addStep(`<div class="code">Response: ${JSON.stringify(data, null, 2).substring(0, 500)}...</div>`, 'success');
+                    
+                    if (locations.length > 0) {
+                        addStep(`<h3>✅ Authentication is Working!</h3><p>Your dashboard should show ${locations.length} location(s).</p><button class="fix-btn" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>`, 'success');
+                    }
+                } else {
+                    addStep(`⚠️ Unexpected response: ${response.status} - ${JSON.stringify(data, null, 2)}`, 'warning');
+                }
+            } catch (error) {
+                addStep(`❌ Network error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
