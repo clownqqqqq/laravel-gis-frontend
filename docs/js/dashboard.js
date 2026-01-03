@@ -17,36 +17,47 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Wait a moment to ensure token is properly set, then load data
-    setTimeout(() => {
-        // Verify token is still there
-        const verifyToken = getAuthToken();
-        if (!verifyToken) {
-            console.error('Token lost! Redirecting to login...');
-            window.location.href = 'login.html';
-            return;
-        }
-        
-        // Load user info first
-        loadUserInfo().then(() => {
-            // Then load locations after user info is loaded
-            loadLocations();
-        }).catch(error => {
-            console.error('Error loading user info:', error);
-            // Still try to load locations
-            loadLocations();
-        });
-        
-        // Search on Enter key
-        const searchInput = document.getElementById('search');
-        if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchLocations(e);
+        // Wait a moment to ensure token is properly set, then load data
+        setTimeout(() => {
+            // Verify token is still there
+            const verifyToken = getAuthToken();
+            if (!verifyToken) {
+                console.error('Token lost! Redirecting to login...');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            console.log('Token verified, starting data load...');
+            
+            // Try loading locations first (simpler, tests auth)
+            // If this works, then load user info
+            loadLocations().then(() => {
+                console.log('Locations loaded successfully');
+                // Load user info after locations (non-critical)
+                loadUserInfo().catch(err => console.warn('User info load failed (non-critical):', err));
+            }).catch(error => {
+                console.error('Error loading locations:', error);
+                
+                // If auth error, don't immediately logout - show helpful message
+                if (error.message && error.message.includes('Authentication')) {
+                    showMessage('Authentication error. Please refresh the page or log in again.', 'error');
+                    // Don't auto-logout - let user decide
+                } else {
+                    // Other errors - try loading user info anyway
+                    loadUserInfo().catch(err => console.warn('User info load failed:', err));
                 }
             });
-        }
-    }, 300); // Small delay to ensure localStorage is ready
+            
+            // Search on Enter key
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchLocations(e);
+                    }
+                });
+            }
+        }, 500); // Increased delay to ensure everything is ready
 });
 
 // Load user information and profile
@@ -195,22 +206,32 @@ async function loadLocations(searchTerm = '') {
         // Check if it's an authentication error
         if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
             console.error('Authentication error when loading locations');
-            // Don't immediately redirect - check if token still exists
+            
+            // Check if token still exists
             const currentToken = getAuthToken();
             if (!currentToken) {
-                // Token was removed, redirect to login
+                // Token was removed by error handler, show message
                 showMessage('Your session has expired. Redirecting to login...', 'error');
                 setTimeout(() => {
                     window.location.href = 'login.html';
-                }, 2000);
+                }, 3000);
                 return;
             } else {
-                // Token exists but API rejected it - might be backend issue
-                showMessage('Authentication error. Please try refreshing the page or log in again.', 'error');
+                // Token exists but API rejected it
+                showMessage('Cannot connect to server. Please check your connection and refresh the page.', 'error');
                 console.error('Token exists but API rejected:', {
-                    token: currentToken.substring(0, 20) + '...',
-                    error: error.message
+                    token: currentToken.substring(0, 30) + '...',
+                    tokenLength: currentToken.length,
+                    error: error.message,
+                    url: url
                 });
+                
+                // Show helpful debugging info in console
+                console.error('DEBUG INFO:');
+                console.error('- Token preview:', currentToken.substring(0, 30));
+                console.error('- Full token length:', currentToken.length);
+                console.error('- API URL:', url);
+                console.error('- Error message:', error.message);
             }
             return;
         }
