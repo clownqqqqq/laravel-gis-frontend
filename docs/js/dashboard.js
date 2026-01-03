@@ -4,53 +4,93 @@ let currentSearch = '';
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', function() {
-    if (!isAuthenticated()) {
+    // Mark page load time for auth error handling
+    window.pageLoadTime = Date.now();
+    
+    // Check authentication
+    const token = getAuthToken();
+    console.log('Dashboard loaded - Token check:', token ? 'YES (' + token.substring(0, 20) + '...)' : 'NO');
+    
+    if (!token || !isAuthenticated()) {
+        console.log('Not authenticated, redirecting to login...');
         window.location.href = 'login.html';
         return;
     }
     
-    // Load user info
-    loadUserInfo();
-    
-    // Load locations
-    loadLocations();
-    
-    // Search on Enter key
-    const searchInput = document.getElementById('search');
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchLocations(e);
-            }
+    // Wait a moment to ensure token is properly set, then load data
+    setTimeout(() => {
+        // Verify token is still there
+        const verifyToken = getAuthToken();
+        if (!verifyToken) {
+            console.error('Token lost! Redirecting to login...');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Load user info first
+        loadUserInfo().then(() => {
+            // Then load locations after user info is loaded
+            loadLocations();
+        }).catch(error => {
+            console.error('Error loading user info:', error);
+            // Still try to load locations
+            loadLocations();
         });
-    }
+        
+        // Search on Enter key
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchLocations(e);
+                }
+            });
+        }
+    }, 300); // Small delay to ensure localStorage is ready
 });
 
 // Load user information and profile
 async function loadUserInfo() {
     const userData = getUserData();
+    const token = getAuthToken();
+    
+    console.log('Loading user info - Token:', token ? 'Present' : 'Missing');
+    console.log('Loading user info - User data:', userData);
     
     // Try to load full user profile from API to get latest role and data
-    if (userData && userData.id) {
+    if (userData && userData.id && token) {
         try {
+            console.log('Fetching user profile from API...');
             const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+            console.log('Profile data received:', profileData);
+            
             if (profileData && profileData.user) {
                 // Update user data with latest from server
-                setUserData(profileData.user);
-                updateUIWithUserData(profileData.user);
+                const updatedUser = {
+                    ...userData,
+                    ...profileData.user,
+                    role: profileData.user.role || userData.role || 'member'
+                };
+                setUserData(updatedUser);
+                updateUIWithUserData(updatedUser);
             } else {
                 // Fallback to stored data
+                console.log('Using stored user data (no profile data)');
                 updateUIWithUserData(userData);
             }
         } catch (error) {
-            console.warn('Could not load user profile:', error);
-            // Fallback to stored data
+            console.warn('Could not load user profile (non-fatal):', error);
+            // Don't fail completely - use stored data
             if (userData) {
+                console.log('Using stored user data (API error)');
                 updateUIWithUserData(userData);
             }
         }
     } else if (userData) {
+        console.log('Using stored user data (no ID or token)');
         updateUIWithUserData(userData);
+    } else {
+        console.warn('No user data found');
     }
 }
 
@@ -101,6 +141,20 @@ async function loadLocations(searchTerm = '') {
     const container = document.getElementById('locations-container');
     const emptyState = document.getElementById('empty-state');
     
+    // Verify token before making request
+    const token = getAuthToken();
+    if (!token) {
+        console.error('No token found when loading locations!');
+        loadingDiv.style.display = 'none';
+        showMessage('Authentication error. Please log in again.', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+    
+    console.log('Loading locations - Token:', token.substring(0, 20) + '...');
+    
     loadingDiv.style.display = 'block';
     container.innerHTML = '';
     emptyState.style.display = 'none';
@@ -111,7 +165,9 @@ async function loadLocations(searchTerm = '') {
             url += `?search=${encodeURIComponent(searchTerm)}`;
         }
         
+        console.log('Fetching locations from:', url);
         const data = await apiRequest(url);
+        console.log('Locations data received:', data);
         
         // Handle different response formats
         if (data.success && data.data) {
@@ -133,12 +189,29 @@ async function loadLocations(searchTerm = '') {
         
         renderLocations(currentLocations);
         
-    } catch (error) {
+        } catch (error) {
         loadingDiv.style.display = 'none';
         
         // Check if it's an authentication error
-        if (error.message && error.message.includes('Authentication failed')) {
-            // Already handled by apiRequest - will redirect to login
+        if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
+            console.error('Authentication error when loading locations');
+            // Don't immediately redirect - check if token still exists
+            const currentToken = getAuthToken();
+            if (!currentToken) {
+                // Token was removed, redirect to login
+                showMessage('Your session has expired. Redirecting to login...', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            } else {
+                // Token exists but API rejected it - might be backend issue
+                showMessage('Authentication error. Please try refreshing the page or log in again.', 'error');
+                console.error('Token exists but API rejected:', {
+                    token: currentToken.substring(0, 20) + '...',
+                    error: error.message
+                });
+            }
             return;
         }
         
