@@ -22,30 +22,30 @@ document.addEventListener('DOMContentLoaded', function() {
             // Verify token is still there
             const verifyToken = getAuthToken();
             if (!verifyToken) {
-                console.error('Token lost! Redirecting to login...');
-                window.location.href = 'login.html';
+                console.error('❌ No token found! Redirecting to login...');
+                showMessage('⚠️ No authentication token found. Please log in.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
                 return;
             }
             
-            console.log('Token verified, starting data load...');
+            console.log('✅ Token verified, starting data load...');
+            console.log('Token preview:', verifyToken.substring(0, 40) + '...');
+            console.log('Token length:', verifyToken.length);
             
-            // Try loading locations first (simpler, tests auth)
-            // If this works, then load user info
+            // Load user info first (non-blocking)
+            loadUserInfo().catch(err => {
+                console.warn('⚠️ User info load failed (non-critical):', err);
+            });
+            
+            // Then load locations
+            console.log('Loading locations from:', API_ENDPOINTS.GIS_INDEX);
             loadLocations().then(() => {
-                console.log('Locations loaded successfully');
-                // Load user info after locations (non-critical)
-                loadUserInfo().catch(err => console.warn('User info load failed (non-critical):', err));
+                console.log('✅ Locations loaded successfully!');
             }).catch(error => {
-                console.error('Error loading locations:', error);
-                
-                // If auth error, don't immediately logout - show helpful message
-                if (error.message && error.message.includes('Authentication')) {
-                    showMessage('Authentication error. Please refresh the page or log in again.', 'error');
-                    // Don't auto-logout - let user decide
-                } else {
-                    // Other errors - try loading user info anyway
-                    loadUserInfo().catch(err => console.warn('User info load failed:', err));
-                }
+                console.error('❌ Error loading locations:', error);
+                // Error handling is done inside loadLocations function
             });
             
             // Search on Enter key
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             }
-        }, 500); // Increased delay to ensure everything is ready
+        }, 800); // Delay to ensure token is ready
 });
 
 // Load user information and profile
@@ -164,7 +164,10 @@ async function loadLocations(searchTerm = '') {
         return;
     }
     
-    console.log('Loading locations - Token:', token.substring(0, 20) + '...');
+    console.log('📡 Loading locations...');
+    console.log('- Token exists:', !!token);
+    console.log('- Token preview:', token ? token.substring(0, 40) + '...' : 'NONE');
+    console.log('- Token length:', token ? token.length : 0);
     
     loadingDiv.style.display = 'block';
     container.innerHTML = '';
@@ -176,63 +179,100 @@ async function loadLocations(searchTerm = '') {
             url += `?search=${encodeURIComponent(searchTerm)}`;
         }
         
-        console.log('Fetching locations from:', url);
+        console.log('🌐 Fetching from:', url);
+        console.log('📤 Headers being sent:', {
+            'Authorization': `Bearer ${token.substring(0, 40)}...`,
+            'Accept': 'application/json'
+        });
+        
         const data = await apiRequest(url);
-        console.log('Locations data received:', data);
+        console.log('✅ Locations data received:', data);
         
         // Handle different response formats
         if (data.success && data.data) {
             currentLocations = Array.isArray(data.data) ? data.data : [];
+            console.log(`✅ Found ${currentLocations.length} locations in data.data`);
         } else if (data.locations) {
             currentLocations = Array.isArray(data.locations) ? data.locations : [];
+            console.log(`✅ Found ${currentLocations.length} locations in data.locations`);
         } else if (Array.isArray(data)) {
             currentLocations = data;
+            console.log(`✅ Found ${currentLocations.length} locations (direct array)`);
         } else {
             currentLocations = [];
+            console.warn('⚠️ Unexpected response format:', data);
         }
         
         loadingDiv.style.display = 'none';
         
         if (currentLocations.length === 0) {
+            console.log('ℹ️ No locations found - showing empty state');
             emptyState.style.display = 'block';
+            showMessage('No locations found. Add your first location using the "Add Location" button.', 'info');
             return;
         }
         
+        console.log('🎨 Rendering', currentLocations.length, 'locations...');
         renderLocations(currentLocations);
+        console.log('✅ Locations rendered successfully!');
         
         } catch (error) {
         loadingDiv.style.display = 'none';
         
         // Check if it's an authentication error
         if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
-            console.error('Authentication error when loading locations');
+            console.error('❌ Authentication error when loading locations');
             
-            // Check if token still exists
             const currentToken = getAuthToken();
+            
             if (!currentToken) {
-                // Token was removed by error handler, show message
-                showMessage('Your session has expired. Redirecting to login...', 'error');
+                // No token at all - user needs to login
+                showMessage('⚠️ Not logged in. Please log in to view locations.', 'error');
                 setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 3000);
+                    if (confirm('You are not logged in. Would you like to go to the login page?')) {
+                        window.location.href = 'login.html';
+                    }
+                }, 2000);
                 return;
-            } else {
-                // Token exists but API rejected it
-                showMessage('Cannot connect to server. Please check your connection and refresh the page.', 'error');
-                console.error('Token exists but API rejected:', {
-                    token: currentToken.substring(0, 30) + '...',
-                    tokenLength: currentToken.length,
-                    error: error.message,
-                    url: url
-                });
-                
-                // Show helpful debugging info in console
-                console.error('DEBUG INFO:');
-                console.error('- Token preview:', currentToken.substring(0, 30));
-                console.error('- Full token length:', currentToken.length);
-                console.error('- API URL:', url);
-                console.error('- Error message:', error.message);
             }
+            
+            // Token exists but was rejected - show helpful error
+            showMessage(`⚠️ Authentication Error: ${error.message}. Please refresh the page or log in again.`, 'error');
+            
+            console.error('🔍 DEBUG INFO - Token exists but API rejected:');
+            console.error('- Token:', currentToken.substring(0, 40) + '...');
+            console.error('- Token Length:', currentToken.length);
+            console.error('- API URL:', url);
+            console.error('- Error:', error.message);
+            console.error('- Full Token (for debugging):', currentToken);
+            
+            // Show a retry button instead of auto-logout
+            const retryBtn = document.createElement('button');
+            retryBtn.textContent = '🔄 Retry Loading Locations';
+            retryBtn.className = 'btn';
+            retryBtn.style.marginTop = '10px';
+            retryBtn.onclick = function() {
+                this.disabled = true;
+                this.textContent = 'Retrying...';
+                loadLocations(currentSearch);
+            };
+            container.appendChild(retryBtn);
+            
+            // Also show manual logout option
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = '🚪 Logout and Login Again';
+            logoutBtn.className = 'btn';
+            logoutBtn.style.marginLeft = '10px';
+            logoutBtn.style.background = '#ef4444';
+            logoutBtn.onclick = function() {
+                if (confirm('Logout and return to login page?')) {
+                    removeAuthToken();
+                    removeUserData();
+                    window.location.href = 'login.html';
+                }
+            };
+            container.appendChild(logoutBtn);
+            
             return;
         }
         
