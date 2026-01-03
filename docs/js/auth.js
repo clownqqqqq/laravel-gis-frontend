@@ -42,8 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Save token and user data
                     if (data.auth_token) {
                         setAuthToken(data.auth_token);
+                        
+                        // Save user data (including role for permissions)
                         if (data.user) {
                             setUserData(data.user);
+                        } else {
+                            // If user data not in response, create minimal user object
+                            // Role will be loaded from profile later
+                            setUserData({
+                                id: null,
+                                username: username,
+                                email: null,
+                                role: 'member' // Default, will be updated when profile is loaded
+                            });
                         }
                         
                         // Show success message
