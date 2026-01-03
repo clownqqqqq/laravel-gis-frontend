@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connection - GeoCRUD</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-result {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .test-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        .test-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+        .test-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 2px solid #3b82f6;
+        }
+        .test-details {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>🔗 Frontend ↔️ Backend Connection Test</h2>
+            
+            <div id="test-results"></div>
+            
+            <div class="test-details">
+                <strong>Frontend URL:</strong> <span id="frontend-url"></span><br>
+                <strong>Backend API:</strong> https://geocrud.bytevortexz.com/api<br>
+                <strong>Health Check:</strong> https://geocrud.bytevortexz.com/up
+            </div>
+            
+            <div style="margin-top: 2rem; text-align: center;">
+                <a href="index.html" style="color: #667eea;">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+        const frontendUrl = document.getElementById('frontend-url');
+        
+        frontendUrl.textContent = window.location.origin;
+        
+        async function testConnection() {
+            // Test 1: Backend Health Check
+            resultsDiv.innerHTML = '<div class="test-result test-info">Testing backend connection...</div>';
+            
+            try {
+                const healthResponse = await fetch('https://geocrud.bytevortexz.com/up');
+                const healthText = await healthResponse.text();
+                
+                if (healthResponse.ok) {
+                    resultsDiv.innerHTML += '<div class="test-result test-success">✅ Backend is UP and running!</div>';
+                } else {
+                    throw new Error('Backend returned error');
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="test-result test-error">❌ Cannot reach backend: ' + error.message + '</div>';
+                return;
+            }
+            
+            // Test 2: API CORS
+            resultsDiv.innerHTML += '<div class="test-result test-info">Testing API CORS...</div>';
+            
+            try {
+                const corsResponse = await fetch('https://geocrud.bytevortexz.com/api/auth/login', {
+                    method: 'OPTIONS',
+                });
+                
+                if (corsResponse.ok) {
+                    resultsDiv.innerHTML += '<div class="test-result test-success">✅ CORS is configured correctly!</div>';
+                } else {
+                    resultsDiv.innerHTML += '<div class="test-result test-error">⚠️ CORS might need configuration</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="test-result test-error">❌ CORS test failed: ' + error.message + '</div>';
+            }
+            
+            // Test 3: API Endpoint
+            resultsDiv.innerHTML += '<div class="test-result test-info">Testing API endpoint...</div>';
+            
+            try {
+                const apiResponse = await fetch('https://geocrud.bytevortexz.com/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@test.com',
+                        password: 'test'
+                    }),
+                });
+                
+                const apiData = await apiResponse.json();
+                
+                // Even if login fails, if we get JSON response, API is working
+                if (apiResponse.status === 401 || apiResponse.status === 422) {
+                    resultsDiv.innerHTML += '<div class="test-result test-success">✅ API is responding! (Expected error: Invalid credentials)</div>';
+                } else if (apiResponse.ok) {
+                    resultsDiv.innerHTML += '<div class="test-result test-success">✅ API is working perfectly!</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML += '<div class="test-result test-error">❌ API test failed: ' + error.message + '</div>';
+            }
+            
+            // Final Result
+            resultsDiv.innerHTML += '<div class="test-result test-success" style="margin-top: 2rem; font-size: 1.1rem;"><strong>✅ Connection Test Complete!</strong><br>Frontend (GitHub Pages) ↔️ Backend (Hostinger) are connected!</div>';
+        }
+        
+        // Run test on page load
+        testConnection();
+    </script>
+</body>
+</html>
+

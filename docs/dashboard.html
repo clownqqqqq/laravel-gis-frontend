@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS Dashboard - GeoCRUD</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="dashboard.html" class="logo">📍 GeoCRUD</a>
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-link active">Locations</a>
+                <span class="user-info" id="user-info">
+                    <span id="user-name">Loading...</span>
+                    <button onclick="logout()" class="btn-logout">Logout</button>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-header">
+            <h1>📍 My Geographic Locations</h1>
+            <div class="header-actions">
+                <button onclick="window.location.href='create-location.html'" class="btn btn-primary">
+                    ➕ Add Location
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card">
+            <div class="search-wrapper">
+                <input type="text" id="search-input" placeholder="🔍 Search locations by name..." class="search-input">
+                <button onclick="searchLocations()" class="btn btn-search">Search</button>
+                <button onclick="clearSearch()" class="btn btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages"></div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <p>Loading locations...</p>
+        </div>
+
+        <!-- Locations List -->
+        <div id="locations-container" class="locations-grid"></div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <p>📍 No locations found. Click "Add Location" to get started!</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
+
