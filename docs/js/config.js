@@ -67,13 +67,38 @@ async function apiRequest(url, options = {}) {
     
     // Add authentication token
     if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        // Trim token to remove any whitespace
+        const cleanToken = token.trim();
+        headers['Authorization'] = `Bearer ${cleanToken}`;
+        
+        // Log token being sent (for debugging)
+        console.log('🔑 Sending token:', {
+            preview: cleanToken.substring(0, 40) + '...',
+            length: cleanToken.length,
+            url: url
+        });
+    } else {
+        console.warn('⚠️ No token available for request to:', url);
     }
     
     try {
+        console.log('📤 Making API request:', {
+            method: options.method || 'GET',
+            url: url,
+            hasToken: !!token,
+            headers: Object.keys(headers)
+        });
+        
         const response = await fetch(url, {
             ...options,
             headers,
+        });
+        
+        console.log('📥 API Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            url: url
         });
         
         // Handle non-JSON responses
