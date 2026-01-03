@@ -188,7 +188,7 @@ async function loadLocations(searchTerm = '') {
         const data = await apiRequest(url);
         console.log('✅ Locations data received:', data);
         
-        // Handle different response formats
+        // Handle different response formats - API returns {success: true, data: [...]}
         if (data.success && data.data) {
             currentLocations = Array.isArray(data.data) ? data.data : [];
             console.log(`✅ Found ${currentLocations.length} locations in data.data`);
@@ -201,7 +201,11 @@ async function loadLocations(searchTerm = '') {
         } else {
             currentLocations = [];
             console.warn('⚠️ Unexpected response format:', data);
+            console.warn('Full response:', JSON.stringify(data, null, 2));
         }
+        
+        // Store locations for later use
+        currentLocations = currentLocations || [];
         
         loadingDiv.style.display = 'none';
         
@@ -292,17 +296,26 @@ function renderLocations(locations) {
     const userData = getUserData();
     const userRole = userData?.role || 'member';
     
-    if (locations.length === 0) {
+    if (!Array.isArray(locations) || locations.length === 0) {
+        console.warn('No locations to render or invalid data:', locations);
         document.getElementById('empty-state').style.display = 'block';
         return;
     }
     
-    container.innerHTML = locations.map(location => {
+    console.log(`🎨 Rendering ${locations.length} locations...`);
+    
+    container.innerHTML = locations.map((location, index) => {
+        // Handle location data - ensure we have required fields
+        const locationName = location.location || location.name || 'Unnamed Location';
+        const latitude = location.latitude || 0;
+        const longitude = location.longitude || 0;
+        const locationId = location.id || index;
         const imageUrl = location.image 
             ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
-            : '';
+            : null;
         
         const statusBadge = getStatusBadge(location.status, userRole);
+        // Admin and staff can edit approved locations
         const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
         
         return `
@@ -310,16 +323,16 @@ function renderLocations(locations) {
                 <div class="location-content">
                     ${imageUrl ? `
                     <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${location.location}" class="location-image" onerror="this.style.display='none'">
+                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:200px;height:200px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;border:3px solid #0d6efd;\\'><span style=\\'font-size:48px;\\'>📍</span></div>';">
                     </div>
-                    ` : ''}
+                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
                     <div class="location-details">
                         <h3 class="location-name">
-                            ${location.location}
+                            ${locationName}
                             ${statusBadge}
                         </h3>
                         <p class="location-coords">
-                            Lat: ${location.latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${location.longitude}
+                            Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
                         </p>
                         ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
                         ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
@@ -327,10 +340,10 @@ function renderLocations(locations) {
                 </div>
                 ${canEdit ? `
                 <div class="location-actions">
-                    <a href="edit-location.html?id=${location.id}" class="btn btn-edit">
+                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
                         <span>✏️</span> Edit
                     </a>
-                    <form class="location-delete-form" onsubmit="deleteLocation(${location.id}); return false;">
+                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
                         <button type="submit" class="btn btn-delete">
                             <span>🗑️</span> Delete
                         </button>
@@ -340,6 +353,8 @@ function renderLocations(locations) {
             </div>
         `;
     }).join('');
+    
+    console.log(`✅ Successfully rendered ${locations.length} locations!`);
 }
 
 // Get status badge HTML
