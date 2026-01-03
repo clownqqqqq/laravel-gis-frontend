@@ -88,32 +88,56 @@ async function apiRequest(url, options = {}) {
         
         // Handle authentication errors
         if (response.status === 401) {
-            // Only auto-logout if we're not already on login page and it's not the first API call
-            // This prevents immediate logout right after login
+            // Only auto-logout if we're not already on login page
             const isLoginPage = window.location.pathname.includes('login.html') || window.location.pathname === '/login.html';
             
             if (!isLoginPage) {
                 // Check if token exists - if not, don't show error (user already logged out)
                 const existingToken = getAuthToken();
                 if (existingToken) {
-                    console.error('401 Error - Token invalid:', {
+                    console.error('401 Error - Token rejected by backend:', {
                         url: url,
-                        tokenPreview: existingToken.substring(0, 20) + '...',
-                        responseData: data
+                        tokenPreview: existingToken.substring(0, 30) + '...',
+                        tokenLength: existingToken.length,
+                        responseData: data,
+                        fullToken: existingToken // Log full token for debugging
                     });
                     
-                    removeAuthToken();
-                    removeUserData();
+                    // Don't immediately logout - might be a timing issue
+                    // Only logout after multiple failed attempts or explicit error message
+                    const errorMsg = data.message || data.error || '';
                     
-                    // Don't redirect if we just logged in (give it a moment)
-                    const timeSinceLoad = Date.now() - (window.pageLoadTime || 0);
-                    if (timeSinceLoad > 2000) { // Only redirect if page has been loaded for more than 2 seconds
-                        alert('Your session has expired. Please log in again.');
-                        window.location.href = 'login.html';
+                    // Check if error explicitly says token is invalid/expired
+                    if (errorMsg.toLowerCase().includes('expired') || 
+                        errorMsg.toLowerCase().includes('invalid') ||
+                        errorMsg.toLowerCase().includes('unauthorized')) {
+                        
+                        // Track failed attempts
+                        if (!window.authFailCount) window.authFailCount = 0;
+                        window.authFailCount++;
+                        
+                        // Only logout after 2 failed attempts (to avoid premature logout)
+                        if (window.authFailCount >= 2) {
+                            console.error('Multiple auth failures detected. Logging out...');
+                            removeAuthToken();
+                            removeUserData();
+                            window.authFailCount = 0;
+                            alert('Authentication failed. Please log in again.');
+                            window.location.href = 'login.html';
+                            throw new Error('Authentication failed. Please log in again.');
+                        } else {
+                            console.warn('Auth failure (attempt ' + window.authFailCount + '). Will retry...');
+                            // Don't logout yet, just throw error
+                        }
                     }
                 }
             }
             throw new Error(data.message || data.error || 'Authentication failed. Please log in again.');
+        }
+        
+        // Reset failure counter on successful request
+        if (response.ok && window.authFailCount) {
+            window.authFailCount = 0;
         }
         
         // Handle authorization errors
