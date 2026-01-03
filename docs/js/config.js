@@ -70,35 +70,12 @@ async function apiRequest(url, options = {}) {
         // Trim token to remove any whitespace
         const cleanToken = token.trim();
         headers['Authorization'] = `Bearer ${cleanToken}`;
-        
-        // Log token being sent (for debugging)
-        console.log('🔑 Sending token:', {
-            preview: cleanToken.substring(0, 40) + '...',
-            length: cleanToken.length,
-            url: url
-        });
-    } else {
-        console.warn('⚠️ No token available for request to:', url);
     }
     
     try {
-        console.log('📤 Making API request:', {
-            method: options.method || 'GET',
-            url: url,
-            hasToken: !!token,
-            headers: Object.keys(headers)
-        });
-        
         const response = await fetch(url, {
             ...options,
             headers,
-        });
-        
-        console.log('📥 API Response:', {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-            url: url
         });
         
         // Handle non-JSON responses
@@ -111,24 +88,21 @@ async function apiRequest(url, options = {}) {
             throw new Error(text || 'Server error');
         }
         
-        // Handle authentication errors - DON'T AUTO-LOGOUT
+        // Handle authentication errors
         if (response.status === 401) {
             const existingToken = getAuthToken();
             
             console.error('⚠️ 401 Unauthorized Error:', {
                 url: url,
                 tokenExists: !!existingToken,
-                tokenPreview: existingToken ? existingToken.substring(0, 30) + '...' : 'NO TOKEN',
+                tokenPreview: existingToken ? existingToken.substring(0, 40) + '...' : 'NO TOKEN',
                 tokenLength: existingToken ? existingToken.length : 0,
-                responseData: data,
-                headersSent: {
-                    'Authorization': existingToken ? `Bearer ${existingToken.substring(0, 30)}...` : 'NOT SENT'
-                }
+                responseMessage: data.message || data.error,
+                fullResponse: data
             });
             
-            // DO NOT AUTO-LOGOUT - Let user see the error and decide
-            // This prevents immediate logout after login
-            throw new Error(data.message || data.error || 'Authentication failed. Please check your credentials or refresh the page.');
+            // Don't auto-logout - let the calling function handle it
+            throw new Error(data.message || data.error || 'Authentication failed. Please log in again.');
         }
         
         // Handle authorization errors
