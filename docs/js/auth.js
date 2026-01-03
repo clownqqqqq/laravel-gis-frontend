@@ -79,12 +79,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Double-check token before redirect
                             const verifyToken = getAuthToken();
                             if (verifyToken) {
+                                console.log('Token verified, redirecting to dashboard...');
+                                // Clear any previous auth failure counters
+                                if (window.authFailCount) window.authFailCount = 0;
                                 window.location.href = 'dashboard.html';
                             } else {
                                 alert('Error: Token not saved. Please try logging in again.');
                                 console.error('Token lost after save!');
                             }
-                        }, 500);
+                        }, 1000); // Increased delay to ensure token is fully saved
                     } else {
                         throw new Error('No authentication token received');
                     }
