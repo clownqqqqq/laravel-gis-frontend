@@ -38,59 +38,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const data = await response.json();
                 
-                if (response.ok && data.success) {
-                    // Save token and user data
-                    if (data.auth_token) {
-                        // Save token FIRST
-                        const token = data.auth_token;
-                        setAuthToken(token);
-                        
-                        // Verify token was saved
-                        const savedToken = getAuthToken();
-                        console.log('Token saved:', savedToken ? 'YES' : 'NO', savedToken ? savedToken.substring(0, 20) + '...' : '');
-                        
-                        // Save user data (including role for permissions)
-                        if (data.user) {
-                            // Ensure we have all user data
-                            const userData = {
-                                id: data.user.id,
-                                username: data.user.username || username,
-                                email: data.user.email || null,
-                                role: data.user.role || 'member', // Try to get role, default to member
-                                is_activated: data.user.is_activated || false
-                            };
-                            setUserData(userData);
-                            console.log('User data saved:', userData);
-                        } else {
-                            // If user data not in response, create minimal user object
-                            setUserData({
-                                id: null,
-                                username: username,
-                                email: null,
-                                role: 'member' // Default, will be updated when profile is loaded
-                            });
-                        }
-                        
-                        // Show success message
-                        alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
-                        
-                        // Wait a moment to ensure localStorage is saved, then redirect
-                        setTimeout(() => {
-                            // Double-check token before redirect
-                            const verifyToken = getAuthToken();
-                            if (verifyToken) {
-                                console.log('Token verified, redirecting to dashboard...');
-                                // Clear any previous auth failure counters
-                                if (window.authFailCount) window.authFailCount = 0;
-                                window.location.href = 'dashboard.html';
-                            } else {
-                                alert('Error: Token not saved. Please try logging in again.');
-                                console.error('Token lost after save!');
-                            }
-                        }, 1000); // Increased delay to ensure token is fully saved
-                    } else {
-                        throw new Error('No authentication token received');
+                if (response.ok && data.success && data.auth_token) {
+                    // Save token
+                    const token = data.auth_token.trim(); // Ensure no whitespace
+                    setAuthToken(token);
+                    
+                    // Save user data
+                    if (data.user) {
+                        const userData = {
+                            id: data.user.id,
+                            username: data.user.username || username,
+                            email: data.user.email || null,
+                            role: data.user.role || 'member',
+                            profile_picture: data.user.profile_picture || null,
+                            is_activated: data.user.is_activated || false
+                        };
+                        setUserData(userData);
                     }
+                    
+                    // Show success and redirect
+                    alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 500);
                 } else {
                     throw new Error(data.message || data.error || 'Login failed. Please check your credentials.');
                 }
