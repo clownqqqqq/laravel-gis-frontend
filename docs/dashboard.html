@@ -252,7 +252,8 @@ function renderLocations(locations) {
                 <div class="location-content">
                     ${imageUrl ? `
                     <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:200px;height:200px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;border:3px solid #0d6efd;\\'><span style=\\'font-size:48px;\\'>📍</span></div>';">
+                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="location-image-placeholder" style="display: none; width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>
                     </div>
                     ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
                     <div class="location-details">
