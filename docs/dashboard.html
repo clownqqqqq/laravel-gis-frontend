@@ -2,65 +2,521 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GIS Dashboard - GeoCRUD</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
+    <title>GIS Manager - GeoCRUD</title>
+    <script src="js/config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #2c3e50;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .main-container {
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .top-nav .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .top-nav .nav-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+        }
+
+        .top-nav .nav-btn:hover {
+            background: white;
+            color: #0d6efd;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 5px;
+            border: 2px solid white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            border: 2px solid white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar-placeholder span {
+            font-size: 20px;
+        }
+
+        .content-area {
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-add-location {
+            background: #0d6efd;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-add-location:hover {
+            background: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .search-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-icon-wrapper {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #94a3b8;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            background: #ffffff;
+            color: #1e293b;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        .btn-search, .btn-clear {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-search {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-search:hover {
+            background: #059669;
+        }
+
+        .btn-clear {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #4b5563;
+        }
+
+        .alert {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .alert-success {
+            background: #d1f4e0;
+            color: #0f5132;
+            border: 1px solid #a3e1c5;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #b8d4da;
+        }
+
+        .locations-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .location-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .location-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .location-image-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .location-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .location-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .location-coords {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #d97706;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        #empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .top-nav .container {
+                flex-direction: row;
+            }
+
+            .top-nav .nav-buttons {
+                gap: 6px;
+                margin-top: 10px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .locations-list {
+                grid-template-columns: 1fr;
+            }
+
+            .search-wrapper {
+                flex-direction: column;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="dashboard.html" class="logo">📍 GeoCRUD</a>
-            <div class="nav-links">
-                <a href="dashboard.html" class="nav-link active">Locations</a>
-                <span class="user-info" id="user-info">
-                    <span id="user-name">Loading...</span>
-                    <button onclick="logout()" class="btn-logout">Logout</button>
-                </span>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <img id="profile-avatar" src="" alt="Profile" class="profile-avatar" style="display: none;" onclick="window.location.href='#profile'">
+                    <div id="profile-avatar-placeholder" class="profile-avatar-placeholder" onclick="window.location.href='#profile'">
+                        <span>👤</span>
+                    </div>
+                    <button id="admin-btn" class="nav-btn" style="display: none; background: rgba(255,215,0,0.3); border: 2px solid rgba(255,215,0,0.6); font-weight: bold;">
+                        <span>👑</span> Admin
+                    </button>
+                    <a href="#profile" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+        <div class="content-area">
+            <div class="container">
+                <div class="page-header">
+                    <h1>
+                        <span style="font-size: 36px;">📍</span> My Geographic Locations
+                    </h1>
+                    <a href="create-location.html" class="btn-add-location">
+                        <span>➕</span> Add Location
+                    </a>
+                </div>
 
-    <!-- Main Content -->
-    <div class="container">
-        <div class="page-header">
-            <h1>📍 My Geographic Locations</h1>
-            <div class="header-actions">
-                <button onclick="window.location.href='create-location.html'" class="btn btn-primary">
-                    ➕ Add Location
-                </button>
+                <div class="card">
+                    <h3 class="search-title">Search Locations</h3>
+                    <form id="searchForm" onsubmit="searchLocations(event); return false;">
+                        <label for="search" class="search-label">Search Locations</label>
+                        <div class="search-wrapper">
+                            <div style="position: relative; flex: 1; min-width: 200px;">
+                                <div class="search-icon-wrapper">
+                                    <span>🔍</span>
+                                </div>
+                                <input type="text" id="search" name="search" 
+                                       placeholder="Search locations by name..." 
+                                       class="search-input">
+                            </div>
+                            <button type="submit" class="btn-search">
+                                <span>🔍</span> Search
+                            </button>
+                            <button type="button" onclick="clearSearch()" class="btn-clear">
+                                Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="messages"></div>
+
+                <div id="loading" style="display: none;">
+                    <p>Loading locations...</p>
+                </div>
+
+                <div id="locations-container" class="locations-list"></div>
+
+                <div id="empty-state" style="display: none;">
+                    <p>📍 No locations found. <a href="create-location.html" style="color: #0d6efd; text-decoration: none;">Add your first location</a></p>
+                </div>
             </div>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="card">
-            <div class="search-wrapper">
-                <input type="text" id="search-input" placeholder="🔍 Search locations by name..." class="search-input">
-                <button onclick="searchLocations()" class="btn btn-search">Search</button>
-                <button onclick="clearSearch()" class="btn btn-secondary">Clear</button>
-            </div>
-        </div>
-
-        <!-- Messages -->
-        <div id="messages"></div>
-
-        <!-- Loading Indicator -->
-        <div id="loading" class="loading" style="display: none;">
-            <p>Loading locations...</p>
-        </div>
-
-        <!-- Locations List -->
-        <div id="locations-container" class="locations-grid"></div>
-
-        <!-- Empty State -->
-        <div id="empty-state" class="empty-state" style="display: none;">
-            <p>📍 No locations found. Click "Add Location" to get started!</p>
         </div>
     </div>
-
-    <script src="js/config.js"></script>
+    
+    <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
+    <script>
+        // Check authentication
+        if (!isAuthenticated()) {
+            window.location.href = 'login.html';
+        }
+
+        // Load user profile picture
+        const userData = getUserData();
+        if (userData && userData.profile_picture) {
+            const img = document.getElementById('profile-avatar');
+            img.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
+            img.style.display = 'block';
+            document.getElementById('profile-avatar-placeholder').style.display = 'none';
+            img.onerror = function() {
+                this.style.display = 'none';
+                document.getElementById('profile-avatar-placeholder').style.display = 'flex';
+            };
+        }
+
+        // Show admin button if user is admin
+        if (userData && userData.role === 'admin') {
+            document.getElementById('admin-btn').style.display = 'flex';
+            document.getElementById('admin-btn').onclick = function() {
+                // Admin panel would go here - for now just show alert
+                alert('Admin panel coming soon');
+            };
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                removeAuthToken();
+                removeUserData();
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
 </body>
 </html>
-
