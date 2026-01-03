@@ -335,13 +335,17 @@
     
     <script src="js/auth.js"></script>
     <script>
-        // Clear localStorage on login page to ensure clean state
-        localStorage.clear();
-        console.log('localStorage cleared on login page');
+        // DON'T clear localStorage on login page - it will clear the token we just saved!
+        // Only clear if user explicitly wants to logout
         
         // Check if already logged in - redirect to dashboard
         if (isAuthenticated && isAuthenticated()) {
-            window.location.href = 'dashboard.html';
+            const token = getAuthToken();
+            console.log('Already authenticated, token:', token ? token.substring(0, 20) + '...' : 'none');
+            // Only redirect if we have a valid token
+            if (token) {
+                window.location.href = 'dashboard.html';
+            }
         }
     </script>
 </body>
