@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     
-    // Check if already logged in
+    // Check if already logged in - redirect to dashboard
     if (isAuthenticated() && window.location.pathname.includes('login.html')) {
-        window.location.href = 'https://geocrud.bytevortexz.com/gis';
+        window.location.href = 'dashboard.html';
     }
     
     // Login Form
