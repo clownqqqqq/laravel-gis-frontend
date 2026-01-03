@@ -222,7 +222,16 @@ async function loadLocations(searchTerm = '') {
     }
 }
 
-// Render locations in the grid
+
+function handleImageError(img) {
+    img.style.display = 'none';
+    const placeholder = img.nextElementSibling;
+    if (placeholder && placeholder.classList.contains('location-image-placeholder')) {
+        placeholder.style.display = 'flex';
+    }
+}
+
+
 function renderLocations(locations) {
     const container = document.getElementById('locations-container');
     const userData = getUserData();
@@ -247,15 +256,17 @@ function renderLocations(locations) {
         // Admin and staff can edit approved locations
         const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
         
+        const imageHtml = imageUrl 
+            ? `<div class="location-image-wrapper">
+                <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="handleImageError(this)">
+                <div class="location-image-placeholder" style="display: none; width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>
+            </div>`
+            : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>';
+        
         return `
             <div class="card location-card">
                 <div class="location-content">
-                    ${imageUrl ? `
-                    <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="location-image-placeholder" style="display: none; width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>
-                    </div>
-                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
+                    ${imageHtml}
                     <div class="location-details">
                         <h3 class="location-name">
                             ${locationName}
