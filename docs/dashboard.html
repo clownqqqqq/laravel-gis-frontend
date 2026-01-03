@@ -1,363 +1,598 @@
-// Dashboard JavaScript
-let currentLocations = [];
-let currentSearch = '';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
+    <title>GIS Manager - GeoCRUD</title>
+    <script src="js/config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Mark page load time for auth error handling
-    window.pageLoadTime = Date.now();
-    
-    // Check authentication
-    if (!isAuthenticated()) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-        // Wait a moment to ensure token is properly set, then load data
-        setTimeout(() => {
-            // Verify token is still there
-            const verifyToken = getAuthToken();
-            if (!verifyToken) {
-                console.error('❌ No token found! Redirecting to login...');
-                showMessage('⚠️ No authentication token found. Please log in.', 'error');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
-                return;
-            }
-            
-            // Load user info and locations
-            loadUserInfo().catch(() => {}); // Non-critical
-            loadLocations();
-            
-            // Search on Enter key
-            const searchInput = document.getElementById('search');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        searchLocations(e);
-                    }
-                });
-            }
-        }, 300); // Small delay to ensure everything is ready
-});
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #2c3e50;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-// Load user information and profile
-async function loadUserInfo() {
-    const userData = getUserData();
-    const token = getAuthToken();
-    
-    console.log('Loading user info - Token:', token ? 'Present' : 'Missing');
-    console.log('Loading user info - User data:', userData);
-    
-    // Try to load full user profile from API to get latest role and data
-    if (userData && userData.id && token) {
-        try {
-            console.log('Fetching user profile from API...');
-            const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
-            console.log('Profile data received:', profileData);
-            
-            if (profileData && profileData.user) {
-                // Update user data with latest from server
-                const updatedUser = {
-                    ...userData,
-                    ...profileData.user,
-                    role: profileData.user.role || userData.role || 'member'
-                };
-                setUserData(updatedUser);
-                updateUIWithUserData(updatedUser);
-            } else {
-                // Fallback to stored data
-                console.log('Using stored user data (no profile data)');
-                updateUIWithUserData(userData);
-            }
-        } catch (error) {
-            console.warn('Could not load user profile (non-fatal):', error);
-            // Don't fail completely - use stored data
-            if (userData) {
-                console.log('Using stored user data (API error)');
-                updateUIWithUserData(userData);
-            }
+        .main-container {
+            min-height: 100vh;
         }
-    } else if (userData) {
-        console.log('Using stored user data (no ID or token)');
-        updateUIWithUserData(userData);
-    } else {
-        console.warn('No user data found');
-    }
-}
 
-// Update UI with user data
-function updateUIWithUserData(userData) {
-    // Update profile picture if exists
-    const profileAvatar = document.getElementById('profile-avatar');
-    const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
-    
-    if (userData.profile_picture) {
-        if (profileAvatar) {
-            profileAvatar.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
-            profileAvatar.style.display = 'block';
-            if (profilePlaceholder) {
-                profilePlaceholder.style.display = 'none';
-            }
-            profileAvatar.onerror = function() {
-                this.style.display = 'none';
-                if (profilePlaceholder) {
-                    profilePlaceholder.style.display = 'flex';
-                }
-            };
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-    }
-    
-    // Show admin button if user is admin
-    const adminBtn = document.getElementById('admin-btn');
-    if (adminBtn && userData.role === 'admin') {
-        adminBtn.style.display = 'flex';
-        adminBtn.onclick = function() {
-            alert('Admin panel - Would redirect to admin dashboard in full implementation');
-        };
-    }
-    
-    // Update add location button visibility based on role
-    const addLocationBtn = document.querySelector('.btn-add-location');
-    if (addLocationBtn) {
-        // Only admin and staff can add locations
-        if (userData.role !== 'admin' && userData.role !== 'staff') {
-            addLocationBtn.style.display = 'none';
-        }
-    }
-}
 
-// Load all locations from API
-async function loadLocations(searchTerm = '') {
-    const loadingDiv = document.getElementById('loading');
-    const container = document.getElementById('locations-container');
-    const emptyState = document.getElementById('empty-state');
-    
-    // Verify token before making request
-    const token = getAuthToken();
-    if (!token) {
-        console.error('No token found when loading locations!');
-        loadingDiv.style.display = 'none';
-        showMessage('Authentication error. Please log in again.', 'error');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
-        return;
-    }
-    
-    loadingDiv.style.display = 'block';
-    container.innerHTML = '';
-    emptyState.style.display = 'none';
-    
-    try {
-        let url = API_ENDPOINTS.GIS_INDEX;
-        if (searchTerm && searchTerm.trim()) {
-            url += `?search=${encodeURIComponent(searchTerm.trim())}`;
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        
-        const data = await apiRequest(url);
-        
-        // Handle API response format: {success: true, data: [...]}
-        if (data.success && Array.isArray(data.data)) {
-            currentLocations = data.data;
-        } else if (Array.isArray(data.locations)) {
-            currentLocations = data.locations;
-        } else if (Array.isArray(data)) {
-            currentLocations = data;
-        } else {
-            currentLocations = [];
+
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
-        
-        loadingDiv.style.display = 'none';
-        
-        if (currentLocations.length === 0) {
-            emptyState.style.display = 'block';
-            return;
+
+        .top-nav .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        
-        renderLocations(currentLocations);
-        
-    } catch (error) {
-        loadingDiv.style.display = 'none';
-        
-        // Check if it's an authentication error
-        if (error.message && (error.message.includes('Authentication') || error.message.includes('401'))) {
-            const currentToken = getAuthToken();
-            
-            if (!currentToken) {
-                showMessage('⚠️ Not logged in. Redirecting to login...', 'error');
-                setTimeout(() => window.location.href = 'login.html', 2000);
-                return;
+
+        .top-nav .nav-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+        }
+
+        .top-nav .nav-btn:hover {
+            background: white;
+            color: #0d6efd;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 5px;
+            border: 2px solid white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            border: 2px solid white;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar-placeholder span {
+            font-size: 20px;
+        }
+
+        .content-area {
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-add-location {
+            background: #0d6efd;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-add-location:hover {
+            background: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: none;
+            margin-bottom: 20px;
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+
+        .search-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 16px;
+        }
+
+        .search-wrapper {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0;
+        }
+
+        .search-icon-wrapper {
+            background: #0d6efd;
+            padding: 16px 18px;
+            border-radius: 10px 0 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-icon-wrapper span {
+            color: white;
+            font-size: 18px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 16px 18px;
+            border: 2px solid #d1d5db;
+            border-left: none;
+            border-right: none;
+            background: #ffffff;
+            color: #2c3e50;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #0d6efd;
+        }
+
+        .btn-search {
+            margin: 0;
+            border-radius: 0 10px 10px 0;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: auto;
+            border: 2px solid #0d6efd;
+            background: #10b981;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 52px;
+            font-size: 16px;
+        }
+
+        .btn-search:hover {
+            background: #059669;
+        }
+
+        .alert {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .alert-success {
+            background: #d1f4e0;
+            color: #0f5132;
+            border: 1px solid #a3e1c5;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #b8d4da;
+        }
+
+        .locations-list {
+            display: block;
+        }
+
+        .location-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .location-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .location-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .location-image-wrapper {
+            flex-shrink: 0;
+        }
+
+        .location-image {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #0d6efd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .location-name {
+            margin: 0 0 12px 0;
+            color: #0d6efd;
+            font-weight: 600;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .location-coords {
+            margin: 0;
+            color: #64748b;
+            font-weight: 400;
+            font-size: 15px;
+            word-break: break-word;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-edit {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: white;
+            border: 2px solid #0d6efd;
+            color: #0d6efd;
+        }
+
+        .btn-edit:hover {
+            background: #f0f7ff;
+        }
+
+        .location-delete-form {
+            flex: 1;
+        }
+
+        .btn-delete {
+            width: 100%;
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-delete:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        #empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .page-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
             }
-            
-            // Token exists but was rejected
-            showMessage(`⚠️ ${error.message}. Please log in again.`, 'error');
-            
-            const retryBtn = document.createElement('button');
-            retryBtn.textContent = '🔄 Retry';
-            retryBtn.className = 'btn btn-primary';
-            retryBtn.style.marginTop = '10px';
-            retryBtn.onclick = () => loadLocations(currentSearch);
-            container.appendChild(retryBtn);
-            
-            const loginBtn = document.createElement('button');
-            loginBtn.textContent = '🚪 Login Again';
-            loginBtn.className = 'btn';
-            loginBtn.style.marginLeft = '10px';
-            loginBtn.style.background = '#ef4444';
-            loginBtn.onclick = () => {
+
+            .btn-add-location {
+                width: 100% !important;
+                max-width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .search-wrapper {
+                flex-direction: column !important;
+            }
+
+            .search-icon-wrapper {
+                border-radius: 10px 10px 0 0 !important;
+                padding: 12px !important;
+            }
+
+            .search-input {
+                border: 2px solid #d1d5db !important;
+                border-radius: 0 !important;
+                border-left: 2px solid #d1d5db !important;
+                border-right: 2px solid #d1d5db !important;
+            }
+
+            .btn-search {
+                border-radius: 0 0 10px 10px !important;
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .location-content {
+                flex-direction: column !important;
+                gap: 16px !important;
+            }
+
+            .location-image {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 250px !important;
+            }
+
+            .location-name {
+                font-size: 20px !important;
+            }
+
+            .location-actions {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            .btn-edit,
+            .location-delete-form {
+                width: 100% !important;
+            }
+
+            .btn-edit,
+            .btn-delete {
+                width: 100% !important;
+            }
+
+            h1 {
+                font-size: 28px !important;
+            }
+
+            .top-nav .container {
+                flex-direction: row;
+            }
+
+            .top-nav .nav-buttons {
+                gap: 6px;
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .location-name {
+                font-size: 18px;
+            }
+
+            .location-coords {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <img id="profile-avatar" src="" alt="Profile" class="profile-avatar" style="display: none;" onclick="window.location.href='#profile'">
+                    <div id="profile-avatar-placeholder" class="profile-avatar-placeholder" onclick="window.location.href='#profile'">
+                        <span>👤</span>
+                    </div>
+                    <button id="admin-btn" class="nav-btn" style="display: none; background: rgba(255,215,0,0.3); border: 2px solid rgba(255,215,0,0.6); font-weight: bold;">
+                        <span>👑</span> Admin
+                    </button>
+                    <a href="#profile" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="content-area">
+            <div class="container">
+                <div id="admin-access-panel" style="display: none; background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b8d4da;">
+                    <strong>👑 Admin Access:</strong> 
+                    <a href="#" style="color: #0d6efd; text-decoration: underline; margin: 0 10px;" onclick="alert('Admin dashboard - would redirect to admin panel'); return false;">Dashboard</a> | 
+                    <a href="#" style="color: #0d6efd; text-decoration: underline;" onclick="alert('Manage users - would redirect to admin/users'); return false;">Manage Users</a>
+                </div>
+
+                <div class="page-header">
+                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <span style="font-size: 36px;">📍</span> My Geographic Locations
+                    </h1>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <a id="manage-users-btn" href="#" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block;" onclick="alert('Manage users - would redirect to admin/users'); return false;">
+                            <span>👥</span> Manage Users
+                        </a>
+                        <a href="create-location.html" class="btn-add-location">
+                            <span>➕</span> Add Location
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="search-title">Search Locations</h3>
+                    <form id="searchForm" onsubmit="searchLocations(event); return false;">
+                        <label for="search" class="search-label">Search Locations</label>
+                        <div class="search-wrapper">
+                            <div class="search-icon-wrapper">
+                                <span>🔍</span>
+                            </div>
+                            <input type="text" id="search" name="search" 
+                                   placeholder="Search locations by name..." 
+                                   class="search-input">
+                            <button type="submit" class="btn-search">
+                                <span>🔍</span> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="messages"></div>
+
+                <div id="loading" style="display: none;">
+                    <p>Loading locations...</p>
+                </div>
+
+                <div id="locations-container" class="locations-list"></div>
+
+                <div id="empty-state" style="display: none;">
+                    <p>📍 No locations found. <a href="create-location.html" style="color: #0d6efd; text-decoration: none;">Add your first location</a></p>
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <a href="database-test.html" style="color: #0d6efd; text-decoration: none; font-size: 14px;">🔌 Test Database Connection</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        // Authentication check is handled in dashboard.js on DOMContentLoaded
+        // Just define logout function here
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
                 removeAuthToken();
                 removeUserData();
                 window.location.href = 'login.html';
-            };
-            container.appendChild(loginBtn);
-            return;
+            }
         }
-        
-        // Other errors
-        showMessage('Error loading locations: ' + (error.message || 'Unknown error'), 'error');
-        container.innerHTML = '';
-        emptyState.style.display = 'block';
-    }
-}
-
-function renderLocations(locations) {
-    const container = document.getElementById('locations-container');
-    const userData = getUserData();
-    const userRole = userData?.role || 'member';
-    
-    if (!Array.isArray(locations) || locations.length === 0) {
-        document.getElementById('empty-state').style.display = 'block';
-        return;
-    }
-    
-    container.innerHTML = locations.map((location, index) => {
-        // Handle location data - ensure we have required fields
-        const locationName = location.location || location.name || 'Unnamed Location';
-        const latitude = location.latitude || 0;
-        const longitude = location.longitude || 0;
-        const locationId = location.id || index;
-        const imageUrl = location.image 
-            ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
-            : null;
-        
-        const statusBadge = getStatusBadge(location.status, userRole);
-        // Admin and staff can edit approved locations
-        const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
-        
-        return `
-            <div class="card location-card">
-                <div class="location-content">
-                    ${imageUrl ? `
-                    <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'">
-                    </div>
-                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
-                    <div class="location-details">
-                        <h3 class="location-name">
-                            ${locationName}
-                            ${statusBadge}
-                        </h3>
-                        <p class="location-coords">
-                            Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
-                        </p>
-                        ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
-                        ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
-                    </div>
-                </div>
-                ${canEdit ? `
-                <div class="location-actions">
-                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
-                        <span>✏️</span> Edit
-                    </a>
-                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
-                        <button type="submit" class="btn btn-delete">
-                            <span>🗑️</span> Delete
-                        </button>
-                    </form>
-                </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
-}
-
-// Get status badge HTML
-function getStatusBadge(status, userRole) {
-    if (!status || status === 'approved' || userRole !== 'admin') return '';
-    
-    const badges = {
-        'pending': '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fde047;">⏳ Pending Approval</span>',
-        'rejected': '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fca5a5;">✗ Rejected</span>'
-    };
-    
-    return badges[status] || '';
-}
-
-// Search locations
-function searchLocations(event) {
-    if (event) event.preventDefault();
-    const searchTerm = document.getElementById('search').value.trim();
-    currentSearch = searchTerm;
-    loadLocations(searchTerm);
-}
-
-// Clear search (if needed in future)
-function clearSearch() {
-    document.getElementById('search').value = '';
-    currentSearch = '';
-    loadLocations();
-}
-
-// Edit location
-function editLocation(id) {
-    window.location.href = `edit-location.html?id=${id}`;
-}
-
-// View location
-function viewLocation(id) {
-    window.location.href = `view-location.html?id=${id}`;
-}
-
-// Delete location
-async function deleteLocation(id) {
-    const locationName = currentLocations.find(loc => loc.id === id)?.location || 'this location';
-    if (!confirm(`Are you sure you want to delete ${locationName}? This action cannot be undone.`)) {
-        return false;
-    }
-    
-    try {
-        await apiRequest(API_ENDPOINTS.GIS_DELETE(id), {
-            method: 'DELETE'
-        });
-        
-        showMessage('Location deleted successfully!', 'success');
-        loadLocations(currentSearch);
-        
-    } catch (error) {
-        showMessage('Error deleting location: ' + error.message, 'error');
-    }
-    return false;
-}
-
-// Show message
-function showMessage(message, type = 'success') {
-    const messagesDiv = document.getElementById('messages');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    
-    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
-    
-    setTimeout(() => {
-        messagesDiv.innerHTML = '';
-    }, 5000);
-}
-
-// Logout function
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        removeAuthToken();
-        window.location.href = 'index.html';
-    }
-}
-
+    </script>
+</body>
+</html>
