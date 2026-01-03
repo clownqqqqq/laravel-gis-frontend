@@ -27,6 +27,10 @@ function setAuthToken(token) {
 // Helper function to remove auth token
 function removeAuthToken() {
     localStorage.removeItem('auth_token');
+}
+
+// Helper function to remove user data
+function removeUserData() {
     localStorage.removeItem('user_data');
 }
 
