@@ -192,9 +192,16 @@ async function loadLocations(searchTerm = '') {
         
     } catch (error) {
         loadingDiv.style.display = 'none';
+        const errorContainer = document.getElementById('error-container');
+        const locationsContainer = document.getElementById('locations-container');
+        
+        // Clear locations container
+        if (locationsContainer) {
+            locationsContainer.innerHTML = '';
+        }
         
         // Check if it's an authentication error
-        if (error.message && (error.message.includes('Authentication') || error.message.includes('401'))) {
+        if (error.message && (error.message.includes('Authentication') || error.message.includes('401') || error.message.includes('Unauthorized'))) {
             const currentToken = getAuthToken();
             
             if (!currentToken) {
@@ -203,27 +210,38 @@ async function loadLocations(searchTerm = '') {
                 return;
             }
             
-            // Token exists but was rejected
-            showMessage(`⚠️ Authentication failed: ${error.message}. Please log out and log in again.`, 'error');
+            // Token exists but was rejected - show detailed error
+            const errorMsg = `⚠️ Authentication Error: ${error.message}\n\n` +
+                           `This usually means:\n` +
+                           `• Your session expired\n` +
+                           `• Server cache needs to be cleared\n` +
+                           `• Please try logging out and logging in again`;
+            showMessage(errorMsg, 'error');
             
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = '🚪 Logout and Login Again';
-            logoutBtn.className = 'btn';
-            logoutBtn.style.marginTop = '10px';
-            logoutBtn.style.background = '#ef4444';
-            logoutBtn.style.color = 'white';
-            logoutBtn.onclick = () => {
-                removeAuthToken();
-                removeUserData();
-                window.location.href = 'login.html';
-            };
-            container.appendChild(logoutBtn);
+            // Add logout button
+            if (errorContainer) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = '🚪 Logout and Login Again';
+                logoutBtn.className = 'btn';
+                logoutBtn.style.marginTop = '10px';
+                logoutBtn.style.background = '#ef4444';
+                logoutBtn.style.color = 'white';
+                logoutBtn.style.padding = '12px 24px';
+                logoutBtn.style.borderRadius = '8px';
+                logoutBtn.style.cursor = 'pointer';
+                logoutBtn.onclick = () => {
+                    removeAuthToken();
+                    removeUserData();
+                    window.location.href = 'login.html';
+                };
+                errorContainer.appendChild(logoutBtn);
+            }
+            emptyState.style.display = 'block';
             return;
         }
         
         // Other errors
-        showMessage('Error loading locations: ' + (error.message || 'Unknown error'), 'error');
-        container.innerHTML = '';
+        showMessage('❌ Error loading locations: ' + (error.message || 'Unknown error. Please check your connection and try again.'), 'error');
         emptyState.style.display = 'block';
     }
 }
