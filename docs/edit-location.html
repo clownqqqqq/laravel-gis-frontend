@@ -16,16 +16,42 @@
             padding: 0 !important;
         }
 
-        /* Override form-actions button width */
-        .form-actions .btn {
+        /* Override form-actions button width - more specific to override style.css */
+        .card .form-actions .btn,
+        .card .form-actions button,
+        .card .form-actions a.btn {
             width: auto !important;
             min-width: 120px;
+            max-width: none !important;
+            display: inline-block !important;
         }
 
-        /* Ensure buttons are clickable */
-        .btn, button {
+        /* Ensure all buttons are clickable */
+        .btn, button, a.btn {
             cursor: pointer !important;
             pointer-events: auto !important;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Override style.css button styles completely */
+        .card .btn,
+        .card button.btn {
+            width: auto !important;
+        }
+
+        /* Make delete button visible and styled */
+        .card .btn-delete,
+        .card button.btn-delete {
+            width: auto !important;
+            background: #ef4444 !important;
+            color: white !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+        }
+
+        .card .btn-delete:hover {
+            background: #dc2626 !important;
         }
     </style>
 </head>
