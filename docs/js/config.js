@@ -119,11 +119,39 @@ async function apiRequest(url, options = {}) {
                 tokenExists: !!existingToken,
                 tokenPreview: existingToken ? existingToken.substring(0, 40) + '...' : 'NO TOKEN',
                 tokenLength: existingToken ? existingToken.length : 0,
+                tokenFull: existingToken, // Include full token for debugging
                 responseMessage: data.message || data.error,
                 fullResponse: data
             };
             
             console.error('⚠️ 401 Unauthorized Error:', errorDetails);
+            
+            // Test if token is valid using debug endpoint
+            if (existingToken && !url.includes('/debug/')) {
+                console.log('🔍 Testing token with debug endpoint...');
+                fetch('https://geocrud.bytevortexz.com/api/debug/auth-test', {
+                    headers: {
+                        'Authorization': `Bearer ${existingToken}`,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(debugData => {
+                    console.log('🔍 Debug endpoint result:', debugData);
+                    if (debugData.user_found === 'YES') {
+                        console.error('⚠️ Token is VALID in database but middleware rejected it!');
+                        console.error('⚠️ This is an OPcache issue - touch middleware file or restart PHP-FPM');
+                    } else {
+                        console.error('⚠️ Token NOT found in database');
+                        console.error('⚠️ Token in localStorage:', existingToken);
+                        if (debugData.token_comparisons) {
+                            console.error('⚠️ Database tokens:', debugData.token_comparisons);
+                        }
+                        console.error('⚠️ Solution: Clear localStorage and log in again');
+                    }
+                })
+                .catch(err => console.error('Debug endpoint error:', err));
+            }
             
             // Create detailed error message for UI
             let errorMessage = 'Authentication failed: ';
