@@ -26,6 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Verify token format
+            if (verifyToken.length !== 64 || !/^[0-9a-f]{64}$/i.test(verifyToken)) {
+                console.error('❌ Invalid token format!', {
+                    length: verifyToken.length,
+                    preview: verifyToken.substring(0, 20) + '...',
+                    isHex: /^[0-9a-f]{64}$/i.test(verifyToken)
+                });
+                showMessage('⚠️ Invalid authentication token. Please log in again.', 'error');
+                removeAuthToken();
+                removeUserData();
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            console.log('✅ Token verified on dashboard load:', {
+                length: verifyToken.length,
+                preview: verifyToken.substring(0, 20) + '...',
+                isHex: /^[0-9a-f]{64}$/i.test(verifyToken)
+            });
+            
             // Load user info and locations
             loadUserInfo().catch(() => {}); // Non-critical
             loadLocations();
