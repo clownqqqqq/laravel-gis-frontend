@@ -6,6 +6,16 @@
     <title>Edit Location - GeoCRUD</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        /* Override style.css background for dashboard pages */
+        body {
+            background: #f0f2f5 !important;
+            display: block !important;
+            align-items: unset !important;
+            justify-content: unset !important;
+            padding: 0 !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -105,8 +115,8 @@
                 if (location.image) {
                     const imageUrl = `https://geocrud.bytevortexz.com/uploads/${location.image}`;
                     document.getElementById('current-image').innerHTML = `
-                        <small>Current image:</small><br>
-                        <img src="${imageUrl}" style="max-width: 200px; border-radius: 0.5rem; margin-top: 0.5rem;" 
+                        <small style="display: block; margin-bottom: 0.5rem; color: #6b7280;">Current image:</small>
+                        <img src="${imageUrl}" style="max-width: 200px; border-radius: 0.5rem; margin-top: 0.5rem; border: 1px solid #d1d5db;" 
                              onerror="this.style.display='none'">
                     `;
                 }
@@ -186,4 +196,3 @@
     </script>
 </body>
 </html>
-
