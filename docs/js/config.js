@@ -69,7 +69,29 @@ async function apiRequest(url, options = {}) {
     if (token) {
         // Trim token to remove any whitespace
         const cleanToken = token.trim();
+        
+        // Verify token format before sending
+        if (cleanToken.length !== 64 || !/^[0-9a-f]{64}$/i.test(cleanToken)) {
+            console.error('⚠️ Invalid token format in apiRequest:', {
+                length: cleanToken.length,
+                preview: cleanToken.substring(0, 20) + '...',
+                isHex: /^[0-9a-f]{64}$/i.test(cleanToken),
+                url: url
+            });
+            // Still send it, but log the issue
+        }
+        
         headers['Authorization'] = `Bearer ${cleanToken}`;
+        
+        // Debug log for API requests
+        console.log('📤 API Request:', {
+            url: url,
+            method: options.method || 'GET',
+            tokenLength: cleanToken.length,
+            tokenPreview: cleanToken.substring(0, 20) + '...'
+        });
+    } else {
+        console.warn('⚠️ No token available for API request:', url);
     }
     
     try {
