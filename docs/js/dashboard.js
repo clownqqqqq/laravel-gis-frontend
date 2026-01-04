@@ -440,3 +440,141 @@ function logout() {
     }
 }
 
+// Show profile section
+function showProfileSection() {
+    document.getElementById('profile-section').style.display = 'block';
+    document.getElementById('locations-section').style.display = 'none';
+    window.location.hash = 'profile';
+    loadProfileData();
+}
+
+// Show locations section
+function showLocationsSection() {
+    document.getElementById('profile-section').style.display = 'none';
+    document.getElementById('locations-section').style.display = 'block';
+    window.location.hash = '';
+}
+
+// Load profile data
+async function loadProfileData() {
+    const userData = getUserData();
+    if (!userData || !userData.id) {
+        showProfileMessage('Error: User data not found', 'error');
+        return;
+    }
+
+    try {
+        const data = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+        const user = data.user || data;
+        
+        document.getElementById('profile-username').value = user.username || '';
+        document.getElementById('profile-email').value = user.email || '';
+        document.getElementById('profile-firstname').value = user.firstname || '';
+        document.getElementById('profile-lastname').value = user.lastname || '';
+        document.getElementById('profile-mobile').value = user.mobile_number || '';
+        
+        if (user.profile_picture) {
+            const imageUrl = `https://geocrud.bytevortexz.com/uploads/${user.profile_picture}`;
+            document.getElementById('current-profile-picture').innerHTML = `
+                <small style="display: block; margin-bottom: 0.5rem; color: #6b7280;">Current profile picture:</small>
+                <img src="${imageUrl}" style="max-width: 150px; border-radius: 50%; border: 2px solid #d1d5db;" 
+                     onerror="this.style.display='none'">
+            `;
+        }
+    } catch (error) {
+        showProfileMessage('Error loading profile: ' + error.message, 'error');
+    }
+}
+
+// Update profile
+async function updateProfile(e) {
+    e.preventDefault();
+    
+    const userData = getUserData();
+    if (!userData || !userData.id) {
+        showProfileMessage('Error: User data not found', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('username', document.getElementById('profile-username').value);
+    formData.append('email', document.getElementById('profile-email').value);
+    
+    const firstname = document.getElementById('profile-firstname').value;
+    if (firstname) formData.append('firstname', firstname);
+    
+    const lastname = document.getElementById('profile-lastname').value;
+    if (lastname) formData.append('lastname', lastname);
+    
+    const mobile = document.getElementById('profile-mobile').value;
+    if (mobile) formData.append('mobile_number', mobile);
+    
+    const profilePicture = document.getElementById('profile-picture').files[0];
+    if (profilePicture) formData.append('profile_picture', profilePicture);
+    
+    formData.append('_method', 'PUT');
+    
+    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating...';
+    
+    try {
+        const token = getAuthToken();
+        const response = await fetch(API_ENDPOINTS.PROFILE_UPDATE(userData.id), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to update profile');
+        }
+        
+        // Update user data in localStorage
+        if (data.user) {
+            setUserData(data.user);
+            updateUIWithUserData(data.user);
+        }
+        
+        showProfileMessage('Profile updated successfully!', 'success');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Profile';
+        
+    } catch (error) {
+        showProfileMessage('Error: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Profile';
+    }
+}
+
+// Show profile message
+function showProfileMessage(message, type) {
+    const messagesDiv = document.getElementById('profile-messages');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    
+    setTimeout(() => {
+        messagesDiv.innerHTML = '';
+    }, 5000);
+}
+
+// Check hash on load
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#profile') {
+        showProfileSection();
+    }
+    
+    // Add click handlers for profile links
+    document.querySelectorAll('a[href="#profile"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showProfileSection();
+        });
+    });
+});
+
