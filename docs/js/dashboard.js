@@ -192,25 +192,34 @@ async function loadLocations(searchTerm = '') {
         
         const data = await apiRequest(url);
         
+        console.log('📍 Locations API response:', data);
+        
         // Handle API response format: {success: true, data: [...]}
         if (data.success && Array.isArray(data.data)) {
             currentLocations = data.data;
+            console.log('✅ Locations loaded from data.data:', currentLocations.length, 'locations');
         } else if (Array.isArray(data.locations)) {
             currentLocations = data.locations;
+            console.log('✅ Locations loaded from data.locations:', currentLocations.length, 'locations');
         } else if (Array.isArray(data)) {
             currentLocations = data;
+            console.log('✅ Locations loaded from data array:', currentLocations.length, 'locations');
         } else {
             currentLocations = [];
+            console.warn('⚠️ No locations found in response:', data);
         }
         
         loadingDiv.style.display = 'none';
         
         if (currentLocations.length === 0) {
+            console.log('ℹ️ No locations to display - showing empty state');
             emptyState.style.display = 'block';
             return;
         }
         
+        console.log('🎨 Rendering', currentLocations.length, 'locations...');
         renderLocations(currentLocations);
+        console.log('✅ Locations rendered successfully!');
         
     } catch (error) {
         loadingDiv.style.display = 'none';
@@ -273,11 +282,32 @@ function renderLocations(locations) {
     const userData = getUserData();
     const userRole = userData?.role || 'member';
     
-    if (!Array.isArray(locations) || locations.length === 0) {
-        document.getElementById('empty-state').style.display = 'block';
+    console.log('🎨 renderLocations called with:', locations.length, 'locations');
+    console.log('📍 Container element:', container);
+    console.log('👤 User role:', userRole);
+    
+    if (!container) {
+        console.error('❌ locations-container element not found!');
         return;
     }
     
+    if (!Array.isArray(locations) || locations.length === 0) {
+        console.log('ℹ️ No locations to render - showing empty state');
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+        container.innerHTML = '';
+        return;
+    }
+    
+    // Hide empty state
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+    
+    console.log('🎨 Rendering', locations.length, 'location cards...');
     container.innerHTML = locations.map((location, index) => {
         // Handle location data - ensure we have required fields
         const locationName = location.location || location.name || 'Unnamed Location';
@@ -327,6 +357,9 @@ function renderLocations(locations) {
             </div>
         `;
     }).join('');
+    
+    console.log('✅ Location cards rendered:', container.children.length, 'cards');
+    console.log('✅ Container HTML length:', container.innerHTML.length, 'characters');
 }
 
 // Get status badge HTML
