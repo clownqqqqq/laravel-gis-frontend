@@ -16,42 +16,109 @@
             padding: 0 !important;
         }
 
-        /* Override form-actions button width - more specific to override style.css */
-        .card .form-actions .btn,
-        .card .form-actions button,
-        .card .form-actions a.btn {
-            width: auto !important;
-            min-width: 120px;
-            max-width: none !important;
-            display: inline-block !important;
+        /* Match backend edit page styles exactly */
+        .current-image-wrapper {
+            margin-bottom: 16px;
         }
 
-        /* Ensure all buttons are clickable */
-        .btn, button, a.btn {
-            cursor: pointer !important;
-            pointer-events: auto !important;
-            z-index: 1;
-            position: relative;
+        .current-image {
+            width: 200px;
+            height: 200px;
+            max-width: 100%;
+            border-radius: 12px;
+            object-fit: cover;
+            display: block;
+            border: 3px solid #0d6efd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Override style.css button styles completely */
-        .card .btn,
-        .card button.btn {
-            width: auto !important;
+        .no-image-text {
+            color: #64748b;
+            margin: 12px 0;
+            font-size: 15px;
         }
 
-        /* Make delete button visible and styled */
-        .card .btn-delete,
-        .card button.btn-delete {
-            width: auto !important;
-            background: #ef4444 !important;
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .btn-primary {
+            background: #0d6efd !important;
             color: white !important;
-            border: none !important;
-            padding: 0.75rem 1.5rem !important;
         }
 
-        .card .btn-delete:hover {
-            background: #dc2626 !important;
+        .btn-secondary {
+            background: #6c757d !important;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268 !important;
+        }
+
+        .delete-section {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .btn-danger {
+            background: #dc3545 !important;
+            color: white !important;
+            width: 100%;
+            max-width: 300px;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #bb2d3b !important;
+        }
+
+        @media screen and (max-width: 768px) {
+            .current-image {
+                width: 100% !important;
+                height: auto;
+                max-height: 250px;
+            }
+
+            .form-actions {
+                flex-direction: column !important;
+                margin-top: 24px !important;
+                gap: 10px !important;
+            }
+
+            .form-actions .btn {
+                width: 100% !important;
+                min-width: unset !important;
+                flex: none !important;
+            }
+
+            .delete-section {
+                margin-top: 24px !important;
+                padding-top: 24px !important;
+            }
+
+            .btn-danger {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
         }
     </style>
 </head>
@@ -72,8 +139,8 @@
     <div class="container">
         <div class="page-header">
             <div>
-                <h1>✏️ Edit Location</h1>
-                <p style="color: #6b7280; margin: 0.5rem 0 0 0; font-size: 0.95rem;">Update the location details below.</p>
+                <h1>Edit GIS Location</h1>
+                <p class="subtitle" style="text-align: center; color: #6b7280; margin: 0.5rem 0 0 0;">Update the location details below.</p>
             </div>
         </div>
 
@@ -82,56 +149,55 @@
 
         <div class="card" id="form-card" style="display: none;">
             <form id="edit-form">
-                <!-- Current Image Section (shown first) -->
-                <div class="form-group" id="image-preview-group" style="display: none;">
-                    <label>Current Image:</label>
-                    <div id="current-image" style="margin-top: 0.5rem;"></div>
-                    <small style="display: block; margin-top: 0.5rem; color: #6b7280;">Upload a new image to change.</small>
+                <!-- Current Image FIRST (matches backend) -->
+                <div class="form-group">
+                    <label for="image">Current Image:</label>
+                    <div id="current-image-wrapper" style="display: none;">
+                        <div class="current-image-wrapper">
+                            <img id="current-image" src="" alt="Current Image" class="current-image">
+                        </div>
+                    </div>
+                    <p id="no-image-text" class="no-image-text" style="display: none;">No image uploaded</p>
+                    <input type="file" id="image" name="image" accept="image/*">
+                    <small>Upload a new image to change.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="location">Location Name *</label>
+                    <label for="location">Location Name:</label>
                     <input type="text" id="location" name="location" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="latitude">Latitude *</label>
+                    <label for="latitude">Latitude:</label>
                     <input type="number" id="latitude" name="latitude" step="0.00000001" required>
                     <small>Enter a decimal number between -90 and 90</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="longitude">Longitude *</label>
+                    <label for="longitude">Longitude:</label>
                     <input type="number" id="longitude" name="longitude" step="0.00000001" required>
                     <small>Enter a decimal number between -180 and 180</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="category">Category (Optional)</label>
+                    <label for="category">Category (Optional):</label>
                     <input type="text" id="category" name="category">
                 </div>
 
                 <div class="form-group">
-                    <label for="notes">Notes (Optional)</label>
+                    <label for="notes">Notes (Optional):</label>
                     <textarea id="notes" name="notes" rows="4"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="image">Location Image (Optional)</label>
-                    <input type="file" id="image" name="image" accept="image/*">
                 </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                     <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
                 </div>
-
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
-                    <button type="button" onclick="deleteLocation()" class="btn btn-delete" style="background: #ef4444; color: white;">
-                        🗑️ Delete Location
-                    </button>
-                </div>
             </form>
+
+            <div class="delete-section">
+                <button type="button" onclick="deleteLocation()" class="btn btn-danger">Delete Location</button>
+            </div>
         </div>
     </div>
 
@@ -165,14 +231,19 @@
                 document.getElementById('category').value = location.category || '';
                 document.getElementById('notes').value = location.notes || '';
                 
+                // Handle image display (matches backend structure)
+                const currentImageWrapper = document.getElementById('current-image-wrapper');
+                const currentImage = document.getElementById('current-image');
+                const noImageText = document.getElementById('no-image-text');
+                
                 if (location.image) {
                     const imageUrl = `https://geocrud.bytevortexz.com/uploads/${location.image}`;
-                    const imagePreviewGroup = document.getElementById('image-preview-group');
-                    document.getElementById('current-image').innerHTML = `
-                        <img src="${imageUrl}" style="max-width: 300px; max-height: 200px; border-radius: 0.5rem; border: 1px solid #d1d5db; object-fit: cover;" 
-                             onerror="this.style.display='none'">
-                    `;
-                    imagePreviewGroup.style.display = 'block';
+                    currentImage.src = imageUrl;
+                    currentImageWrapper.style.display = 'block';
+                    noImageText.style.display = 'none';
+                } else {
+                    currentImageWrapper.style.display = 'none';
+                    noImageText.style.display = 'block';
                 }
                 
                 document.getElementById('loading').style.display = 'none';
