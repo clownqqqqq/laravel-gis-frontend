@@ -39,9 +39,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (response.ok && data.success && data.auth_token) {
-                    // Save token
+                    // Save token - ensure it's clean
                     const token = data.auth_token.trim(); // Ensure no whitespace
+                    
+                    // Verify token format
+                    if (token.length !== 64 || !/^[0-9a-f]{64}$/i.test(token)) {
+                        console.error('Invalid token format:', {
+                            length: token.length,
+                            preview: token.substring(0, 20) + '...',
+                            full: token
+                        });
+                        throw new Error('Invalid authentication token received from server');
+                    }
+                    
+                    // Save token to localStorage
                     setAuthToken(token);
+                    
+                    // Verify it was saved
+                    const savedToken = getAuthToken();
+                    if (savedToken !== token) {
+                        console.error('Token save verification failed!', {
+                            expected: token,
+                            actual: savedToken
+                        });
+                        throw new Error('Failed to save authentication token');
+                    }
+                    
+                    console.log('✅ Token saved successfully:', {
+                        length: savedToken.length,
+                        preview: savedToken.substring(0, 20) + '...',
+                        matches: savedToken === token
+                    });
                     
                     // Save user data
                     if (data.user) {
@@ -54,13 +82,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             is_activated: data.user.is_activated || false
                         };
                         setUserData(userData);
+                        console.log('✅ User data saved:', userData);
                     }
                     
                     // Show success and redirect
                     alertContainer.innerHTML = '<div class="alert alert-success">Login successful! Redirecting...</div>';
+                    
+                    // Wait a bit longer to ensure localStorage is persisted
                     setTimeout(() => {
+                        // Double-check token before redirect
+                        const verifyToken = getAuthToken();
+                        if (!verifyToken) {
+                            console.error('❌ Token lost before redirect!');
+                            alertContainer.innerHTML = '<div class="alert alert-error">Authentication error. Please try again.</div>';
+                            return;
+                        }
+                        console.log('✅ Token verified before redirect:', verifyToken.substring(0, 20) + '...');
                         window.location.href = 'dashboard.html';
-                    }, 500);
+                    }, 800);
                 } else {
                     throw new Error(data.message || data.error || 'Login failed. Please check your credentials.');
                 }
