@@ -12,6 +12,7 @@ const API_ENDPOINTS = {
     GIS_UPDATE: (id) => `${API_BASE_URL}/gis/${id}`,
     GIS_DELETE: (id) => `${API_BASE_URL}/gis/${id}`,
     PROFILE: (id) => `${API_BASE_URL}/profile/${id}`,
+    PROFILE_UPDATE: (id) => `${API_BASE_URL}/profile/${id}`,
 };
 
 // Helper function to get auth token
