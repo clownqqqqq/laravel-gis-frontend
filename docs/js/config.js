@@ -92,23 +92,35 @@ async function apiRequest(url, options = {}) {
         if (response.status === 401) {
             const existingToken = getAuthToken();
             
-            console.error('⚠️ 401 Unauthorized Error:', {
+            const errorDetails = {
                 url: url,
                 tokenExists: !!existingToken,
                 tokenPreview: existingToken ? existingToken.substring(0, 40) + '...' : 'NO TOKEN',
                 tokenLength: existingToken ? existingToken.length : 0,
-                tokenFull: existingToken, // Log full token for debugging
                 responseMessage: data.message || data.error,
                 fullResponse: data
-            });
+            };
             
-            // If token exists but was rejected, user should log in again
-            if (existingToken && url.includes('/auth/login') === false) {
-                console.warn('💡 Token exists but was rejected. Try logging out and logging in again.');
+            console.error('⚠️ 401 Unauthorized Error:', errorDetails);
+            
+            // Create detailed error message for UI
+            let errorMessage = 'Authentication failed: ';
+            if (data.message) {
+                errorMessage += data.message;
+            } else if (data.error) {
+                errorMessage += data.error;
+            } else {
+                errorMessage += 'Unauthorized access. Please log in again.';
+            }
+            
+            if (!existingToken) {
+                errorMessage += ' (No token found)';
+            } else if (url.includes('/auth/login') === false) {
+                errorMessage += ' (Token was rejected by server)';
             }
             
             // Don't auto-logout - let the calling function handle it
-            throw new Error(data.message || data.error || 'Authentication failed. Please log in again.');
+            throw new Error(errorMessage);
         }
         
         // Handle authorization errors
