@@ -526,16 +526,73 @@
             <div class="container">
                 <div id="admin-access-panel" style="display: none; background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b8d4da;">
                     <strong>👑 Admin Access:</strong> 
-                    <a href="#" style="color: #0d6efd; text-decoration: underline; margin: 0 10px;" onclick="alert('Admin dashboard - would redirect to admin panel'); return false;">Dashboard</a> | 
-                    <a href="#" style="color: #0d6efd; text-decoration: underline;" onclick="alert('Manage users - would redirect to admin/users'); return false;">Manage Users</a>
+                    <a href="#" style="color: #0d6efd; text-decoration: underline; margin: 0 10px; cursor: pointer;" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">Dashboard</a> | 
+                    <a href="#" style="color: #0d6efd; text-decoration: underline; cursor: pointer;" onclick="alert('Manage users - would redirect to admin/users'); return false;">Manage Users</a>
                 </div>
+
+                <!-- Profile Section -->
+                <div id="profile-section" style="display: none;">
+                    <div class="page-header">
+                        <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                            <span style="font-size: 36px;">👤</span> My Profile
+                        </h1>
+                        <button onclick="showLocationsSection()" class="btn" style="background: #6b7280; color: white; padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">
+                            ← Back to Locations
+                        </button>
+                    </div>
+
+                    <div id="profile-messages"></div>
+
+                    <div class="card">
+                        <form id="profile-form" onsubmit="updateProfile(event); return false;">
+                            <div class="form-group">
+                                <label for="profile-username">Username *</label>
+                                <input type="text" id="profile-username" name="username" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-email">Email *</label>
+                                <input type="email" id="profile-email" name="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-firstname">First Name (Optional)</label>
+                                <input type="text" id="profile-firstname" name="firstname">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-lastname">Last Name (Optional)</label>
+                                <input type="text" id="profile-lastname" name="lastname">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-mobile">Mobile Number (Optional)</label>
+                                <input type="text" id="profile-mobile" name="mobile_number">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="profile-picture">Profile Picture (Optional)</label>
+                                <input type="file" id="profile-picture" name="profile_picture" accept="image/*">
+                                <div id="current-profile-picture" style="margin-top: 0.5rem;"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Update Profile</button>
+                                <button type="button" onclick="showLocationsSection()" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Locations Section -->
+                <div id="locations-section">
 
                 <div class="page-header">
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
                         <span style="font-size: 36px;">📍</span> My Geographic Locations
                     </h1>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <a id="manage-users-btn" href="#" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block;" onclick="alert('Manage users - would redirect to admin/users'); return false;">
+                        <a id="manage-users-btn" href="#" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block; cursor: pointer;" onclick="alert('Manage users - would redirect to admin/users'); return false;">
                             <span>👥</span> Manage Users
                         </a>
                         <a href="create-location.html" class="btn-add-location">
@@ -568,6 +625,8 @@
                     <p>Loading locations...</p>
                 </div>
 
+                <div id="error-container"></div>
+                
                 <div id="locations-container" class="locations-list"></div>
 
                 <div id="empty-state" style="display: none;">
@@ -577,11 +636,13 @@
                 <div style="margin-top: 2rem; text-align: center;">
                     <a href="database-test.html" style="color: #0d6efd; text-decoration: none; font-size: 14px;">🔌 Test Database Connection</a>
                 </div>
+                </div>
             </div>
         </div>
     </div>
     
     <script src="js/auth.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
         // Authentication check is handled in dashboard.js on DOMContentLoaded
@@ -593,6 +654,146 @@
                 window.location.href = 'login.html';
             }
         }
+
+        // Show profile section
+        function showProfileSection() {
+            document.getElementById('profile-section').style.display = 'block';
+            document.getElementById('locations-section').style.display = 'none';
+            window.location.hash = 'profile';
+            loadProfileData();
+        }
+
+        // Show locations section
+        function showLocationsSection() {
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('locations-section').style.display = 'block';
+            window.location.hash = '';
+        }
+
+        // Load profile data
+        async function loadProfileData() {
+            const userData = getUserData();
+            if (!userData || !userData.id) {
+                showProfileMessage('Error: User data not found', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+                const user = data.user || data;
+                
+                document.getElementById('profile-username').value = user.username || '';
+                document.getElementById('profile-email').value = user.email || '';
+                document.getElementById('profile-firstname').value = user.firstname || '';
+                document.getElementById('profile-lastname').value = user.lastname || '';
+                document.getElementById('profile-mobile').value = user.mobile_number || '';
+                
+                if (user.profile_picture) {
+                    const imageUrl = `https://geocrud.bytevortexz.com/uploads/${user.profile_picture}`;
+                    document.getElementById('current-profile-picture').innerHTML = `
+                        <small style="display: block; margin-bottom: 0.5rem; color: #6b7280;">Current profile picture:</small>
+                        <img src="${imageUrl}" style="max-width: 150px; border-radius: 50%; border: 2px solid #d1d5db;" 
+                             onerror="this.style.display='none'">
+                    `;
+                }
+            } catch (error) {
+                showProfileMessage('Error loading profile: ' + error.message, 'error');
+            }
+        }
+
+        // Update profile
+        async function updateProfile(e) {
+            e.preventDefault();
+            
+            const userData = getUserData();
+            if (!userData || !userData.id) {
+                showProfileMessage('Error: User data not found', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('username', document.getElementById('profile-username').value);
+            formData.append('email', document.getElementById('profile-email').value);
+            
+            const firstname = document.getElementById('profile-firstname').value;
+            if (firstname) formData.append('firstname', firstname);
+            
+            const lastname = document.getElementById('profile-lastname').value;
+            if (lastname) formData.append('lastname', lastname);
+            
+            const mobile = document.getElementById('profile-mobile').value;
+            if (mobile) formData.append('mobile_number', mobile);
+            
+            const profilePicture = document.getElementById('profile-picture').files[0];
+            if (profilePicture) formData.append('profile_picture', profilePicture);
+            
+            formData.append('_method', 'PUT');
+            
+            const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+            
+            try {
+                const token = getAuthToken();
+                const response = await fetch(API_ENDPOINTS.PROFILE_UPDATE(userData.id), {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to update profile');
+                }
+                
+                // Update user data in localStorage
+                if (data.user) {
+                    setUserData(data.user);
+                    if (typeof updateUIWithUserData === 'function') {
+                        updateUIWithUserData(data.user);
+                    }
+                }
+                
+                showProfileMessage('Profile updated successfully!', 'success');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Profile';
+                
+            } catch (error) {
+                showProfileMessage('Error: ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Profile';
+            }
+        }
+
+        // Show profile message
+        function showProfileMessage(message, type) {
+            const messagesDiv = document.getElementById('profile-messages');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Add click handlers for profile links after page loads
+        setTimeout(() => {
+            document.querySelectorAll('a[href="#profile"]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileSection();
+                });
+            });
+            
+            // Check hash on load
+            if (window.location.hash === '#profile') {
+                showProfileSection();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
