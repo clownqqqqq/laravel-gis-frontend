@@ -175,20 +175,84 @@
 
     <script src="js/config.js"></script>
     <script>
-        // Check authentication
-        if (!isAuthenticated()) {
-            window.location.href = 'login.html';
-        }
+        // Wait for DOM to be fully loaded
+        // Store locationId globally so it's accessible in form submission
+        let locationId = null;
 
-        // Get location ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const locationId = urlParams.get('id');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
 
-        if (!locationId) {
-            showMessage('No location ID provided', 'error');
-        } else {
-            loadLocation(locationId);
-        }
+            // Get location ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            locationId = urlParams.get('id');
+
+            console.log('🔍 Page loaded, location ID from URL:', locationId);
+
+            if (!locationId) {
+                showMessage('No location ID provided', 'error');
+            } else {
+                // Small delay to ensure all elements are ready
+                setTimeout(() => {
+                    loadLocation(locationId);
+                }, 100);
+            }
+
+            // Attach form submission handler
+            const editForm = document.getElementById('edit-form');
+            if (editForm) {
+                editForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!locationId) {
+                        showMessage('Error: Location ID not found. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('location', document.getElementById('location').value);
+                    formData.append('latitude', document.getElementById('latitude').value);
+                    formData.append('longitude', document.getElementById('longitude').value);
+                    formData.append('_method', 'PUT');
+                    
+                    const image = document.getElementById('image').files[0];
+                    if (image) formData.append('image', image);
+                    
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                    
+                    try {
+                        const data = await apiRequest(API_ENDPOINTS.GIS_UPDATE(locationId), {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        // API returns the updated location object
+                        if (data && (data.id || data.location)) {
+                            showMessage('Location updated successfully!', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
+                        } else if (data && data.success === false) {
+                            throw new Error(data.message || data.error || 'Failed to update location');
+                        } else {
+                            throw new Error('Unexpected response from server');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error updating location:', error);
+                        const errorMessage = error.message || 'Failed to update location. Please check your connection and try again.';
+                        showMessage('Error: ' + errorMessage, 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Changes';
+                    }
+                });
+            }
+        });
 
         async function loadLocation(id) {
             const loadingEl = document.getElementById('loading');
@@ -211,9 +275,18 @@
                 
                 const data = await apiRequest(API_ENDPOINTS.GIS_SHOW(id));
                 console.log('✅ Location data received:', data);
+                console.log('📦 Full API response structure:', JSON.stringify(data, null, 2));
                 
                 // API returns the location object directly (not wrapped in data.location)
-                const location = data;
+                // But check if it's wrapped in a 'data' property or 'location' property
+                let location = data;
+                if (data && data.data) {
+                    location = data.data;
+                    console.log('📦 Data was wrapped in "data" property');
+                } else if (data && data.location) {
+                    location = data.location;
+                    console.log('📦 Data was wrapped in "location" property');
+                }
                 
                 if (!location) {
                     throw new Error('No location data received from server');
@@ -292,46 +365,57 @@
             }
         }
 
-        document.getElementById('edit-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('location', document.getElementById('location').value);
-            formData.append('latitude', document.getElementById('latitude').value);
-            formData.append('longitude', document.getElementById('longitude').value);
-            formData.append('_method', 'PUT');
-            
-            const image = document.getElementById('image').files[0];
-            if (image) formData.append('image', image);
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
-            
-            try {
-                const data = await apiRequest(API_ENDPOINTS.GIS_UPDATE(locationId), {
-                    method: 'POST',
-                    body: formData
+        // Attach form submission handler after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            const editForm = document.getElementById('edit-form');
+            if (editForm) {
+                editForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!locationId) {
+                        showMessage('Error: Location ID not found. Please refresh the page.', 'error');
+                        return;
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('location', document.getElementById('location').value);
+                    formData.append('latitude', document.getElementById('latitude').value);
+                    formData.append('longitude', document.getElementById('longitude').value);
+                    formData.append('_method', 'PUT');
+                    
+                    const image = document.getElementById('image').files[0];
+                    if (image) formData.append('image', image);
+                    
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                    
+                    try {
+                        const data = await apiRequest(API_ENDPOINTS.GIS_UPDATE(locationId), {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        // API returns the updated location object
+                        if (data && (data.id || data.location)) {
+                            showMessage('Location updated successfully!', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'dashboard.html';
+                            }, 1500);
+                        } else if (data && data.success === false) {
+                            throw new Error(data.message || data.error || 'Failed to update location');
+                        } else {
+                            throw new Error('Unexpected response from server');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error updating location:', error);
+                        const errorMessage = error.message || 'Failed to update location. Please check your connection and try again.';
+                        showMessage('Error: ' + errorMessage, 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save Changes';
+                    }
                 });
-                
-                // API returns the updated location object
-                if (data && (data.id || data.location)) {
-                    showMessage('Location updated successfully!', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
-                } else if (data && data.success === false) {
-                    throw new Error(data.message || data.error || 'Failed to update location');
-                } else {
-                    throw new Error('Unexpected response from server');
-                }
-                
-            } catch (error) {
-                console.error('Error updating location:', error);
-                const errorMessage = error.message || 'Failed to update location. Please check your connection and try again.';
-                showMessage('Error: ' + errorMessage, 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Changes';
             }
         });
 
