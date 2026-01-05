@@ -142,14 +142,32 @@ function updateUIWithUserData(userData) {
     
     // Show admin access panel if user is admin
     const adminAccessPanel = document.getElementById('admin-access-panel');
-    if (adminAccessPanel && userData.role === 'admin') {
-        adminAccessPanel.style.display = 'block';
+    if (adminAccessPanel) {
+        if (userData.role === 'admin') {
+            adminAccessPanel.style.display = 'block';
+        } else {
+            adminAccessPanel.style.display = 'none';
+        }
     }
     
     // Show Manage Users button if user is admin
     const manageUsersBtn = document.getElementById('manage-users-btn');
-    if (manageUsersBtn && userData.role === 'admin') {
-        manageUsersBtn.style.display = 'inline-block';
+    if (manageUsersBtn) {
+        if (userData.role === 'admin') {
+            manageUsersBtn.style.display = 'inline-block';
+        } else {
+            manageUsersBtn.style.display = 'none';
+        }
+    }
+    
+    // Show Test Database Connection button if user is admin
+    const databaseTestBtn = document.getElementById('database-test-btn');
+    if (databaseTestBtn) {
+        if (userData.role === 'admin') {
+            databaseTestBtn.style.display = 'block';
+        } else {
+            databaseTestBtn.style.display = 'none';
+        }
     }
     
     // Update add location button visibility based on role
