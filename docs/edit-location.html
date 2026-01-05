@@ -191,23 +191,63 @@
         }
 
         async function loadLocation(id) {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('form-card').style.display = 'none';
+            const loadingEl = document.getElementById('loading');
+            const formCardEl = document.getElementById('form-card');
+            
+            if (loadingEl) loadingEl.style.display = 'block';
+            if (formCardEl) formCardEl.style.display = 'none';
             
             try {
-                const data = await apiRequest(API_ENDPOINTS.GIS_SHOW(id));
+                console.log('🔍 Loading location with ID:', id);
                 
-                // API returns the location object directly
-                const location = data.location || data;
+                // Check if form fields exist
+                const locationInput = document.getElementById('location');
+                const latitudeInput = document.getElementById('latitude');
+                const longitudeInput = document.getElementById('longitude');
                 
-                if (!location || !location.id) {
-                    throw new Error('Invalid location data received');
+                if (!locationInput || !latitudeInput || !longitudeInput) {
+                    throw new Error('Form fields not found. Please refresh the page.');
                 }
                 
-                // Populate form fields
-                document.getElementById('location').value = location.location || '';
-                document.getElementById('latitude').value = location.latitude || '';
-                document.getElementById('longitude').value = location.longitude || '';
+                const data = await apiRequest(API_ENDPOINTS.GIS_SHOW(id));
+                console.log('✅ Location data received:', data);
+                
+                // API returns the location object directly (not wrapped in data.location)
+                const location = data;
+                
+                if (!location) {
+                    throw new Error('No location data received from server');
+                }
+                
+                // Check if we have at least location name or ID
+                if (!location.id && !location.location) {
+                    console.error('❌ Invalid location data:', location);
+                    throw new Error('Invalid location data received from server');
+                }
+                
+                // Populate form fields - ensure values are set
+                const locationName = String(location.location || '').trim();
+                const latitude = String(location.latitude || '').trim();
+                const longitude = String(location.longitude || '').trim();
+                
+                console.log('📝 Setting form values:', { 
+                    locationName, 
+                    latitude, 
+                    longitude,
+                    hasImage: !!location.image
+                });
+                
+                // Set form field values
+                locationInput.value = locationName;
+                latitudeInput.value = latitude;
+                longitudeInput.value = longitude;
+                
+                // Verify values were set
+                console.log('✅ Form values after setting:', {
+                    location: locationInput.value,
+                    latitude: latitudeInput.value,
+                    longitude: longitudeInput.value
+                });
                 
                 // Handle image display (matches backend structure)
                 const currentImageWrapper = document.getElementById('current-image-wrapper');
@@ -216,26 +256,39 @@
                 
                 if (location.image) {
                     const imageUrl = `https://geocrud.bytevortexz.com/uploads/${location.image}`;
-                    currentImage.src = imageUrl;
-                    currentImage.onerror = function() {
-                        this.style.display = 'none';
-                        currentImageWrapper.style.display = 'none';
-                        noImageText.style.display = 'block';
-                    };
-                    currentImageWrapper.style.display = 'block';
-                    noImageText.style.display = 'none';
+                    console.log('🖼️ Loading image:', imageUrl);
+                    
+                    if (currentImage) {
+                        currentImage.src = imageUrl;
+                        currentImage.onerror = function() {
+                            console.error('❌ Image failed to load:', imageUrl);
+                            if (currentImageWrapper) currentImageWrapper.style.display = 'none';
+                            if (noImageText) noImageText.style.display = 'block';
+                        };
+                        currentImage.onload = function() {
+                            console.log('✅ Image loaded successfully');
+                        };
+                    }
+                    
+                    if (currentImageWrapper) currentImageWrapper.style.display = 'block';
+                    if (noImageText) noImageText.style.display = 'none';
                 } else {
-                    currentImageWrapper.style.display = 'none';
-                    noImageText.style.display = 'block';
+                    console.log('ℹ️ No image for this location');
+                    if (currentImageWrapper) currentImageWrapper.style.display = 'none';
+                    if (noImageText) noImageText.style.display = 'block';
                 }
                 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('form-card').style.display = 'block';
+                // Show form and hide loading
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (formCardEl) formCardEl.style.display = 'block';
+                
+                console.log('✅ Location loaded successfully');
                 
             } catch (error) {
-                console.error('Error loading location:', error);
-                document.getElementById('loading').style.display = 'none';
-                showMessage('Error loading location: ' + (error.message || 'Unknown error'), 'error');
+                console.error('❌ Error loading location:', error);
+                if (loadingEl) loadingEl.style.display = 'none';
+                const errorMsg = error.message || 'Unknown error. Please check console for details.';
+                showMessage('Error loading location: ' + errorMsg, 'error');
             }
         }
 
