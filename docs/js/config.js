@@ -108,10 +108,23 @@ async function apiRequest(url, options = {}) {
         // Handle non-JSON responses
         let data;
         const contentType = response.headers.get('content-type');
+        console.log('📦 Response Content-Type:', contentType);
+        console.log('📦 Response Status:', response.status);
+        
         if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
+            const responseText = await response.text();
+            console.log('📦 Raw JSON response text:', responseText.substring(0, 500)); // First 500 chars
+            try {
+                data = JSON.parse(responseText);
+                console.log('📦 Parsed JSON data:', data);
+            } catch (parseError) {
+                console.error('❌ JSON parse error:', parseError);
+                console.error('❌ Response text:', responseText);
+                throw new Error('Invalid JSON response from server: ' + responseText.substring(0, 100));
+            }
         } else {
             const text = await response.text();
+            console.error('❌ Non-JSON response:', text.substring(0, 500));
             throw new Error(text || 'Server error');
         }
         
