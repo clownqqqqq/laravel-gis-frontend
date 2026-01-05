@@ -136,7 +136,7 @@ function updateUIWithUserData(userData) {
     if (adminBtn && userData.role === 'admin') {
         adminBtn.style.display = 'flex';
         adminBtn.onclick = function() {
-            alert('Admin panel - Would redirect to admin dashboard in full implementation');
+            window.location.href = 'admin/dashboard.html';
         };
     }
     
