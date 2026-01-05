@@ -10,6 +10,8 @@ const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/auth/login`,
     REGISTER: `${API_BASE_URL}/auth/register`,
     LOGOUT: `${API_BASE_URL}/logout`,
+    FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
+    RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
     GIS_INDEX: `${API_BASE_URL}/gis`,
     GIS_CREATE: `${API_BASE_URL}/gis`,
     GIS_SHOW: (id) => `${API_BASE_URL}/gis/${id}`,
