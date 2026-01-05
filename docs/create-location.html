@@ -125,12 +125,21 @@
 
     <script src="js/config.js"></script>
     <script>
-        // Check authentication
-        if (!isAuthenticated()) {
-            window.location.href = 'login.html';
-        }
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
 
-        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            const createForm = document.getElementById('create-form');
+            if (!createForm) {
+                console.error('Create form not found!');
+                return;
+            }
+
+            createForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             // Validate required fields
@@ -172,11 +181,15 @@
             formData.append('latitude', latitude);
             formData.append('longitude', longitude);
             
-            const category = document.getElementById('category').value;
-            if (category) formData.append('category', category);
+            const categoryEl = document.getElementById('category');
+            if (categoryEl && categoryEl.value) {
+                formData.append('category', categoryEl.value);
+            }
             
-            const notes = document.getElementById('notes').value;
-            if (notes) formData.append('notes', notes);
+            const notesEl = document.getElementById('notes');
+            if (notesEl && notesEl.value) {
+                formData.append('notes', notesEl.value);
+            }
             
             const image = document.getElementById('image').files[0];
             if (image) formData.append('image', image);
@@ -214,7 +227,8 @@
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Add Location';
             }
-        });
+            }); // End form submit handler
+        }); // End DOMContentLoaded
 
         function showMessage(message, type) {
             const messagesDiv = document.getElementById('messages');
