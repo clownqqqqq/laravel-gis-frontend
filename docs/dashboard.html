@@ -744,10 +744,56 @@
         </nav>
         <div class="content-area">
             <div class="container">
+                <!-- Admin Access Panel -->
                 <div id="admin-access-panel" style="display: none; background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b8d4da;">
                     <strong>👑 Admin Access:</strong> 
                     <a href="admin/dashboard.html" style="color: #0d6efd; text-decoration: underline; margin: 0 10px;">Dashboard</a> | 
                     <a href="admin/users.html" style="color: #0d6efd; text-decoration: underline;">Manage Users</a>
+                </div>
+
+                <!-- Staff Dashboard -->
+                <div id="staff-dashboard" class="card" style="background: #ffffff; border: 1px solid #e5e7eb; margin-bottom: 20px; display: none;">
+                    <h3 style="color: #1f2937; margin-bottom: 15px;">🛠 Staff Dashboard</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            <div id="staff-pending-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
+                            <div style="font-size: 14px; color: #6b7280;">Pending</div>
+                        </div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            <div id="staff-approved-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
+                            <div style="font-size: 14px; color: #6b7280;">Approved</div>
+                        </div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            <div id="staff-rejected-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
+                            <div style="font-size: 14px; color: #6b7280;">Rejected</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0; font-size: 14px; color: #6b7280;">
+                            <strong>Your Role:</strong> Field Data Collector - Submit locations for admin approval
+                        </p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <a href="staff/my-submissions.html" style="background: #ffffff; padding: 12px 20px; border-radius: 8px; color: #1f2937; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'">
+                            <span>📋</span> View My Submissions
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Member Features -->
+                <div id="member-features" class="card" style="background: #ffffff; border: 1px solid #e5e7eb; margin-bottom: 20px; display: none;">
+                    <h3 style="color: #1f2937; margin-bottom: 15px;">🧑 Member Features</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <a href="member/favorites.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
+                            <span>⭐</span> My Favorites
+                        </a>
+                        <a href="member/suggest.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
+                            <span>💡</span> Suggest Place
+                        </a>
+                        <a href="member/my-suggestions.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
+                            <span>📋</span> My Suggestions
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Profile Section -->
@@ -836,7 +882,7 @@
                         <span style="font-size: 36px;">📍</span> My Geographic Locations
                     </h1>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <a id="manage-users-btn" href="#" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block; cursor: pointer;" onclick="alert('Manage users - would redirect to admin/users'); return false;">
+                        <a id="manage-users-btn" href="admin/users.html" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block;">
                             <span>👥</span> Manage Users
                         </a>
                         <a href="create-location.html" class="btn-add-location">
