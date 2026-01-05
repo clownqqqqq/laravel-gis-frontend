@@ -412,6 +412,10 @@
 
     <script src="../js/auth.js"></script>
     <script>
+        // Cache-busting: Force reload if old version
+        if (typeof window.ADMIN_USERS_VERSION === 'undefined') {
+            window.ADMIN_USERS_VERSION = '2.0';
+        }
         let currentUser = null;
 
         // Check authentication on page load
@@ -583,11 +587,17 @@
 
         // Assign role
         async function assignRole(userId, role) {
+            console.log('🔄 assignRole called:', { userId, role });
             try {
-                const response = await apiRequest(`${API_BASE_URL}/admin/users/${userId}/assign-role`, {
+                const url = `${API_BASE_URL}/admin/users/${userId}/assign-role`;
+                const options = {
                     method: 'POST',
                     body: JSON.stringify({ role })
-                });
+                };
+                console.log('📤 Calling apiRequest with:', { url, method: options.method, body: options.body });
+                
+                const response = await apiRequest(url, options);
+                
                 if (response.success) {
                     showAlert(response.message || 'Role assigned successfully', 'success');
                     await loadUsers();
@@ -595,7 +605,7 @@
                     showAlert(response.message || 'Failed to assign role', 'error');
                 }
             } catch (error) {
-                console.error('Error assigning role:', error);
+                console.error('❌ Error assigning role:', error);
                 showAlert('Error assigning role: ' + error.message, 'error');
             }
         }
