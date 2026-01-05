@@ -119,14 +119,30 @@ async function apiRequest(url, options = {}) {
         if (contentType && contentType.includes('application/json')) {
             console.log('📦 Raw JSON response text:', responseText.substring(0, 500)); // First 500 chars
             try {
-                data = JSON.parse(responseText);
+                // Try to parse JSON - if it fails, try to extract JSON from the end (in case debug output is prepended)
+                let jsonText = responseText.trim();
+                
+                // If response starts with non-JSON (like SMTP debug output), try to find JSON at the end
+                if (!jsonText.startsWith('{') && !jsonText.startsWith('[')) {
+                    // Look for JSON object at the end
+                    const jsonMatch = jsonText.match(/\{[\s\S]*\}$/);
+                    if (jsonMatch) {
+                        jsonText = jsonMatch[0];
+                        console.log('📦 Extracted JSON from response:', jsonText.substring(0, 200));
+                    }
+                }
+                
+                data = JSON.parse(jsonText);
                 console.log('📦 Parsed JSON data:', data);
             } catch (parseError) {
                 console.error('❌ JSON parse error:', parseError);
                 console.error('❌ Response text:', responseText);
-                // For 500 errors, the response might be HTML error page
+                // For 500 errors, the response might be HTML error page or have debug output
                 if (response.status === 500) {
-                    throw new Error('Server error (500). Check Laravel logs for details. Response: ' + responseText.substring(0, 200));
+                    // Try to extract error message from response
+                    const errorMatch = responseText.match(/"message"\s*:\s*"([^"]+)"/);
+                    const errorMsg = errorMatch ? errorMatch[1] : 'Server error (500). Check Laravel logs for details.';
+                    throw new Error(errorMsg);
                 }
                 throw new Error('Invalid JSON response from server: ' + responseText.substring(0, 100));
             }
