@@ -440,6 +440,19 @@
                     return;
                 }
 
+                // Check URL parameters for filtering
+                const urlParams = new URLSearchParams(window.location.search);
+                const roleParam = urlParams.get('role');
+                const statusParam = urlParams.get('status');
+                
+                // Set filter values from URL parameters
+                if (roleParam) {
+                    document.getElementById('role').value = roleParam;
+                }
+                if (statusParam) {
+                    document.getElementById('status').value = statusParam;
+                }
+
                 // Load users
                 await loadUsers();
             } catch (error) {
