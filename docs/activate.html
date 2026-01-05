@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="Laravel Framework">
+    <title>Activate Account - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <script src="js/config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-header {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .auth-header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-header .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auth-header .header-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .auth-header .header-btn:hover {
+            background: white;
+            color: #0d6efd;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 70px);
+            padding: 40px 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px 45px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .auth-icon {
+            text-align: center;
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #0d6efd;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 24px;
+            letter-spacing: 8px;
+            text-align: center;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            color: #2c3e50;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #0b5ed7;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 14px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .alert-success {
+            background: #d1f4e0;
+            color: #0f5132;
+            border: 1px solid #a3e1c5;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .auth-card {
+                padding: 35px 25px;
+            }
+
+            .auth-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="auth-header">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <span>📍</span> GeoCRUD
+            </a>
+            <a href="login.html" class="header-btn">
+                <span>🚪</span> Login
+            </a>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-icon">🔐</div>
+            <h1 class="auth-title">Activate Account</h1>
+            <p class="auth-subtitle" id="email-subtitle">Enter the OTP code sent to your email</p>
+
+            <div id="alert-container"></div>
+
+            <form id="activate-form" method="POST">
+                <div class="form-group">
+                    <label for="otp_code">OTP Code</label>
+                    <input type="text" id="otp_code" name="otp_code" required 
+                           maxlength="6" pattern="[0-9]{6}" 
+                           placeholder="000000" autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn-primary">Verify & Activate</button>
+            </form>
+
+            <div style="text-align: center; margin: 20px 0; color: #64748b;">Didn't receive the code?</div>
+            <button id="resendBtn" class="btn-secondary">Resend OTP</button>
+
+            <div class="back-link">
+                <a href="login.html">Back to login</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Get email from URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email') || localStorage.getItem('pending_activation_email') || '';
+        if (email) {
+            document.getElementById('email-subtitle').textContent = `Enter the OTP code sent to ${email}`;
+        }
+
+        // Auto-focus OTP input
+        document.getElementById('otp_code').focus();
+
+        // Only allow numbers
+        document.getElementById('otp_code').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Activate form
+        document.getElementById('activate-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const otpCode = document.getElementById('otp_code').value;
+            const alertContainer = document.getElementById('alert-container');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/activate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        otp_code: otpCode,
+                        email: email
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alertContainer.innerHTML = `<div class="alert alert-success">${data.message || 'Account activated successfully! Redirecting to login...'}</div>`;
+                    localStorage.removeItem('pending_activation_email');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    alertContainer.innerHTML = `<div class="alert alert-error">${data.message || 'Invalid OTP code. Please try again.'}</div>`;
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        });
+
+        // Resend OTP
+        document.getElementById('resendBtn').addEventListener('click', async function() {
+            this.disabled = true;
+            this.textContent = 'Sending...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('OTP resent successfully!');
+                    let countdown = 60;
+                    this.textContent = `Resend OTP (${countdown}s)`;
+                    const interval = setInterval(() => {
+                        countdown--;
+                        this.textContent = `Resend OTP (${countdown}s)`;
+                        if (countdown === 0) {
+                            clearInterval(interval);
+                            this.textContent = 'Resend OTP';
+                            this.disabled = false;
+                        }
+                    }, 1000);
+                } else {
+                    alert(data.error || data.message || 'Failed to resend OTP');
+                    this.disabled = false;
+                    this.textContent = 'Resend OTP';
+                }
+            } catch (error) {
+                alert('Failed to resend OTP');
+                this.disabled = false;
+                this.textContent = 'Resend OTP';
+            }
+        });
+    </script>
+</body>
+</html>
+

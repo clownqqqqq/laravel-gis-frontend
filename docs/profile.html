@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="css/backend-styles.css">
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
+    <style>
+        .profile-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .profile-picture-card {
+            text-align: center;
+            height: fit-content;
+        }
+
+        .profile-picture-wrapper {
+            margin-bottom: 24px;
+        }
+
+        .profile-picture {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+            border: 4px solid #0d6efd;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-outline {
+            background: white;
+            border: 2px solid #0d6efd;
+            color: #0d6efd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .btn-outline:hover {
+            background: #f0f7ff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .btn-full {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .api-token-card {
+            background: #e7f3ff;
+            border: 1px solid #b6d7f5;
+            margin-top: 30px;
+        }
+
+        .api-token-title {
+            margin: 0 0 16px 0;
+            color: #0a58ca;
+            font-weight: 600;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .api-token-title span {
+            font-size: 28px;
+        }
+
+        .api-token-description {
+            margin: 8px 0 16px 0;
+            font-size: 15px;
+            color: #495057;
+            font-weight: 400;
+        }
+
+        .api-token-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: 1px solid #b6d7f5;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #212529;
+            cursor: text;
+            word-break: break-all;
+        }
+
+        .api-token-usage {
+            margin: 16px 0 0 0;
+            font-size: 14px;
+            color: #495057;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .api-token-code {
+            background: #d0e7ff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            color: #212529;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .api-token-note {
+            margin: 12px 0 0 0;
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 400;
+        }
+
+        @media screen and (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr !important;
+                gap: 24px !important;
+            }
+
+            .profile-picture {
+                width: 160px !important;
+                height: 160px !important;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr !important;
+                gap: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            .form-row .form-group {
+                margin-bottom: 20px !important;
+            }
+
+            .api-token-title {
+                font-size: 18px !important;
+            }
+
+            .api-token-title span {
+                font-size: 24px !important;
+            }
+
+            .api-token-input {
+                font-size: 12px !important;
+                padding: 12px 14px !important;
+            }
+
+            .api-token-code {
+                font-size: 12px !important;
+                display: block !important;
+                margin-top: 8px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-picture {
+                width: 140px;
+                height: 140px;
+            }
+
+            .api-token-input {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <span id="profile-avatar-container"></span>
+                    <span id="admin-button-container"></span>
+                    <a href="profile.html" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="content-area">
+            <div class="container">
+                <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
+                    <span style="font-size: 36px;">👤</span> Profile
+                </h1>
+
+                <div id="messages"></div>
+
+                <div class="profile-container">
+                    <!-- Left Column - Profile Picture -->
+                    <div class="card profile-picture-card">
+                        <div class="profile-picture-wrapper">
+                            <img id="profile-picture-img" src="" alt="Profile Picture" class="profile-picture"
+                                 onerror="this.src='https://via.placeholder.com/200'">
+                        </div>
+                        <button type="button" onclick="document.getElementById('profile_picture').click()" class="btn btn-outline">
+                            <span>📷</span> Change Picture
+                        </button>
+                    </div>
+
+                    <!-- Right Column - Form -->
+                    <div class="card profile-form-card">
+                        <form id="profile-form" onsubmit="updateProfile(event); return false;" enctype="multipart/form-data">
+                            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;" onchange="handleProfilePictureChange(event)">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstname">First Name</label>
+                                    <input type="text" id="firstname" name="firstname">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="lastname">Last Name</label>
+                                    <input type="text" id="lastname" name="lastname">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" id="username" name="username" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mobile_number">Mobile Number</label>
+                                <input type="tel" id="mobile_number" name="mobile_number">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span>✓</span> Update Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- API Token Section -->
+                <div class="card api-token-card">
+                    <h4 class="api-token-title">
+                        <span>🔑</span> Your API Authentication Token
+                    </h4>
+                    <p class="api-token-description">Use this token for Postman or API requests:</p>
+                    <input type="text" readonly id="authToken" class="api-token-input"
+                           onclick="this.select()">
+                    <p class="api-token-usage">
+                        <strong>Usage:</strong> Add header <code class="api-token-code" id="token-code"></code>
+                    </p>
+                    <p class="api-token-note">
+                        ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
+                    </p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <a href="change-password.html" class="btn" style="background: #6c757d; color: white; text-decoration: none;">
+                        <span>🔒</span> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = null;
+
+        // Load user profile on page load
+        async function loadProfile() {
+            const userData = getUserData();
+            if (!userData || !userData.id) {
+                showMessage('Please login to view your profile.', 'error');
+                setTimeout(() => window.location.href = 'login.html', 2000);
+                return;
+            }
+
+            currentUser = userData;
+            const userId = userData.id;
+
+            try {
+                const data = await apiRequest(API_ENDPOINTS.PROFILE(userId));
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    populateForm(data.user);
+                    updateProfilePicture(data.user);
+                    updateAuthToken();
+                } else {
+                    // Use stored data if API fails
+                    populateForm(userData);
+                    updateProfilePicture(userData);
+                    updateAuthToken();
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                // Use stored data if API fails
+                populateForm(userData);
+                updateProfilePicture(userData);
+                updateAuthToken();
+            }
+        }
+
+        function populateForm(user) {
+            document.getElementById('firstname').value = user.firstname || '';
+            document.getElementById('lastname').value = user.lastname || '';
+            document.getElementById('username').value = user.username || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('mobile_number').value = user.mobile_number || '';
+        }
+
+        function updateProfilePicture(user) {
+            const img = document.getElementById('profile-picture-img');
+            if (user.profile_picture) {
+                img.src = `${API_BASE_URL.replace('/api', '')}/uploads/${user.profile_picture}`;
+            } else {
+                img.src = 'https://via.placeholder.com/200';
+            }
+        }
+
+        function updateAuthToken() {
+            const token = getAuthToken();
+            if (token) {
+                document.getElementById('authToken').value = token;
+                document.getElementById('token-code').textContent = `Authorization: Bearer ${token}`;
+            }
+        }
+
+        function handleProfilePictureChange(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-picture-img').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                // Auto-submit form when picture is selected
+                document.getElementById('profile-form').requestSubmit();
+            }
+        }
+
+        async function updateProfile(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('profile-form'));
+            const userData = getUserData();
+            const userId = userData?.id;
+
+            if (!userId) {
+                showMessage('User ID not found for profile update.', 'error');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+
+            try {
+                formData.append('_method', 'PUT');
+                const data = await apiRequest(API_ENDPOINTS.PROFILE_UPDATE(userId), {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (data.success && data.user) {
+                    setUserData(data.user);
+                    currentUser = data.user;
+                    updateProfilePicture(data.user);
+                    showMessage('Profile updated successfully!', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to update profile.');
+                }
+            } catch (error) {
+                showMessage('Error updating profile: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Profile';
+            }
+        }
+
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        function getUserData() {
+            try {
+                const userData = localStorage.getItem('user_data');
+                return userData ? JSON.parse(userData) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setUserData(user) {
+            localStorage.setItem('user_data', JSON.stringify(user));
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+            // Load navigation elements
+            const userData = getUserData();
+            if (userData) {
+                // Profile avatar
+                const avatarContainer = document.getElementById('profile-avatar-container');
+                if (userData.profile_picture) {
+                    avatarContainer.innerHTML = `<img src="${API_BASE_URL.replace('/api', '')}/uploads/${userData.profile_picture}" alt="Profile" class="profile-avatar" onclick="window.location.href='profile.html'">`;
+                } else {
+                    avatarContainer.innerHTML = `<div class="profile-avatar-placeholder" onclick="window.location.href='profile.html'"><span>👤</span></div>`;
+                }
+                
+                // Admin button
+                if (userData.role === 'admin') {
+                    document.getElementById('admin-button-container').innerHTML = `<a href="admin/dashboard.html" class="nav-btn" style="background: rgba(255,215,0,0.3); border: 2px solid rgba(255,215,0,0.6); font-weight: bold;"><span>👑</span> Admin</a>`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
