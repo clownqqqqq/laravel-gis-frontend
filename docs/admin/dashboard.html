@@ -295,19 +295,28 @@
 
                 const result = await response.json();
                 
+                console.log('📊 Dashboard API Response:', result);
+                
                 if (result.success && result.data) {
+                    console.log('📊 Dashboard Data:', result.data);
                     await renderStats(result.data);
                 } else {
+                    console.error('❌ Dashboard API Error:', result);
                     throw new Error(result.message || 'Failed to load dashboard stats');
                 }
             } catch (error) {
-                console.error('Error loading dashboard:', error);
+                console.error('❌ Error loading dashboard:', error);
                 showMessage('Error loading dashboard: ' + error.message, 'error');
             }
         }
 
         async function renderStats(data) {
             const statsGrid = document.getElementById('stats-grid');
+            
+            console.log('📊 Rendering stats with data:', data);
+            console.log('📊 Data keys:', Object.keys(data));
+            console.log('📊 total_users value:', data.total_users);
+            console.log('📊 total_locations value:', data.total_locations);
             
             // Get pending suggestions count separately (API doesn't return it in dashboard endpoint)
             let pendingSuggestions = 0;
