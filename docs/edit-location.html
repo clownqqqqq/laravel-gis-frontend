@@ -192,11 +192,19 @@
 
         async function loadLocation(id) {
             document.getElementById('loading').style.display = 'block';
+            document.getElementById('form-card').style.display = 'none';
             
             try {
                 const data = await apiRequest(API_ENDPOINTS.GIS_SHOW(id));
+                
+                // API returns the location object directly
                 const location = data.location || data;
                 
+                if (!location || !location.id) {
+                    throw new Error('Invalid location data received');
+                }
+                
+                // Populate form fields
                 document.getElementById('location').value = location.location || '';
                 document.getElementById('latitude').value = location.latitude || '';
                 document.getElementById('longitude').value = location.longitude || '';
@@ -209,6 +217,11 @@
                 if (location.image) {
                     const imageUrl = `https://geocrud.bytevortexz.com/uploads/${location.image}`;
                     currentImage.src = imageUrl;
+                    currentImage.onerror = function() {
+                        this.style.display = 'none';
+                        currentImageWrapper.style.display = 'none';
+                        noImageText.style.display = 'block';
+                    };
                     currentImageWrapper.style.display = 'block';
                     noImageText.style.display = 'none';
                 } else {
@@ -220,8 +233,9 @@
                 document.getElementById('form-card').style.display = 'block';
                 
             } catch (error) {
+                console.error('Error loading location:', error);
                 document.getElementById('loading').style.display = 'none';
-                showMessage('Error loading location: ' + error.message, 'error');
+                showMessage('Error loading location: ' + (error.message || 'Unknown error'), 'error');
             }
         }
 
