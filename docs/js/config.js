@@ -107,14 +107,16 @@ async function apiRequest(url, options = {}) {
             headers,
         });
         
-        // Handle non-JSON responses
+        // Handle non-JSON responses - read response body ONCE
         let data;
         const contentType = response.headers.get('content-type');
         console.log('📦 Response Content-Type:', contentType);
         console.log('📦 Response Status:', response.status);
         
+        // Read response body once - clone if needed for multiple reads
+        const responseText = await response.text();
+        
         if (contentType && contentType.includes('application/json')) {
-            const responseText = await response.text();
             console.log('📦 Raw JSON response text:', responseText.substring(0, 500)); // First 500 chars
             try {
                 data = JSON.parse(responseText);
@@ -122,12 +124,19 @@ async function apiRequest(url, options = {}) {
             } catch (parseError) {
                 console.error('❌ JSON parse error:', parseError);
                 console.error('❌ Response text:', responseText);
+                // For 500 errors, the response might be HTML error page
+                if (response.status === 500) {
+                    throw new Error('Server error (500). Check Laravel logs for details. Response: ' + responseText.substring(0, 200));
+                }
                 throw new Error('Invalid JSON response from server: ' + responseText.substring(0, 100));
             }
         } else {
-            const text = await response.text();
-            console.error('❌ Non-JSON response:', text.substring(0, 500));
-            throw new Error(text || 'Server error');
+            console.error('❌ Non-JSON response:', responseText.substring(0, 500));
+            // For 500 errors, provide more helpful message
+            if (response.status === 500) {
+                throw new Error('Server error (500). The server returned: ' + responseText.substring(0, 200));
+            }
+            throw new Error(responseText || 'Server error');
         }
         
         // Handle authentication errors
@@ -198,9 +207,14 @@ async function apiRequest(url, options = {}) {
             throw new Error(data.message || data.error || 'Access denied. You do not have permission to perform this action.');
         }
         
-        // Handle other errors
+        // Handle other errors (including 500)
         if (!response.ok) {
-            throw new Error(data.message || data.error || `Error: ${response.status} ${response.statusText}`);
+            // If we have data from JSON parsing, use it
+            if (data && (data.message || data.error)) {
+                throw new Error(data.message || data.error || `Error: ${response.status} ${response.statusText}`);
+            }
+            // Otherwise, create a generic error message
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
         
         return data;
