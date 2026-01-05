@@ -1,5 +1,9 @@
 // API Configuration
-const API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+// Use window.API_BASE_URL if already defined (from inline scripts), otherwise define it
+if (typeof window.API_BASE_URL === 'undefined') {
+    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+}
+const API_BASE_URL = window.API_BASE_URL;
 
 // API Endpoints
 const API_ENDPOINTS = {
