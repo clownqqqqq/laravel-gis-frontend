@@ -2,21 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
     <title>Add Location - GeoCRUD</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/backend-styles.css">
     <style>
-        /* Override style.css background for dashboard pages */
-        body {
-            background: #f0f2f5 !important;
-            display: block !important;
-            align-items: unset !important;
-            justify-content: unset !important;
-            padding: 0 !important;
-        }
-
-        /* Match backend create.blade.php styles exactly */
+        /* Page-specific styles from create.blade.php */
         .form-actions {
             display: flex;
             gap: 12px;
@@ -31,12 +21,10 @@
 
         .btn-primary {
             background: #0d6efd !important;
-            color: white !important;
         }
 
         .btn-secondary {
             background: #6c757d !important;
-            color: white !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -63,74 +51,75 @@
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="dashboard.html" class="logo">📍 GeoCRUD</a>
-            <div class="nav-links">
-                <a href="dashboard.html" class="nav-link">← Back</a>
-                <span class="user-info">
-                    <button onclick="logout()" class="btn-logout">Logout</button>
-                </span>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <a href="dashboard.html" class="nav-btn">
+                        <span>←</span> Back
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="page-header">
-            <div>
+        </nav>
+        <div class="content-area">
+            <div class="container">
                 <h1>Add New GIS Location</h1>
-                <p class="subtitle" style="text-align: center; color: #6b7280; margin: 0.5rem 0 0 0;">Fill out the form below to add a new geographic location.</p>
+                <p class="subtitle" style="text-align: center;">Fill out the form below to add a new geographic location.</p>
+
+                <div id="messages"></div>
+
+                <div class="card">
+                    <form id="create-form">
+                        <div class="form-group">
+                            <label for="image">Location Image (Optional):</label>
+                            <input type="file" id="image" name="image" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location Name:</label>
+                            <input type="text" id="location" name="location" required 
+                                   placeholder="e.g., MU, City Hall, etc.">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="latitude">Latitude:</label>
+                            <input type="number" id="latitude" name="latitude" step="0.00000001" required
+                                   placeholder="e.g., 8.14954800">
+                            <small>Enter a decimal number between -90 and 90</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="longitude">Longitude:</label>
+                            <input type="number" id="longitude" name="longitude" step="0.00000001" required
+                                   placeholder="e.g., 123.84147700">
+                            <small>Enter a decimal number between -180 and 180</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category (Optional):</label>
+                            <input type="text" id="category" name="category" 
+                                   placeholder="e.g., University, Restaurant, Park">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Notes (Optional):</label>
+                            <textarea id="notes" name="notes" rows="4" 
+                                      placeholder="Additional information about this location"></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add Location</button>
+                            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-
-        <div id="messages"></div>
-
-        <div class="card">
-            <form id="create-form">
-                <!-- Image field FIRST (matches backend) -->
-                <div class="form-group">
-                    <label for="image">Location Image (Optional):</label>
-                    <input type="file" id="image" name="image" accept="image/*">
-                </div>
-
-                <div class="form-group">
-                    <label for="location">Location Name:</label>
-                    <input type="text" id="location" name="location" required 
-                           placeholder="e.g., MU, City Hall, etc.">
-                </div>
-
-                <div class="form-group">
-                    <label for="latitude">Latitude:</label>
-                    <input type="number" id="latitude" name="latitude" step="0.00000001" required
-                           placeholder="e.g., 8.14954800">
-                    <small>Enter a decimal number between -90 and 90</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="longitude">Longitude:</label>
-                    <input type="number" id="longitude" name="longitude" step="0.00000001" required
-                           placeholder="e.g., 123.84147700">
-                    <small>Enter a decimal number between -180 and 180</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="category">Category (Optional):</label>
-                    <input type="text" id="category" name="category" 
-                           placeholder="e.g., University, Restaurant, Park">
-                </div>
-
-                <div class="form-group">
-                    <label for="notes">Notes (Optional):</label>
-                    <textarea id="notes" name="notes" rows="4" 
-                              placeholder="Additional information about this location"></textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Add Location</button>
-                    <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
         </div>
     </div>
 
