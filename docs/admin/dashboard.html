@@ -282,7 +282,8 @@
             try {
                 const response = await fetch(`${apiBaseUrl}/admin/dashboard`, {
                     headers: {
-                        'Authorization': `Bearer ${getAuthToken()}`
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Accept': 'application/json'
                     }
                 });
                 
@@ -292,12 +293,12 @@
                     return;
                 }
 
-                const data = await response.json();
+                const result = await response.json();
                 
-                if (data.success) {
-                    renderStats(data);
+                if (result.success && result.data) {
+                    await renderStats(result.data);
                 } else {
-                    throw new Error(data.message || 'Failed to load dashboard stats');
+                    throw new Error(result.message || 'Failed to load dashboard stats');
                 }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -305,13 +306,34 @@
             }
         }
 
-        function renderStats(data) {
+        async function renderStats(data) {
             const statsGrid = document.getElementById('stats-grid');
+            
+            // Get pending suggestions count separately (API doesn't return it in dashboard endpoint)
+            let pendingSuggestions = 0;
+            try {
+                const apiBaseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'https://geocrud.bytevortexz.com/api';
+                const suggestionsResponse = await fetch(`${apiBaseUrl}/admin/reports?status=pending&report_type=suggest_place`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (suggestionsResponse.ok) {
+                    const suggestionsResult = await suggestionsResponse.json();
+                    if (suggestionsResult.success && suggestionsResult.data) {
+                        pendingSuggestions = suggestionsResult.data.filter(r => r.report_type === 'suggest_place').length;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load pending suggestions count:', e);
+            }
+            
             const stats = {
                 total_users: data.total_users || 0,
                 total_locations: data.total_locations || 0,
                 pending_requests: data.pending_requests || 0,
-                pending_suggestions: data.pending_suggestions || 0,
+                pending_suggestions: pendingSuggestions,
                 total_staff: data.total_staff || 0,
                 total_members: data.total_members || 0,
                 blocked_users: data.blocked_users || 0
