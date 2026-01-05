@@ -532,13 +532,14 @@
                             html += '<a href="edit-user.html?id=' + user.id + '" class="btn-small btn-edit">✏️ Edit</a>';
                             html += '<span style="padding: 4px 8px; color: #64748b; font-size: 12px; font-style: italic;">(Your account)</span>';
                         } else {
-                            html += '<a href="edit-user.html?id=' + user.id + '" class="btn-small btn-edit">✏️ Edit</a>';
+                            html += '<a href="edit-user.html?id=' + user.id + '" style="padding: 4px 10px; border-radius: 4px; border: 1px solid #0d6efd; color: #0d6efd; font-size: 12px; text-decoration: none; background: #e0f2fe;">✏️ Edit</a>';
                             html += '<select onchange="assignRole(' + user.id + ', this.value)" style="padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">';
                             html += '<option value="admin"' + (user.role === 'admin' ? ' selected' : '') + '>Admin</option>';
                             html += '<option value="staff"' + (user.role === 'staff' ? ' selected' : '') + '>Staff</option>';
                             html += '<option value="member"' + (user.role === 'member' ? ' selected' : '') + '>Member</option>';
                             html += '</select>';
-                            html += '<button type="button" onclick="toggleStatus(' + user.id + ')" class="btn-small btn-block ' + user.status + '" style="' + (user.status === 'active' ? 'background: #ff6b6b;' : 'background: #43e97b;') + ' color: white;">' + (user.status === 'active' ? '🚫 Block' : '✅ Unblock') + '</button>';
+                            html += '<button type="button" onclick="toggleStatus(' + user.id + ')" style="padding: 4px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; ' + (user.status === 'active' ? 'background: #ff6b6b;' : 'background: #43e97b;') + ' color: white;">' + (user.status === 'active' ? '🚫 Block' : '✅ Unblock') + '</button>';
+                            html += '<button type="button" onclick="deleteUser(' + user.id + ', \'' + escapeHtml(user.username) + '\')" style="padding: 4px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; background: #dc3545; color: white;">🗑️ Delete</button>';
                         }
                         
                         html += '</div></td>';
@@ -620,6 +621,29 @@
             } catch (error) {
                 console.error('❌ Error assigning role:', error);
                 showAlert('Error assigning role: ' + error.message, 'error');
+            }
+        }
+
+        // Delete user
+        async function deleteUser(userId, username) {
+            if (!confirm(`Are you sure you want to delete user ${username}? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`${API_BASE_URL}/admin/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    showAlert(response.message || 'User deleted successfully', 'success');
+                    await loadUsers();
+                } else {
+                    showAlert(response.message || 'Failed to delete user', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showAlert('Error deleting user: ' + error.message, 'error');
             }
         }
 
