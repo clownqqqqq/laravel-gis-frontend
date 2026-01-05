@@ -352,11 +352,18 @@
                 `;
             }
 
+            // Safely parse coordinates with null checks
+            const lat = location.latitude != null ? parseFloat(location.latitude) : null;
+            const lng = location.longitude != null ? parseFloat(location.longitude) : null;
+            const coordsDisplay = (lat != null && !isNaN(lat) && lng != null && !isNaN(lng)) 
+                ? `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+                : 'N/A';
+            
             html += `
                             <div style="display: grid; gap: 8px;">
                                 <p style="margin: 0; color: #64748b;">
                                     <strong>📍 Coordinates:</strong> 
-                                    ${parseFloat(location.latitude).toFixed(6)}, ${parseFloat(location.longitude).toFixed(6)}
+                                    ${coordsDisplay}
                                 </p>
             `;
 
