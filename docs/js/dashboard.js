@@ -158,7 +158,53 @@ function updateUIWithUserData(userData) {
         // Only admin and staff can add locations
         if (userData.role !== 'admin' && userData.role !== 'staff') {
             addLocationBtn.style.display = 'none';
+        } else {
+            addLocationBtn.style.display = 'flex';
         }
+    }
+    
+    // Show/hide staff dashboard
+    const staffDashboard = document.getElementById('staff-dashboard');
+    if (staffDashboard) {
+        if (userData.role === 'staff') {
+            staffDashboard.style.display = 'block';
+            loadStaffStatistics();
+        } else {
+            staffDashboard.style.display = 'none';
+        }
+    }
+    
+    // Show/hide member features
+    const memberFeatures = document.getElementById('member-features');
+    if (memberFeatures) {
+        if (userData.role === 'member') {
+            memberFeatures.style.display = 'block';
+        } else {
+            memberFeatures.style.display = 'none';
+        }
+    }
+}
+
+// Load staff statistics
+async function loadStaffStatistics() {
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/staff/submission-history`);
+        if (response.success && response.data) {
+            const locations = response.data;
+            const pending = locations.filter(l => l.status === 'pending').length;
+            const approved = locations.filter(l => l.status === 'approved').length;
+            const rejected = locations.filter(l => l.status === 'rejected').length;
+            
+            const pendingEl = document.getElementById('staff-pending-count');
+            const approvedEl = document.getElementById('staff-approved-count');
+            const rejectedEl = document.getElementById('staff-rejected-count');
+            
+            if (pendingEl) pendingEl.textContent = pending;
+            if (approvedEl) approvedEl.textContent = approved;
+            if (rejectedEl) rejectedEl.textContent = rejected;
+        }
+    } catch (error) {
+        console.error('Error loading staff statistics:', error);
     }
 }
 
@@ -207,6 +253,23 @@ async function loadLocations(searchTerm = '') {
         } else {
             currentLocations = [];
             console.warn('⚠️ No locations found in response:', data);
+        }
+        
+        // For members, check favorites for each location
+        const userData = getUserData();
+        if (userData && userData.role === 'member' && currentLocations.length > 0) {
+            try {
+                const favoritesResponse = await apiRequest(`${API_BASE_URL}/member/favorites`);
+                if (favoritesResponse.success && Array.isArray(favoritesResponse.data)) {
+                    const favoriteIds = favoritesResponse.data.map(f => f.id || f.location_id);
+                    currentLocations = currentLocations.map(loc => ({
+                        ...loc,
+                        is_favorite: favoriteIds.includes(loc.id)
+                    }));
+                }
+            } catch (error) {
+                console.warn('Could not load favorites (non-fatal):', error);
+            }
         }
         
         loadingDiv.style.display = 'none';
@@ -321,6 +384,44 @@ function renderLocations(locations) {
         const statusBadge = getStatusBadge(location.status, userRole);
         // Admin and staff can edit approved locations
         const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
+        const isFavorited = location.is_favorite || false;
+        
+        // Build location actions based on role
+        let locationActions = '';
+        if (userRole === 'member') {
+            // Members see favorite buttons
+            if (isFavorited) {
+                locationActions = `
+                <div class="location-actions">
+                    <button onclick="removeFavorite(${locationId})" class="btn" style="background: #ffc107; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+                        <span>⭐</span> Remove Favorite
+                    </button>
+                </div>
+                `;
+            } else {
+                locationActions = `
+                <div class="location-actions">
+                    <button onclick="addFavorite(${locationId})" class="btn" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+                        <span>⭐</span> Add to Favorites
+                    </button>
+                </div>
+                `;
+            }
+        } else if (canEdit) {
+            // Admin and staff see edit/delete buttons
+            locationActions = `
+                <div class="location-actions">
+                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
+                        <span>✏️</span> Edit
+                    </a>
+                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
+                        <button type="submit" class="btn btn-delete">
+                            <span>🗑️</span> Delete
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
         
         return `
             <div class="card location-card">
@@ -329,7 +430,7 @@ function renderLocations(locations) {
                     <div class="location-image-wrapper">
                         <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'">
                     </div>
-                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
+                    ` : ''}
                     <div class="location-details">
                         <h3 class="location-name">
                             ${locationName}
@@ -342,18 +443,7 @@ function renderLocations(locations) {
                         ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
                     </div>
                 </div>
-                ${canEdit ? `
-                <div class="location-actions">
-                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
-                        <span>✏️</span> Edit
-                    </a>
-                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
-                        <button type="submit" class="btn btn-delete">
-                            <span>🗑️</span> Delete
-                        </button>
-                    </form>
-                </div>
-                ` : ''}
+                ${locationActions}
             </div>
         `;
     }).join('');
