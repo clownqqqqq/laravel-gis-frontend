@@ -1,391 +1,373 @@
-// Dashboard JavaScript
-let currentLocations = [];
-let currentSearch = '';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="../css/backend-styles.css">
+    <script src="../js/config.js"></script>
+    <script>
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+        
+        // Fallback if config.js doesn't load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src.includes('config.js')) {
+                console.warn('config.js failed to load, using fallback API_BASE_URL');
+                if (typeof API_BASE_URL === 'undefined') {
+                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+                }
+            }
+        }, true);
+    </script>
+    <style>
+        /* Fallback styles if backend-styles.css doesn't load */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .main-container { min-height: 100vh; }
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .content-area { padding: 40px 20px; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .alert {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
 
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Mark page load time for auth error handling
-    window.pageLoadTime = Date.now();
+        .btn-add-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #6b7280;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .stat-card.clickable:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 2px 8px rgba(13,110,253,0.1);
+        }
+
+        .stat-card.blue {
+            border-left-color: #0d6efd;
+        }
+
+        .stat-label {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            background: #ffffff;
+            color: #1f2937;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        @media screen and (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-header h1 {
+                font-size: 24px;
+            }
+
+            .page-header h1 span {
+                font-size: 28px;
+            }
+
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stat-card .stat-value {
+                font-size: 28px !important;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+            }
+
+            .quick-action-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="../dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <a href="../profile.html" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="content-area">
+            <div class="container">
+                <div class="page-header">
+                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <span style="font-size: 36px;">👑</span> Admin Dashboard
+                    </h1>
+                    <a href="users.html" class="btn btn-add-location">
+                        <span>👥</span> Manage Users
+                    </a>
+                </div>
+
+                <div id="messages"></div>
+
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Stats will be loaded here -->
+                </div>
+
+                <div class="card">
+                    <h3 style="color: #1f2937; margin-bottom: 20px;">Quick Actions</h3>
+                    <div class="quick-actions">
+                        <a href="users.html" class="quick-action-btn">👥 View All Users</a>
+                        <a href="users.html?role=staff" class="quick-action-btn">🛠 View Staff</a>
+                        <a href="users.html?status=blocked" class="quick-action-btn">🚫 View Blocked Users</a>
+                        <a href="pending-locations.html" class="quick-action-btn" id="pending-locations-link">⏳ Review Pending Locations (0)</a>
+                        <a href="suggestions.html" class="quick-action-btn" id="suggestions-link">💡 Review Place Suggestions (0)</a>
+                        <a href="../dashboard.html" class="quick-action-btn">📍 View All Locations</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
-    // Check authentication
-    if (!isAuthenticated()) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-        // Wait a moment to ensure token is properly set, then load data
-        setTimeout(() => {
-            // Verify token is still there
-            const verifyToken = getAuthToken();
-            if (!verifyToken) {
-                console.error('❌ No token found! Redirecting to login...');
-                showMessage('⚠️ No authentication token found. Please log in.', 'error');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 2000);
+    <script>
+        function getUserData() {
+            try {
+                const userData = localStorage.getItem('user_data');
+                return userData ? JSON.parse(userData) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../login.html';
+        }
+
+        async function loadDashboardStats() {
+            const userData = getUserData();
+            if (!userData || userData.role !== 'admin') {
+                showMessage('Access denied. Admin only.', 'error');
+                setTimeout(() => window.location.href = '../dashboard.html', 2000);
                 return;
             }
-            
-            // Load user info and locations
-            loadUserInfo().catch(() => {}); // Non-critical
-            loadLocations();
-            
-            // Search on Enter key
-            const searchInput = document.getElementById('search');
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        searchLocations(e);
+
+            // Use fallback if API_BASE_URL is not defined
+            const apiBaseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'https://geocrud.bytevortexz.com/api';
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
                     }
                 });
-            }
-        }, 300); // Small delay to ensure everything is ready
-});
-
-// Load user information and profile
-async function loadUserInfo() {
-    const userData = getUserData();
-    const token = getAuthToken();
-    
-    console.log('Loading user info - Token:', token ? 'Present' : 'Missing');
-    console.log('Loading user info - User data:', userData);
-    
-    // Try to load full user profile from API to get latest role and data
-    if (userData && userData.id && token) {
-        try {
-            console.log('Fetching user profile from API...');
-            const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
-            console.log('Profile data received:', profileData);
-            
-            if (profileData && profileData.user) {
-                // Update user data with latest from server
-                const updatedUser = {
-                    ...userData,
-                    ...profileData.user,
-                    role: profileData.user.role || userData.role || 'member'
-                };
-                setUserData(updatedUser);
-                updateUIWithUserData(updatedUser);
-            } else {
-                // Fallback to stored data
-                console.log('Using stored user data (no profile data)');
-                updateUIWithUserData(userData);
-            }
-        } catch (error) {
-            console.warn('Could not load user profile (non-fatal):', error);
-            // Don't fail completely - use stored data
-            if (userData) {
-                console.log('Using stored user data (API error)');
-                updateUIWithUserData(userData);
-            }
-        }
-    } else if (userData) {
-        console.log('Using stored user data (no ID or token)');
-        updateUIWithUserData(userData);
-    } else {
-        console.warn('No user data found');
-    }
-}
-
-// Update UI with user data
-function updateUIWithUserData(userData) {
-    // Update profile picture if exists
-    const profileAvatar = document.getElementById('profile-avatar');
-    const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
-    
-    if (userData.profile_picture) {
-        if (profileAvatar) {
-            profileAvatar.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
-            profileAvatar.style.display = 'block';
-            if (profilePlaceholder) {
-                profilePlaceholder.style.display = 'none';
-            }
-            profileAvatar.onerror = function() {
-                this.style.display = 'none';
-                if (profilePlaceholder) {
-                    profilePlaceholder.style.display = 'flex';
+                
+                if (response.status === 401) {
+                    showMessage('Authentication failed. Please login again.', 'error');
+                    setTimeout(() => window.location.href = '../login.html', 2000);
+                    return;
                 }
-            };
-        }
-    }
-    
-    // Show admin button if user is admin
-    const adminBtn = document.getElementById('admin-btn');
-    if (adminBtn && userData.role === 'admin') {
-        adminBtn.style.display = 'flex';
-        adminBtn.onclick = function() {
-            alert('Admin panel - Would redirect to admin dashboard in full implementation');
-        };
-    }
-    
-    // Update add location button visibility based on role
-    const addLocationBtn = document.querySelector('.btn-add-location');
-    if (addLocationBtn) {
-        // Only admin and staff can add locations
-        if (userData.role !== 'admin' && userData.role !== 'staff') {
-            addLocationBtn.style.display = 'none';
-        }
-    }
-}
 
-// Load all locations from API
-async function loadLocations(searchTerm = '') {
-    const loadingDiv = document.getElementById('loading');
-    const container = document.getElementById('locations-container');
-    const emptyState = document.getElementById('empty-state');
-    
-    // Verify token before making request
-    const token = getAuthToken();
-    if (!token) {
-        console.error('No token found when loading locations!');
-        loadingDiv.style.display = 'none';
-        showMessage('Authentication error. Please log in again.', 'error');
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
-        return;
-    }
-    
-    loadingDiv.style.display = 'block';
-    container.innerHTML = '';
-    emptyState.style.display = 'none';
-    
-    try {
-        let url = API_ENDPOINTS.GIS_INDEX;
-        if (searchTerm && searchTerm.trim()) {
-            url += `?search=${encodeURIComponent(searchTerm.trim())}`;
-        }
-        
-        const data = await apiRequest(url);
-        
-        // Handle API response format: {success: true, data: [...]}
-        if (data.success && Array.isArray(data.data)) {
-            currentLocations = data.data;
-        } else if (Array.isArray(data.locations)) {
-            currentLocations = data.locations;
-        } else if (Array.isArray(data)) {
-            currentLocations = data;
-        } else {
-            currentLocations = [];
-        }
-        
-        loadingDiv.style.display = 'none';
-        
-        if (currentLocations.length === 0) {
-            emptyState.style.display = 'block';
-            return;
-        }
-        
-        renderLocations(currentLocations);
-        
-        } catch (error) {
-        loadingDiv.style.display = 'none';
-        
-        // Check if it's an authentication error
-        if (error.message && (error.message.includes('Authentication failed') || error.message.includes('Unauthorized') || error.message.includes('401'))) {
-            console.error('❌ Authentication error when loading locations');
-            
-            const currentToken = getAuthToken();
-            const apiUrl = API_ENDPOINTS.GIS_INDEX;
-            
-            if (!currentToken) {
-                // No token at all - user needs to login
-                showMessage('⚠️ Not logged in. Please log in to view locations.', 'error');
-                setTimeout(() => {
-                    if (confirm('You are not logged in. Would you like to go to the login page?')) {
-                        window.location.href = 'login.html';
-                    }
-                }, 2000);
-                return;
-            }
-            
-            // Token exists but was rejected - show helpful error
-            showMessage(`⚠️ Authentication Error: ${error.message}. Please refresh the page or log in again.`, 'error');
-            
-            console.error('🔍 DEBUG INFO - Token exists but API rejected:');
-            console.error('- Token:', currentToken.substring(0, 40) + '...');
-            console.error('- Token Length:', currentToken.length);
-            console.error('- API URL:', apiUrl);
-            console.error('- Error:', error.message);
-            console.error('- Full Token (for debugging):', currentToken);
-            
-            // Show a retry button instead of auto-logout
-            const retryBtn = document.createElement('button');
-            retryBtn.textContent = '🔄 Retry Loading Locations';
-            retryBtn.className = 'btn';
-            retryBtn.style.marginTop = '10px';
-            retryBtn.onclick = function() {
-                this.disabled = true;
-                this.textContent = 'Retrying...';
-                loadLocations(currentSearch);
-            };
-            container.appendChild(retryBtn);
-            
-            // Also show manual logout option
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = '🚪 Logout and Login Again';
-            logoutBtn.className = 'btn';
-            logoutBtn.style.marginLeft = '10px';
-            logoutBtn.style.background = '#ef4444';
-            logoutBtn.onclick = function() {
-                if (confirm('Logout and return to login page?')) {
-                    removeAuthToken();
-                    removeUserData();
-                    window.location.href = 'login.html';
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderStats(data);
+                } else {
+                    throw new Error(data.message || 'Failed to load dashboard stats');
                 }
-            };
-            container.appendChild(logoutBtn);
-            
-            return;
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showMessage('Error loading dashboard: ' + error.message, 'error');
+            }
         }
-        
-        const errorMessage = error.message || 'Failed to load locations. Please try again.';
-        showMessage('Error loading locations: ' + errorMessage, 'error');
-        console.error('Error loading locations:', error);
-        
-        // Show empty state if there was an error
-        container.innerHTML = '';
-        emptyState.style.display = 'block';
-    }
-}
 
-// Render locations in the grid
-function renderLocations(locations) {
-    const container = document.getElementById('locations-container');
-    const userData = getUserData();
-    const userRole = userData?.role || 'member';
-    
-    if (!Array.isArray(locations) || locations.length === 0) {
-        document.getElementById('empty-state').style.display = 'block';
-        return;
-    }
-    
-    container.innerHTML = locations.map((location, index) => {
-        // Handle location data - ensure we have required fields
-        const locationName = location.location || location.name || 'Unnamed Location';
-        const latitude = location.latitude || 0;
-        const longitude = location.longitude || 0;
-        const locationId = location.id || index;
-        const imageUrl = location.image 
-            ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
-            : null;
-        
-        const statusBadge = getStatusBadge(location.status, userRole);
-        // Admin and staff can edit approved locations
-        const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
-        
-        return `
-            <div class="card location-card">
-                <div class="location-content">
-                    ${imageUrl ? `
-                    <div class="location-image-wrapper">
-                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:200px;height:200px;background:#f3f4f6;border-radius:12px;display:flex;align-items:center;justify-content:center;border:3px solid #0d6efd;\\'><span style=\\'font-size:48px;\\'>📍</span></div>';">
-                    </div>
-                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
-                    <div class="location-details">
-                        <h3 class="location-name">
-                            ${locationName}
-                            ${statusBadge}
-                        </h3>
-                        <p class="location-coords">
-                            Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
-                        </p>
-                        ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
-                        ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
-                    </div>
+        function renderStats(data) {
+            const statsGrid = document.getElementById('stats-grid');
+            const stats = {
+                total_users: data.total_users || 0,
+                total_locations: data.total_locations || 0,
+                pending_requests: data.pending_requests || 0,
+                pending_suggestions: data.pending_suggestions || 0,
+                total_staff: data.total_staff || 0,
+                total_members: data.total_members || 0,
+                blocked_users: data.blocked_users || 0
+            };
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <h3 class="stat-label">Total Users</h3>
+                    <div class="stat-value">${stats.total_users}</div>
                 </div>
-                ${canEdit ? `
-                <div class="location-actions">
-                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
-                        <span>✏️</span> Edit
-                    </a>
-                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
-                        <button type="submit" class="btn btn-delete">
-                            <span>🗑️</span> Delete
-                        </button>
-                    </form>
+                <div class="stat-card">
+                    <h3 class="stat-label">Total Locations</h3>
+                    <div class="stat-value">${stats.total_locations}</div>
                 </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
-}
+                <a href="pending-locations.html" class="stat-card clickable blue">
+                    <h3 class="stat-label">Pending Requests</h3>
+                    <div class="stat-value">${stats.pending_requests}</div>
+                    ${stats.pending_requests > 0 ? '<div style="margin-top: 10px; font-size: 12px; color: #0d6efd;">Click to review →</div>' : ''}
+                </a>
+                <a href="suggestions.html" class="stat-card clickable blue">
+                    <h3 class="stat-label">Place Suggestions</h3>
+                    <div class="stat-value">${stats.pending_suggestions}</div>
+                    ${stats.pending_suggestions > 0 ? '<div style="margin-top: 10px; font-size: 12px; color: #0d6efd;">Click to review →</div>' : ''}
+                </a>
+                <div class="stat-card">
+                    <h3 class="stat-label">Staff Members</h3>
+                    <div class="stat-value">${stats.total_staff}</div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-label">Members</h3>
+                    <div class="stat-value">${stats.total_members}</div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-label">Blocked Users</h3>
+                    <div class="stat-value">${stats.blocked_users}</div>
+                </div>
+            `;
 
-// Get status badge HTML
-function getStatusBadge(status, userRole) {
-    if (!status || status === 'approved' || userRole !== 'admin') return '';
-    
-    const badges = {
-        'pending': '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fde047;">⏳ Pending Approval</span>',
-        'rejected': '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fca5a5;">✗ Rejected</span>'
-    };
-    
-    return badges[status] || '';
-}
+            // Update quick action links
+            document.getElementById('pending-locations-link').textContent = `⏳ Review Pending Locations (${stats.pending_requests})`;
+            document.getElementById('suggestions-link').textContent = `💡 Review Place Suggestions (${stats.pending_suggestions})`;
+        }
 
-// Search locations
-function searchLocations(event) {
-    if (event) event.preventDefault();
-    const searchTerm = document.getElementById('search').value.trim();
-    currentSearch = searchTerm;
-    loadLocations(searchTerm);
-}
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                messagesDiv.innerHTML = '';
+            }, 5000);
+        }
 
-// Clear search (if needed in future)
-function clearSearch() {
-    document.getElementById('search').value = '';
-    currentSearch = '';
-    loadLocations();
-}
-
-// Edit location
-function editLocation(id) {
-    window.location.href = `edit-location.html?id=${id}`;
-}
-
-// View location
-function viewLocation(id) {
-    window.location.href = `view-location.html?id=${id}`;
-}
-
-// Delete location
-async function deleteLocation(id) {
-    const locationName = currentLocations.find(loc => loc.id === id)?.location || 'this location';
-    if (!confirm(`Are you sure you want to delete ${locationName}? This action cannot be undone.`)) {
-        return false;
-    }
-    
-    try {
-        await apiRequest(API_ENDPOINTS.GIS_DELETE(id), {
-            method: 'DELETE'
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
         });
-        
-        showMessage('Location deleted successfully!', 'success');
-        loadLocations(currentSearch);
-        
-    } catch (error) {
-        showMessage('Error deleting location: ' + error.message, 'error');
-    }
-    return false;
-}
-
-// Show message
-function showMessage(message, type = 'success') {
-    const messagesDiv = document.getElementById('messages');
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-    
-    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
-    
-    setTimeout(() => {
-        messagesDiv.innerHTML = '';
-    }, 5000);
-}
-
-// Logout function
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        removeAuthToken();
-        window.location.href = 'index.html';
-    }
-}
+    </script>
+</body>
+</html>
 
