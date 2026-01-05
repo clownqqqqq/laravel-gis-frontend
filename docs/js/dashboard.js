@@ -188,9 +188,9 @@ function updateUIWithUserData(userData) {
 // Load staff statistics
 async function loadStaffStatistics() {
     try {
-        const response = await apiRequest(`${API_BASE_URL}/staff/submission-history`);
-        if (response.success && response.data) {
-            const locations = response.data;
+        const data = await apiRequest(`${API_BASE_URL}/staff/submissions`);
+        if (data.success && data.data) {
+            const locations = data.data;
             const pending = locations.filter(l => l.status === 'pending').length;
             const approved = locations.filter(l => l.status === 'approved').length;
             const rejected = locations.filter(l => l.status === 'rejected').length;
