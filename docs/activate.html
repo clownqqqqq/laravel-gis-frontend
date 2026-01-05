@@ -282,14 +282,26 @@
         // Activate form
         document.getElementById('activate-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const otpCode = document.getElementById('otp_code').value;
+            const otpCode = document.getElementById('otp_code').value.trim();
             const alertContainer = document.getElementById('alert-container');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Validate OTP code
+            if (!otpCode || otpCode.length !== 6 || !/^\d{6}$/.test(otpCode)) {
+                alertContainer.innerHTML = `<div class="alert alert-error">Please enter a valid 6-digit OTP code.</div>`;
+                return;
+            }
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
             
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/activate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
                         otp_code: otpCode,
@@ -299,17 +311,27 @@
                 
                 const data = await response.json();
                 
-                if (data.success) {
+                if (response.ok && data.success) {
                     alertContainer.innerHTML = `<div class="alert alert-success">${data.message || 'Account activated successfully! Redirecting to login...'}</div>`;
                     localStorage.removeItem('pending_activation_email');
                     setTimeout(() => {
-                        window.location.href = 'login.html';
+                        window.location.href = 'login.html?activated=1';
                     }, 2000);
                 } else {
-                    alertContainer.innerHTML = `<div class="alert alert-error">${data.message || 'Invalid OTP code. Please try again.'}</div>`;
+                    // Handle error response
+                    const errorMessage = data.message || data.error || 'Invalid OTP code. Please try again.';
+                    alertContainer.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Verify & Activate';
+                    // Clear OTP input on error
+                    document.getElementById('otp_code').value = '';
+                    document.getElementById('otp_code').focus();
                 }
             } catch (error) {
-                alertContainer.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+                console.error('Activation error:', error);
+                alertContainer.innerHTML = `<div class="alert alert-error">Error: ${error.message || 'Network error. Please check your connection and try again.'}</div>`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Verify & Activate';
             }
         });
 
