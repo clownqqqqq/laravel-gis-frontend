@@ -2,21 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
     <title>Edit Location - GeoCRUD</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/backend-styles.css">
     <style>
-        /* Override style.css background for dashboard pages */
-        body {
-            background: #f0f2f5 !important;
-            display: block !important;
-            align-items: unset !important;
-            justify-content: unset !important;
-            padding: 0 !important;
-        }
-
-        /* Match backend edit page styles exactly */
+        /* Page-specific styles from edit.blade.php */
         .current-image-wrapper {
             margin-bottom: 16px;
         }
@@ -52,12 +42,10 @@
 
         .btn-primary {
             background: #0d6efd !important;
-            color: white !important;
         }
 
         .btn-secondary {
             background: #6c757d !important;
-            color: white !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -76,15 +64,8 @@
 
         .btn-danger {
             background: #dc3545 !important;
-            color: white !important;
             width: 100%;
             max-width: 300px;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
         }
 
         .btn-danger:hover {
@@ -123,80 +104,71 @@
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="top-nav">
-        <div class="nav-container">
-            <a href="dashboard.html" class="logo">📍 GeoCRUD</a>
-            <div class="nav-links">
-                <a href="dashboard.html" class="nav-link">← Back</a>
-                <span class="user-info">
-                    <button onclick="logout()" class="btn-logout">Logout</button>
-                </span>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <a href="dashboard.html" class="nav-btn">
+                        <span>←</span> Back
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="page-header">
-            <div>
+        </nav>
+        <div class="content-area">
+            <div class="container">
                 <h1>Edit GIS Location</h1>
-                <p class="subtitle" style="text-align: center; color: #6b7280; margin: 0.5rem 0 0 0;">Update the location details below.</p>
-            </div>
-        </div>
+                <p class="subtitle" style="text-align: center;">Update the location details below.</p>
 
-        <div id="messages"></div>
-        <div id="loading" class="loading" style="display: none;">Loading location...</div>
+                <div id="messages"></div>
+                <div id="loading" class="alert alert-info" style="display: none;">Loading location...</div>
 
-        <div class="card" id="form-card" style="display: none;">
-            <form id="edit-form">
-                <!-- Current Image FIRST (matches backend) -->
-                <div class="form-group">
-                    <label for="image">Current Image:</label>
-                    <div id="current-image-wrapper" style="display: none;">
-                        <div class="current-image-wrapper">
-                            <img id="current-image" src="" alt="Current Image" class="current-image">
+                <div class="card" id="form-card" style="display: none;">
+                    <form id="edit-form">
+                        <div class="form-group">
+                            <label for="image">Current Image:</label>
+                            <div id="current-image-wrapper" style="display: none;">
+                                <div class="current-image-wrapper">
+                                    <img id="current-image" src="" alt="Current Image" class="current-image">
+                                </div>
+                            </div>
+                            <p id="no-image-text" class="no-image-text" style="display: none;">No image uploaded</p>
+                            <input type="file" id="image" name="image" accept="image/*">
+                            <small>Upload a new image to change.</small>
                         </div>
+
+                        <div class="form-group">
+                            <label for="location">Location Name:</label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="latitude">Latitude:</label>
+                            <input type="number" id="latitude" name="latitude" step="0.00000001" required>
+                            <small>Enter a decimal number between -90 and 90</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="longitude">Longitude:</label>
+                            <input type="number" id="longitude" name="longitude" step="0.00000001" required>
+                            <small>Enter a decimal number between -180 and 180</small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+
+                    <div class="delete-section">
+                        <button type="button" onclick="deleteLocation()" class="btn btn-danger">Delete Location</button>
                     </div>
-                    <p id="no-image-text" class="no-image-text" style="display: none;">No image uploaded</p>
-                    <input type="file" id="image" name="image" accept="image/*">
-                    <small>Upload a new image to change.</small>
                 </div>
-
-                <div class="form-group">
-                    <label for="location">Location Name:</label>
-                    <input type="text" id="location" name="location" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="latitude">Latitude:</label>
-                    <input type="number" id="latitude" name="latitude" step="0.00000001" required>
-                    <small>Enter a decimal number between -90 and 90</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="longitude">Longitude:</label>
-                    <input type="number" id="longitude" name="longitude" step="0.00000001" required>
-                    <small>Enter a decimal number between -180 and 180</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="category">Category (Optional):</label>
-                    <input type="text" id="category" name="category">
-                </div>
-
-                <div class="form-group">
-                    <label for="notes">Notes (Optional):</label>
-                    <textarea id="notes" name="notes" rows="4"></textarea>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
-
-            <div class="delete-section">
-                <button type="button" onclick="deleteLocation()" class="btn btn-danger">Delete Location</button>
             </div>
         </div>
     </div>
@@ -228,8 +200,6 @@
                 document.getElementById('location').value = location.location || '';
                 document.getElementById('latitude').value = location.latitude || '';
                 document.getElementById('longitude').value = location.longitude || '';
-                document.getElementById('category').value = location.category || '';
-                document.getElementById('notes').value = location.notes || '';
                 
                 // Handle image display (matches backend structure)
                 const currentImageWrapper = document.getElementById('current-image-wrapper');
@@ -264,12 +234,6 @@
             formData.append('longitude', document.getElementById('longitude').value);
             formData.append('_method', 'PUT');
             
-            const category = document.getElementById('category').value;
-            if (category) formData.append('category', category);
-            
-            const notes = document.getElementById('notes').value;
-            if (notes) formData.append('notes', notes);
-            
             const image = document.getElementById('image').files[0];
             if (image) formData.append('image', image);
             
@@ -278,29 +242,27 @@
             submitBtn.textContent = 'Saving...';
             
             try {
-                const token = getAuthToken();
-                const response = await fetch(API_ENDPOINTS.GIS_UPDATE(locationId), {
+                const data = await apiRequest(API_ENDPOINTS.GIS_UPDATE(locationId), {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                    },
                     body: formData
                 });
                 
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to update location');
+                // API returns the updated location object
+                if (data && (data.id || data.location)) {
+                    showMessage('Location updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else if (data && data.success === false) {
+                    throw new Error(data.message || data.error || 'Failed to update location');
+                } else {
+                    throw new Error('Unexpected response from server');
                 }
                 
-                showMessage('Location updated successfully!', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-                
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+                console.error('Error updating location:', error);
+                const errorMessage = error.message || 'Failed to update location. Please check your connection and try again.';
+                showMessage('Error: ' + errorMessage, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Save Changes';
             }
