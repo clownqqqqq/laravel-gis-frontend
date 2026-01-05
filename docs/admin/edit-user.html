@@ -292,7 +292,7 @@
         async function loadUser(id) {
             try {
                 // Get user from users list API
-                const response = await apiRequest(`${API_BASE_URL}/admin/users`, 'GET');
+                const response = await apiRequest(`${API_BASE_URL}/admin/users`);
                 
                 if (response.success && response.data && response.data.data) {
                     const user = response.data.data.find(u => u.id == id);
@@ -354,7 +354,10 @@
             try {
                 // NOTE: This endpoint needs to be added to the API
                 // PUT /admin/users/{id}
-                const response = await apiRequest(`${API_BASE_URL}/admin/users/${userId}`, 'PUT', formData);
+                const response = await apiRequest(`${API_BASE_URL}/admin/users/${userId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
                 
                 if (response.success) {
                     showAlert(response.message || 'User updated successfully!', 'success');
