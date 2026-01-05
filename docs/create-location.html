@@ -133,10 +133,44 @@
         document.getElementById('create-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Validate required fields
+            const location = document.getElementById('location').value.trim();
+            const latitude = document.getElementById('latitude').value.trim();
+            const longitude = document.getElementById('longitude').value.trim();
+            
+            if (!location) {
+                showMessage('Error: Location name is required', 'error');
+                return;
+            }
+            
+            if (!latitude) {
+                showMessage('Error: Latitude is required', 'error');
+                return;
+            }
+            
+            if (!longitude) {
+                showMessage('Error: Longitude is required', 'error');
+                return;
+            }
+            
+            // Validate latitude range
+            const latNum = parseFloat(latitude);
+            if (isNaN(latNum) || latNum < -90 || latNum > 90) {
+                showMessage('Error: Latitude must be between -90 and 90', 'error');
+                return;
+            }
+            
+            // Validate longitude range
+            const lngNum = parseFloat(longitude);
+            if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
+                showMessage('Error: Longitude must be between -180 and 180', 'error');
+                return;
+            }
+            
             const formData = new FormData();
-            formData.append('location', document.getElementById('location').value);
-            formData.append('latitude', document.getElementById('latitude').value);
-            formData.append('longitude', document.getElementById('longitude').value);
+            formData.append('location', location);
+            formData.append('latitude', latitude);
+            formData.append('longitude', longitude);
             
             const category = document.getElementById('category').value;
             if (category) formData.append('category', category);
@@ -152,29 +186,31 @@
             submitBtn.textContent = 'Adding...';
             
             try {
-                const token = getAuthToken();
-                const response = await fetch(API_ENDPOINTS.GIS_CREATE, {
+                const data = await apiRequest(API_ENDPOINTS.GIS_CREATE, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                    },
                     body: formData
                 });
                 
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to create location');
+                // API returns the location object directly (201 status)
+                // Check if we have location data (id, location name, etc.)
+                if (data && (data.id || data.location)) {
+                    const message = data.status === 'pending' 
+                        ? 'Location submitted successfully! Waiting for admin approval.'
+                        : 'Location created successfully!';
+                    showMessage(message, 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else if (data && data.success === false) {
+                    throw new Error(data.message || data.error || 'Failed to create location');
+                } else {
+                    throw new Error('Unexpected response from server');
                 }
                 
-                showMessage('Location created successfully!', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-                
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+                console.error('Error creating location:', error);
+                const errorMessage = error.message || 'Failed to create location. Please check your connection and try again.';
+                showMessage('Error: ' + errorMessage, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Add Location';
             }
