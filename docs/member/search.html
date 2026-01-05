@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
+    <title>Search Places - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="../css/backend-styles.css">
+    <script src="../js/config.js"></script>
+    <script>
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .main-container { min-height: 100vh; }
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .content-area { padding: 40px 20px; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        @media screen and (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .page-header h1 {
+                font-size: 24px;
+            }
+            .page-header h1 span {
+                font-size: 28px;
+            }
+            .page-header .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="../dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <a href="../dashboard.html" class="nav-btn">
+                        <span>🏠</span> Dashboard
+                    </a>
+                    <a href="../dashboard.html#profile" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            <div class="container">
+                <div id="alert-container"></div>
+
+                <div class="page-header">
+                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <span style="font-size: 36px;">🔍</span> Search Places
+                    </h1>
+                    <a href="../dashboard.html" class="btn btn-add-location">
+                        <span>←</span> Back to Locations
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h3>Search & Filter</h3>
+                    <form id="searchForm" style="display: grid; gap: 15px;">
+                        <div>
+                            <label for="search" style="display: block; margin-bottom: 5px;">Search by Name</label>
+                            <input type="text" id="search" name="search" 
+                                   placeholder="Enter location name..." 
+                                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                        </div>
+                        <div>
+                            <label for="category" style="display: block; margin-bottom: 5px;">Filter by Category</label>
+                            <select id="category" name="category" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="background: #0d6efd; color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            <span>🔍</span> Search
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card" style="background: #f8f9fa; margin-top: 20px;">
+                    <h4 style="color: #495057; margin-bottom: 10px;">ℹ️ Search Tips</h4>
+                    <ul style="color: #6c757b; line-height: 1.8;">
+                        <li>Search by location name, category, or description</li>
+                        <li>Use the category filter to narrow down results</li>
+                        <li>Only approved locations are shown in search results</li>
+                    </ul>
+                </div>
+
+                <div id="results-container" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('auth_token');
+            const userData = localStorage.getItem('user_data');
+
+            if (!token || !userData) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userData);
+                
+                // Check if user is member
+                if (user.role !== 'member') {
+                    showAlert('Access denied. Member only.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '../dashboard.html';
+                    }, 2000);
+                    return;
+                }
+
+                // Load categories
+                await loadCategories();
+
+                // Handle URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const searchParam = urlParams.get('search');
+                const categoryParam = urlParams.get('category');
+
+                if (searchParam) {
+                    document.getElementById('search').value = searchParam;
+                }
+                if (categoryParam) {
+                    document.getElementById('category').value = categoryParam;
+                }
+
+                // If search params exist, perform search
+                if (searchParam || categoryParam) {
+                    await performSearch();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.location.href = '../login.html';
+            }
+        });
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const response = await apiRequest(`${API_BASE_URL}/member/categories`);
+                if (response.success && response.data) {
+                    const select = document.getElementById('category');
+                    response.data.forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await performSearch();
+        });
+
+        // Perform search
+        async function performSearch() {
+            const search = document.getElementById('search').value.trim();
+            const category = document.getElementById('category').value;
+            const container = document.getElementById('results-container');
+
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;">Searching...</div>';
+
+            try {
+                let url = `${API_BASE_URL}/member/locations?`;
+                if (search) {
+                    url += `search=${encodeURIComponent(search)}&`;
+                }
+                if (category) {
+                    url += `category=${encodeURIComponent(category)}&`;
+                }
+
+                const response = await apiRequest(url);
+
+                if (response.success && response.data) {
+                    const locations = response.data;
+
+                    if (locations.length === 0) {
+                        container.innerHTML = `
+                            <div class="card">
+                                <p style="text-align: center; color: #64748b;">
+                                    No locations found matching your search criteria.
+                                </p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = `<h2 style="color: #1e293b; margin-bottom: 20px;">Search Results (${locations.length})</h2>`;
+                    html += '<div style="display: grid; gap: 20px;">';
+
+                    locations.forEach(location => {
+                        const imageUrl = location.image 
+                            ? `https://geocrud.bytevortexz.com/uploads/${location.image}` 
+                            : null;
+
+                        html += `
+                            <div class="card" style="display: flex; gap: 20px; align-items: flex-start;">
+                                ${imageUrl ? `
+                                <img src="${imageUrl}" 
+                                     alt="${escapeHtml(location.location)}"
+                                     onerror="this.style.display='none'"
+                                     style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #0d6efd;">
+                                ` : ''}
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 10px 0; color: #1e293b;">${escapeHtml(location.location)}</h3>
+                                    <p style="margin: 5px 0; color: #64748b; font-size: 14px;">
+                                        <span>📍</span> ${parseFloat(location.latitude).toFixed(6)}, ${parseFloat(location.longitude).toFixed(6)}
+                                    </p>
+                                    ${location.category ? `
+                                    <p style="margin: 5px 0; color: #64748b; font-size: 14px;">
+                                        <span>🏷️</span> ${escapeHtml(location.category)}
+                                    </p>
+                                    ` : ''}
+                                    ${location.notes ? `
+                                    <p style="margin: 10px 0; color: #475569;">${escapeHtml(location.notes.length > 200 ? location.notes.substring(0, 200) + '...' : location.notes)}</p>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="card"><p style="text-align: center; color: #721c24;">Error performing search. Please try again.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error performing search:', error);
+                container.innerHTML = `<div class="card"><p style="text-align: center; color: #721c24;">Error: ${escapeHtml(error.message)}</p></div>`;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>
+
