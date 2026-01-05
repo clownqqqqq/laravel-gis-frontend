@@ -180,10 +180,10 @@
             const container = document.getElementById('submissions-container');
 
             try {
-                const response = await apiRequest(`${API_BASE_URL}/staff/submission-history`);
+                const data = await apiRequest(`${API_BASE_URL}/staff/submissions`);
                 
-                if (response.success && response.data) {
-                    const locations = response.data;
+                if (data.success && data.data) {
+                    const locations = data.data;
 
                     if (locations.length === 0) {
                         container.innerHTML = `
