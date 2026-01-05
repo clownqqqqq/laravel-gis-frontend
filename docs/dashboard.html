@@ -4,6 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
     <title>GIS Manager - GeoCRUD</title>
+    <script>
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+        
+        // Fallback if config.js doesn't load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
+                console.warn('config.js failed to load, using fallback API_BASE_URL');
+                if (typeof API_BASE_URL === 'undefined') {
+                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+                }
+            }
+        }, true);
+    </script>
+    <script>
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+        
+        // Fallback if config.js doesn't load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
+                console.warn('config.js failed to load, using fallback API_BASE_URL');
+                if (typeof API_BASE_URL === 'undefined') {
+                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+                }
+            }
+        }, true);
+    </script>
     <script src="js/config.js"></script>
     <style>
         * {
@@ -585,7 +617,7 @@
                 </div>
 
                 <!-- Locations Section -->
-                <div id="locations-section">
+                <div id="locations-section" style="display: block;">
 
                 <div class="page-header">
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
@@ -621,16 +653,16 @@
 
                 <div id="messages"></div>
 
-                <div id="loading" style="display: none;">
-                    <p>Loading locations...</p>
+                <div id="loading" style="display: none; text-align: center; padding: 20px;">
+                    <p style="color: #64748b;">Loading locations...</p>
                 </div>
 
                 <div id="error-container"></div>
                 
                 <div id="locations-container" class="locations-list"></div>
 
-                <div id="empty-state" style="display: none;">
-                    <p>📍 No locations found. <a href="create-location.html" style="color: #0d6efd; text-decoration: none;">Add your first location</a></p>
+                <div id="empty-state" style="display: none; text-align: center; padding: 40px;">
+                    <p style="color: #64748b; font-size: 16px;">📍 No locations found. <a href="create-location.html" style="color: #0d6efd; text-decoration: none; font-weight: 500;">Add your first location</a></p>
                 </div>
                 
                 <div style="margin-top: 2rem; text-align: center;">
