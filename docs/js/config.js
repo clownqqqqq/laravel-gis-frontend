@@ -1,198 +1,580 @@
-// API Configuration
-const API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+// Dashboard JavaScript
+let currentLocations = [];
+let currentSearch = '';
 
-// API Endpoints
-const API_ENDPOINTS = {
-    LOGIN: `${API_BASE_URL}/auth/login`,
-    REGISTER: `${API_BASE_URL}/auth/register`,
-    LOGOUT: `${API_BASE_URL}/logout`,
-    GIS_INDEX: `${API_BASE_URL}/gis`,
-    GIS_CREATE: `${API_BASE_URL}/gis`,
-    GIS_SHOW: (id) => `${API_BASE_URL}/gis/${id}`,
-    GIS_UPDATE: (id) => `${API_BASE_URL}/gis/${id}`,
-    GIS_DELETE: (id) => `${API_BASE_URL}/gis/${id}`,
-    PROFILE: (id) => `${API_BASE_URL}/profile/${id}`,
-    PROFILE_UPDATE: (id) => `${API_BASE_URL}/profile/${id}`,
-};
-
-// Helper function to get auth token
-function getAuthToken() {
-    return localStorage.getItem('auth_token');
-}
-
-// Helper function to set auth token
-function setAuthToken(token) {
-    localStorage.setItem('auth_token', token);
-}
-
-// Helper function to remove auth token
-function removeAuthToken() {
-    localStorage.removeItem('auth_token');
-}
-
-// Helper function to remove user data
-function removeUserData() {
-    localStorage.removeItem('user_data');
-}
-
-// Helper function to get user data
-function getUserData() {
-    const userData = localStorage.getItem('user_data');
-    return userData ? JSON.parse(userData) : null;
-}
-
-// Helper function to set user data
-function setUserData(user) {
-    localStorage.setItem('user_data', JSON.stringify(user));
-}
-
-// Check if user is authenticated
-function isAuthenticated() {
-    return !!getAuthToken();
-}
-
-// API request helper
-async function apiRequest(url, options = {}) {
-    const token = getAuthToken();
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark page load time for auth error handling
+    window.pageLoadTime = Date.now();
     
-    // Default headers
-    const headers = {
-        'Accept': 'application/json',
-        ...options.headers,
-    };
-    
-    // Only set Content-Type if not FormData (FormData sets its own Content-Type with boundary)
-    if (!(options.body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json';
+    // Check authentication
+    if (!isAuthenticated()) {
+        window.location.href = 'login.html';
+        return;
     }
     
-    // Add authentication token
-    if (token) {
-        // Trim token to remove any whitespace
-        const cleanToken = token.trim();
-        
-        // Verify token format before sending
-        if (cleanToken.length !== 64 || !/^[0-9a-f]{64}$/i.test(cleanToken)) {
-            console.error('⚠️ Invalid token format in apiRequest:', {
-                length: cleanToken.length,
-                preview: cleanToken.substring(0, 20) + '...',
-                isHex: /^[0-9a-f]{64}$/i.test(cleanToken),
-                url: url
+        // Wait a moment to ensure token is properly set, then load data
+        setTimeout(() => {
+            // Verify token is still there
+            const verifyToken = getAuthToken();
+            if (!verifyToken) {
+                console.error('❌ No token found! Redirecting to login...');
+                showMessage('⚠️ No authentication token found. Please log in.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            // Verify token format
+            if (verifyToken.length !== 64 || !/^[0-9a-f]{64}$/i.test(verifyToken)) {
+                console.error('❌ Invalid token format!', {
+                    length: verifyToken.length,
+                    preview: verifyToken.substring(0, 20) + '...',
+                    isHex: /^[0-9a-f]{64}$/i.test(verifyToken)
+                });
+                showMessage('⚠️ Invalid authentication token. Please log in again.', 'error');
+                removeAuthToken();
+                removeUserData();
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+                return;
+            }
+            
+            console.log('✅ Token verified on dashboard load:', {
+                length: verifyToken.length,
+                preview: verifyToken.substring(0, 20) + '...',
+                isHex: /^[0-9a-f]{64}$/i.test(verifyToken)
             });
-            // Still send it, but log the issue
+            
+            // Load user info and locations
+            loadUserInfo().catch(() => {}); // Non-critical
+            loadLocations();
+            
+            // Search on Enter key
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchLocations(e);
+                    }
+                });
+            }
+        }, 300); // Small delay to ensure everything is ready
+});
+
+// Load user information and profile
+async function loadUserInfo() {
+    const userData = getUserData();
+    const token = getAuthToken();
+    
+    console.log('Loading user info - Token:', token ? 'Present' : 'Missing');
+    console.log('Loading user info - User data:', userData);
+    
+    // Try to load full user profile from API to get latest role and data
+    if (userData && userData.id && token) {
+        try {
+            console.log('Fetching user profile from API...');
+            const profileData = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+            console.log('Profile data received:', profileData);
+            
+            if (profileData && profileData.user) {
+                // Update user data with latest from server
+                const updatedUser = {
+                    ...userData,
+                    ...profileData.user,
+                    role: profileData.user.role || userData.role || 'member'
+                };
+                setUserData(updatedUser);
+                updateUIWithUserData(updatedUser);
+            } else {
+                // Fallback to stored data
+                console.log('Using stored user data (no profile data)');
+                updateUIWithUserData(userData);
+            }
+        } catch (error) {
+            console.warn('Could not load user profile (non-fatal):', error);
+            // Don't fail completely - use stored data
+            if (userData) {
+                console.log('Using stored user data (API error)');
+                updateUIWithUserData(userData);
+            }
+        }
+    } else if (userData) {
+        console.log('Using stored user data (no ID or token)');
+        updateUIWithUserData(userData);
+    } else {
+        console.warn('No user data found');
+    }
+}
+
+// Update UI with user data
+function updateUIWithUserData(userData) {
+    // Update profile picture if exists
+    const profileAvatar = document.getElementById('profile-avatar');
+    const profilePlaceholder = document.getElementById('profile-avatar-placeholder');
+    
+    if (userData.profile_picture) {
+        if (profileAvatar) {
+            profileAvatar.src = `https://geocrud.bytevortexz.com/uploads/${userData.profile_picture}`;
+            profileAvatar.style.display = 'block';
+            if (profilePlaceholder) {
+                profilePlaceholder.style.display = 'none';
+            }
+            profileAvatar.onerror = function() {
+                this.style.display = 'none';
+                if (profilePlaceholder) {
+                    profilePlaceholder.style.display = 'flex';
+                }
+            };
+        }
+    }
+    
+    // Show admin button if user is admin
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn && userData.role === 'admin') {
+        adminBtn.style.display = 'flex';
+        adminBtn.onclick = function() {
+            window.location.href = 'admin/dashboard.html';
+        };
+    }
+    
+    // Show admin access panel if user is admin
+    const adminAccessPanel = document.getElementById('admin-access-panel');
+    if (adminAccessPanel && userData.role === 'admin') {
+        adminAccessPanel.style.display = 'block';
+    }
+    
+    // Show Manage Users button if user is admin
+    const manageUsersBtn = document.getElementById('manage-users-btn');
+    if (manageUsersBtn && userData.role === 'admin') {
+        manageUsersBtn.style.display = 'inline-block';
+    }
+    
+    // Update add location button visibility based on role
+    const addLocationBtn = document.querySelector('.btn-add-location');
+    if (addLocationBtn) {
+        // Only admin and staff can add locations
+        if (userData.role !== 'admin' && userData.role !== 'staff') {
+            addLocationBtn.style.display = 'none';
+        }
+    }
+}
+
+// Load all locations from API
+async function loadLocations(searchTerm = '') {
+    const loadingDiv = document.getElementById('loading');
+    const container = document.getElementById('locations-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Verify token before making request
+    const token = getAuthToken();
+    if (!token) {
+        console.error('No token found when loading locations!');
+        loadingDiv.style.display = 'none';
+        showMessage('Authentication error. Please log in again.', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+    
+    loadingDiv.style.display = 'block';
+    container.innerHTML = '';
+    emptyState.style.display = 'none';
+    
+    try {
+        let url = API_ENDPOINTS.GIS_INDEX;
+        if (searchTerm && searchTerm.trim()) {
+            url += `?search=${encodeURIComponent(searchTerm.trim())}`;
         }
         
-        headers['Authorization'] = `Bearer ${cleanToken}`;
+        const data = await apiRequest(url);
         
-        // Debug log for API requests
-        console.log('📤 API Request:', {
-            url: url,
-            method: options.method || 'GET',
-            tokenLength: cleanToken.length,
-            tokenPreview: cleanToken.substring(0, 20) + '...'
-        });
-    } else {
-        console.warn('⚠️ No token available for API request:', url);
+        console.log('📍 Locations API response:', data);
+        
+        // Handle API response format: {success: true, data: [...]}
+        if (data.success && Array.isArray(data.data)) {
+            currentLocations = data.data;
+            console.log('✅ Locations loaded from data.data:', currentLocations.length, 'locations');
+        } else if (Array.isArray(data.locations)) {
+            currentLocations = data.locations;
+            console.log('✅ Locations loaded from data.locations:', currentLocations.length, 'locations');
+        } else if (Array.isArray(data)) {
+            currentLocations = data;
+            console.log('✅ Locations loaded from data array:', currentLocations.length, 'locations');
+        } else {
+            currentLocations = [];
+            console.warn('⚠️ No locations found in response:', data);
+        }
+        
+        loadingDiv.style.display = 'none';
+        
+        if (currentLocations.length === 0) {
+            console.log('ℹ️ No locations to display - showing empty state');
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        console.log('🎨 Rendering', currentLocations.length, 'locations...');
+        renderLocations(currentLocations);
+        console.log('✅ Locations rendered successfully!');
+        
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        const errorContainer = document.getElementById('error-container');
+        const locationsContainer = document.getElementById('locations-container');
+        
+        // Clear locations container
+        if (locationsContainer) {
+            locationsContainer.innerHTML = '';
+        }
+        
+        // Check if it's an authentication error
+        if (error.message && (error.message.includes('Authentication') || error.message.includes('401') || error.message.includes('Unauthorized'))) {
+            const currentToken = getAuthToken();
+            
+            if (!currentToken) {
+                showMessage('⚠️ Not logged in. Redirecting to login...', 'error');
+                setTimeout(() => window.location.href = 'login.html', 2000);
+                return;
+            }
+            
+            // Token exists but was rejected - show detailed error
+            const errorMsg = `⚠️ Authentication Error: ${error.message}\n\n` +
+                           `This usually means:\n` +
+                           `• Your session expired\n` +
+                           `• Server cache needs to be cleared\n` +
+                           `• Please try logging out and logging in again`;
+            showMessage(errorMsg, 'error');
+            
+            // Add logout button
+            if (errorContainer) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = '🚪 Logout and Login Again';
+                logoutBtn.className = 'btn';
+                logoutBtn.style.marginTop = '10px';
+                logoutBtn.style.background = '#ef4444';
+                logoutBtn.style.color = 'white';
+                logoutBtn.style.padding = '12px 24px';
+                logoutBtn.style.borderRadius = '8px';
+                logoutBtn.style.cursor = 'pointer';
+                logoutBtn.onclick = () => {
+                    removeAuthToken();
+                    removeUserData();
+                    window.location.href = 'login.html';
+                };
+                errorContainer.appendChild(logoutBtn);
+            }
+            emptyState.style.display = 'block';
+            return;
+        }
+        
+        // Other errors
+        showMessage('❌ Error loading locations: ' + (error.message || 'Unknown error. Please check your connection and try again.'), 'error');
+        emptyState.style.display = 'block';
+    }
+}
+
+function renderLocations(locations) {
+    const container = document.getElementById('locations-container');
+    const userData = getUserData();
+    const userRole = userData?.role || 'member';
+    
+    console.log('🎨 renderLocations called with:', locations.length, 'locations');
+    console.log('📍 Container element:', container);
+    console.log('👤 User role:', userRole);
+    
+    if (!container) {
+        console.error('❌ locations-container element not found!');
+        return;
+    }
+    
+    if (!Array.isArray(locations) || locations.length === 0) {
+        console.log('ℹ️ No locations to render - showing empty state');
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+        container.innerHTML = '';
+        return;
+    }
+    
+    // Hide empty state
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+    
+    console.log('🎨 Rendering', locations.length, 'location cards...');
+    container.innerHTML = locations.map((location, index) => {
+        // Handle location data - ensure we have required fields
+        const locationName = location.location || location.name || 'Unnamed Location';
+        const latitude = location.latitude || 0;
+        const longitude = location.longitude || 0;
+        const locationId = location.id || index;
+        const imageUrl = location.image 
+            ? `https://geocrud.bytevortexz.com/uploads/${location.image}`
+            : null;
+        
+        const statusBadge = getStatusBadge(location.status, userRole);
+        // Admin and staff can edit approved locations
+        const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
+        
+        return `
+            <div class="card location-card">
+                <div class="location-content">
+                    ${imageUrl ? `
+                    <div class="location-image-wrapper">
+                        <img src="${imageUrl}" alt="${locationName}" class="location-image" onerror="this.style.display='none'">
+                    </div>
+                    ` : '<div class="location-image-wrapper" style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #0d6efd; flex-shrink: 0;"><span style="font-size: 48px;">📍</span></div>'}
+                    <div class="location-details">
+                        <h3 class="location-name">
+                            ${locationName}
+                            ${statusBadge}
+                        </h3>
+                        <p class="location-coords">
+                            Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
+                        </p>
+                        ${location.category ? `<p style="margin: 5px 0; color: #64748b; font-size: 14px;">${location.category}</p>` : ''}
+                        ${location.notes ? `<p style="margin: 10px 0; color: #475569; font-size: 14px;">${location.notes.length > 100 ? location.notes.substring(0, 100) + '...' : location.notes}</p>` : ''}
+                    </div>
+                </div>
+                ${canEdit ? `
+                <div class="location-actions">
+                    <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
+                        <span>✏️</span> Edit
+                    </a>
+                    <form class="location-delete-form" onsubmit="deleteLocation(${locationId}); return false;">
+                        <button type="submit" class="btn btn-delete">
+                            <span>🗑️</span> Delete
+                        </button>
+                    </form>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    console.log('✅ Location cards rendered:', container.children.length, 'cards');
+    console.log('✅ Container HTML length:', container.innerHTML.length, 'characters');
+}
+
+// Get status badge HTML
+function getStatusBadge(status, userRole) {
+    if (!status || status === 'approved' || userRole !== 'admin') return '';
+    
+    const badges = {
+        'pending': '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fde047;">⏳ Pending Approval</span>',
+        'rejected': '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; border: 1px solid #fca5a5;">✗ Rejected</span>'
+    };
+    
+    return badges[status] || '';
+}
+
+// Search locations
+function searchLocations(event) {
+    if (event) event.preventDefault();
+    const searchTerm = document.getElementById('search').value.trim();
+    currentSearch = searchTerm;
+    loadLocations(searchTerm);
+}
+
+// Clear search (if needed in future)
+function clearSearch() {
+    document.getElementById('search').value = '';
+    currentSearch = '';
+    loadLocations();
+}
+
+// Edit location
+function editLocation(id) {
+    window.location.href = `edit-location.html?id=${id}`;
+}
+
+// View location
+function viewLocation(id) {
+    window.location.href = `view-location.html?id=${id}`;
+}
+
+// Delete location
+async function deleteLocation(id) {
+    const locationName = currentLocations.find(loc => loc.id === id)?.location || 'this location';
+    if (!confirm(`Are you sure you want to delete ${locationName}? This action cannot be undone.`)) {
+        return false;
     }
     
     try {
-        const response = await fetch(url, {
-            ...options,
-            headers,
+        await apiRequest(API_ENDPOINTS.GIS_DELETE(id), {
+            method: 'DELETE'
         });
         
-        // Handle non-JSON responses
-        let data;
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
-            throw new Error(text || 'Server error');
-        }
+        showMessage('Location deleted successfully!', 'success');
+        loadLocations(currentSearch);
         
-        // Handle authentication errors
-        if (response.status === 401) {
-            const existingToken = getAuthToken();
-            
-            const errorDetails = {
-                url: url,
-                tokenExists: !!existingToken,
-                tokenPreview: existingToken ? existingToken.substring(0, 40) + '...' : 'NO TOKEN',
-                tokenLength: existingToken ? existingToken.length : 0,
-                tokenFull: existingToken, // Include full token for debugging
-                responseMessage: data.message || data.error,
-                fullResponse: data
-            };
-            
-            console.error('⚠️ 401 Unauthorized Error:', errorDetails);
-            
-            // Test if token is valid using debug endpoint
-            if (existingToken && !url.includes('/debug/')) {
-                console.log('🔍 Testing token with debug endpoint...');
-                fetch('https://geocrud.bytevortexz.com/api/debug/auth-test', {
-                    headers: {
-                        'Authorization': `Bearer ${existingToken}`,
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(r => r.json())
-                .then(debugData => {
-                    console.log('🔍 Debug endpoint result:', debugData);
-                    if (debugData.user_found === 'YES') {
-                        console.error('⚠️ Token is VALID in database but middleware rejected it!');
-                        console.error('⚠️ This is an OPcache issue - touch middleware file or restart PHP-FPM');
-                    } else {
-                        console.error('⚠️ Token NOT found in database');
-                        console.error('⚠️ Token in localStorage:', existingToken);
-                        if (debugData.token_comparisons) {
-                            console.error('⚠️ Database tokens:', debugData.token_comparisons);
-                        }
-                        console.error('⚠️ Solution: Clear localStorage and log in again');
-                    }
-                })
-                .catch(err => console.error('Debug endpoint error:', err));
-            }
-            
-            // Create detailed error message for UI
-            let errorMessage = 'Authentication failed: ';
-            if (data.message) {
-                errorMessage += data.message;
-            } else if (data.error) {
-                errorMessage += data.error;
-            } else {
-                errorMessage += 'Unauthorized access. Please log in again.';
-            }
-            
-            if (!existingToken) {
-                errorMessage += ' (No token found)';
-            } else if (url.includes('/auth/login') === false) {
-                errorMessage += ' (Token was rejected by server)';
-            }
-            
-            // Don't auto-logout - let the calling function handle it
-            throw new Error(errorMessage);
-        }
-        
-        // Handle authorization errors
-        if (response.status === 403) {
-            throw new Error(data.message || data.error || 'Access denied. You do not have permission to perform this action.');
-        }
-        
-        // Handle other errors
-        if (!response.ok) {
-            throw new Error(data.message || data.error || `Error: ${response.status} ${response.statusText}`);
-        }
-        
-        return data;
     } catch (error) {
-        // If it's already our error object, rethrow it
-        if (error.message) {
-            throw error;
-        }
-        // Otherwise wrap it
-        console.error('API Error:', error);
-        throw new Error(error.message || 'Network error. Please check your connection and try again.');
+        showMessage('Error deleting location: ' + error.message, 'error');
+    }
+    return false;
+}
+
+// Show message
+function showMessage(message, type = 'success') {
+    const messagesDiv = document.getElementById('messages');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    
+    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    
+    setTimeout(() => {
+        messagesDiv.innerHTML = '';
+    }, 5000);
+}
+
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        removeAuthToken();
+        window.location.href = 'index.html';
     }
 }
+
+// Show profile section
+function showProfileSection() {
+    document.getElementById('profile-section').style.display = 'block';
+    document.getElementById('locations-section').style.display = 'none';
+    window.location.hash = 'profile';
+    loadProfileData();
+}
+
+// Show locations section
+function showLocationsSection() {
+    document.getElementById('profile-section').style.display = 'none';
+    document.getElementById('locations-section').style.display = 'block';
+    window.location.hash = '';
+}
+
+// Load profile data
+async function loadProfileData() {
+    const userData = getUserData();
+    if (!userData || !userData.id) {
+        showProfileMessage('Error: User data not found', 'error');
+        return;
+    }
+
+    try {
+        const data = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
+        const user = data.user || data;
+        
+        document.getElementById('profile-username').value = user.username || '';
+        document.getElementById('profile-email').value = user.email || '';
+        document.getElementById('profile-firstname').value = user.firstname || '';
+        document.getElementById('profile-lastname').value = user.lastname || '';
+        document.getElementById('profile-mobile').value = user.mobile_number || '';
+        
+        if (user.profile_picture) {
+            const imageUrl = `https://geocrud.bytevortexz.com/uploads/${user.profile_picture}`;
+            document.getElementById('current-profile-picture').innerHTML = `
+                <small style="display: block; margin-bottom: 0.5rem; color: #6b7280;">Current profile picture:</small>
+                <img src="${imageUrl}" style="max-width: 150px; border-radius: 50%; border: 2px solid #d1d5db;" 
+                     onerror="this.style.display='none'">
+            `;
+        }
+    } catch (error) {
+        showProfileMessage('Error loading profile: ' + error.message, 'error');
+    }
+}
+
+// Update profile
+async function updateProfile(e) {
+    e.preventDefault();
+    
+    const userData = getUserData();
+    if (!userData || !userData.id) {
+        showProfileMessage('Error: User data not found', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('username', document.getElementById('profile-username').value);
+    formData.append('email', document.getElementById('profile-email').value);
+    
+    const firstname = document.getElementById('profile-firstname').value;
+    if (firstname) formData.append('firstname', firstname);
+    
+    const lastname = document.getElementById('profile-lastname').value;
+    if (lastname) formData.append('lastname', lastname);
+    
+    const mobile = document.getElementById('profile-mobile').value;
+    if (mobile) formData.append('mobile_number', mobile);
+    
+    const profilePicture = document.getElementById('profile-picture').files[0];
+    if (profilePicture) formData.append('profile_picture', profilePicture);
+    
+    formData.append('_method', 'PUT');
+    
+    const submitBtn = document.querySelector('#profile-form button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Updating...';
+    
+    try {
+        const token = getAuthToken();
+        const response = await fetch(API_ENDPOINTS.PROFILE_UPDATE(userData.id), {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to update profile');
+        }
+        
+        // Update user data in localStorage
+        if (data.user) {
+            setUserData(data.user);
+            updateUIWithUserData(data.user);
+        }
+        
+        showProfileMessage('Profile updated successfully!', 'success');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Profile';
+        
+    } catch (error) {
+        showProfileMessage('Error: ' + error.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Profile';
+    }
+}
+
+// Show profile message
+function showProfileMessage(message, type) {
+    const messagesDiv = document.getElementById('profile-messages');
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+    messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    
+    setTimeout(() => {
+        messagesDiv.innerHTML = '';
+    }, 5000);
+}
+
+// Check hash on load
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#profile') {
+        showProfileSection();
+    }
+    
+    // Add click handlers for profile links
+    document.querySelectorAll('a[href="#profile"]').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showProfileSection();
+        });
+    });
+});
 
