@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
+    <title>Pending Location Submissions - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="../css/backend-styles.css">
+    <script src="../js/config.js"></script>
+    <script>
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+        
+        // Fallback if config.js doesn't load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
+                console.warn('config.js failed to load, using fallback API_BASE_URL');
+                if (typeof API_BASE_URL === 'undefined') {
+                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+                }
+            }
+        }, true);
+    </script>
+    <style>
+        /* Fallback styles if backend-styles.css doesn't load */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .main-container { min-height: 100vh; }
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .content-area { padding: 40px 20px; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .alert {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-header > div {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-add-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .location-card {
+            border-left: 4px solid #4facfe;
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+        }
+
+        .review-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .page-header h1 {
+                font-size: 24px;
+            }
+
+            .page-header h1 span {
+                font-size: 28px;
+            }
+
+            .page-header > div {
+                width: 100%;
+            }
+
+            .page-header .btn {
+                flex: 1;
+                min-width: 140px;
+                justify-content: center;
+            }
+
+            .location-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            .location-grid > div:last-child {
+                width: 100%;
+            }
+
+            .review-form {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <nav class="top-nav">
+            <div class="container">
+                <a href="../dashboard.html" class="logo">
+                    <span>📍</span> GIS Manager
+                </a>
+                <div class="nav-buttons">
+                    <a href="../dashboard.html" class="nav-btn">
+                        <span>🏠</span> Dashboard
+                    </a>
+                    <a href="../dashboard.html#profile" class="nav-btn">
+                        <span>👤</span> Profile
+                    </a>
+                    <button onclick="logout()" class="nav-btn">
+                        <span>🚪</span> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content-area">
+            <div class="container">
+                <div id="alert-container"></div>
+
+                <div class="page-header">
+                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <span style="font-size: 36px;">⏳</span> Pending Location Submissions
+                    </h1>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="dashboard.html" class="btn btn-add-location">
+                            <span>👑</span> Dashboard
+                        </a>
+                        <a href="../dashboard.html" class="btn" style="background: #6c757d; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px;">
+                            📍 All Locations
+                        </a>
+                    </div>
+                </div>
+
+                <div id="locations-container">
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        Loading pending locations...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('auth_token');
+            const userData = localStorage.getItem('user_data');
+
+            if (!token || !userData) {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userData);
+                
+                // Check if user is admin
+                if (user.role !== 'admin') {
+                    showAlert('Access denied. Admin only.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '../dashboard.html';
+                    }, 2000);
+                    return;
+                }
+
+                // Load pending locations
+                await loadPendingLocations();
+            } catch (error) {
+                console.error('Error:', error);
+                window.location.href = '../login.html';
+            }
+        });
+
+        // Load pending locations from API
+        async function loadPendingLocations() {
+            const container = document.getElementById('locations-container');
+
+            try {
+                const response = await apiRequest(`${API_BASE_URL}/admin/pending-locations`);
+                
+                if (response.success && response.data) {
+                    const locations = response.data;
+
+                    if (locations.length === 0) {
+                        container.innerHTML = `
+                            <div class="card" style="text-align: center; padding: 40px;">
+                                <p style="color: #64748b; margin: 0; font-size: 18px;">
+                                    ✅ No pending location submissions. All locations have been reviewed!
+                                </p>
+                                <a href="dashboard.html" style="display: inline-block; margin-top: 20px; color: #0d6efd; text-decoration: none;">
+                                    ← Back to Dashboard
+                                </a>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Show info banner
+                    let html = `
+                        <div class="card" style="background: #fff3cd; border: 1px solid #ffc107; margin-bottom: 20px;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong>ℹ️</strong> You have <strong>${locations.length}</strong> location(s) waiting for review. 
+                                Review each submission and approve or reject with feedback.
+                            </p>
+                        </div>
+                        <div style="display: grid; gap: 20px;">
+                    `;
+
+                    locations.forEach(location => {
+                        const imageUrl = location.image 
+                            ? `https://geocrud.bytevortexz.com/uploads/${location.image}` 
+                            : null;
+                        const submittedDate = new Date(location.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                        });
+
+                        html += `
+                            <div class="card location-card">
+                                <div class="location-grid">
+                                    <!-- Location Details -->
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                            <h3 style="margin: 0; color: #1e293b;">${escapeHtml(location.location)}</h3>
+                                            <span style="padding: 4px 12px; background: #fff3cd; color: #856404; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                                                ⏳ PENDING
+                                            </span>
+                                        </div>
+
+                                        ${imageUrl ? `
+                                        <div style="margin-bottom: 15px;">
+                                            <img src="${imageUrl}" 
+                                                 alt="${escapeHtml(location.location)}"
+                                                 style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;"
+                                                 onerror="this.style.display='none'">
+                                        </div>
+                                        ` : ''}
+
+                                        <div style="display: grid; gap: 10px; margin-bottom: 15px;">
+                                            <p style="margin: 0; color: #64748b;">
+                                                <strong>📍 Coordinates:</strong> 
+                                                ${parseFloat(location.latitude).toFixed(6)}, ${parseFloat(location.longitude).toFixed(6)}
+                                            </p>
+                                            
+                                            ${location.category ? `
+                                            <p style="margin: 0; color: #64748b;">
+                                                <strong>🏷️ Category:</strong> ${escapeHtml(location.category)}
+                                            </p>
+                                            ` : ''}
+                                            
+                                            <p style="margin: 0; color: #64748b;">
+                                                <strong>👤 Submitted by:</strong> 
+                                                ${escapeHtml(location.user?.username || 'Unknown')} (${escapeHtml(location.user?.email || 'N/A')})
+                                            </p>
+                                            
+                                            <p style="margin: 0; color: #64748b;">
+                                                <strong>📅 Submitted:</strong> 
+                                                ${submittedDate}
+                                            </p>
+                                            
+                                            ${location.notes ? `
+                                            <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                                                <strong style="color: #495057;">📝 Notes:</strong>
+                                                <p style="margin: 5px 0 0 0; color: #475569;">${escapeHtml(location.notes)}</p>
+                                            </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+
+                                    <!-- Review Actions -->
+                                    <div>
+                                        <div class="review-form">
+                                            <h4 style="margin: 0 0 15px 0; color: #495057;">Review Action</h4>
+                                            
+                                            <form onsubmit="reviewLocation(event, ${location.id})" style="display: grid; gap: 15px;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; color: #495057; font-weight: 500;">
+                                                        Feedback (Optional)
+                                                    </label>
+                                                    <textarea id="feedback-${location.id}" 
+                                                              rows="3" 
+                                                              placeholder="Add feedback for the staff member..."
+                                                              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+                                                </div>
+                                                
+                                                <div style="display: flex; gap: 10px;">
+                                                    <button type="submit" 
+                                                            data-action="approve"
+                                                            data-location-id="${location.id}"
+                                                            style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                                                        ✅ Approve
+                                                    </button>
+                                                    <button type="button" 
+                                                            onclick="reviewLocation(null, ${location.id}, 'reject')"
+                                                            style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                                                        ❌ Reject
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="card"><p style="text-align: center; color: #721c24;">Error loading pending locations. Please try again.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading pending locations:', error);
+                container.innerHTML = `<div class="card"><p style="text-align: center; color: #721c24;">Error loading pending locations: ${escapeHtml(error.message)}</p></div>`;
+            }
+        }
+
+        // Review location (approve or reject)
+        async function reviewLocation(event, locationId, action = null) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Get action from button or parameter
+            if (!action) {
+                action = event?.submitter?.dataset?.action || 'approve';
+            }
+
+            const feedbackElement = document.getElementById(`feedback-${locationId}`);
+            const adminFeedback = feedbackElement ? feedbackElement.value.trim() : '';
+
+            if (!confirm(`Are you sure you want to ${action === 'approve' ? 'approve' : 'reject'} this location?`)) {
+                return;
+            }
+
+            try {
+                const response = await apiRequest(`${API_BASE_URL}/admin/locations/${locationId}/review`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: action,
+                        admin_feedback: adminFeedback || null
+                    })
+                });
+
+                if (response.success) {
+                    showAlert(response.message || `Location ${action === 'approve' ? 'approved' : 'rejected'} successfully!`, 'success');
+                    // Reload locations
+                    await loadPendingLocations();
+                } else {
+                    showAlert(response.message || `Failed to ${action} location. Please try again.`, 'error');
+                }
+            } catch (error) {
+                console.error('Error reviewing location:', error);
+                showAlert(`Error ${action === 'approve' ? 'approving' : 'rejecting'} location: ${error.message}`, 'error');
+            }
+        }
+
+        // Helper functions
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>
+
