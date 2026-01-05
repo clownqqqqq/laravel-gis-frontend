@@ -279,7 +279,10 @@
             };
 
             try {
-                const response = await apiRequest(`${API_BASE_URL}/admin/users`, 'POST', formData);
+                const response = await apiRequest(`${API_BASE_URL}/admin/users`, {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
                 
                 if (response.success) {
                     showAlert(response.message || 'User created successfully!', 'success');
