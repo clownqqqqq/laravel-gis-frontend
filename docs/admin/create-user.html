@@ -3,49 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
-    <title>Add Location - GeoCRUD</title>
-    <link rel="stylesheet" href="css/backend-styles.css">
+    <title>Create New User - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="../css/backend-styles.css">
+    <script src="../js/config.js"></script>
+    <script>
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof API_BASE_URL === 'undefined') {
+            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+        }
+        
+        // Fallback if config.js doesn't load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
+                console.warn('config.js failed to load, using fallback API_BASE_URL');
+                if (typeof API_BASE_URL === 'undefined') {
+                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
+                }
+            }
+        }, true);
+    </script>
     <style>
-        /* Page-specific styles from create.blade.php */
-        .form-actions {
+        /* Fallback styles if backend-styles.css doesn't load */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .main-container { min-height: 100vh; }
+        .top-nav {
+            background: #0d6efd;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .top-nav .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
-            flex-wrap: wrap;
-        }
-
-        .form-actions .btn {
-            flex: 1;
-            min-width: 140px;
-        }
-
-        .btn-primary {
-            background: #0d6efd !important;
-        }
-
-        .btn-secondary {
-            background: #6c757d !important;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
+        }
+        .top-nav .logo {
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
             text-decoration: none;
         }
+        .content-area { padding: 40px 20px; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .alert {
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
 
-        .btn-secondary:hover {
-            background: #5a6268 !important;
+        .btn-add-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         @media screen and (max-width: 768px) {
-            .form-actions {
-                flex-direction: column !important;
-                margin-top: 24px !important;
-                gap: 10px !important;
+            .form-row {
+                grid-template-columns: 1fr;
             }
 
-            .form-actions .btn {
-                width: 100% !important;
-                min-width: unset !important;
-                flex: none !important;
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -54,12 +131,15 @@
     <div class="main-container">
         <nav class="top-nav">
             <div class="container">
-                <a href="dashboard.html" class="logo">
+                <a href="../dashboard.html" class="logo">
                     <span>📍</span> GIS Manager
                 </a>
                 <div class="nav-buttons">
-                    <a href="dashboard.html" class="nav-btn">
-                        <span>←</span> Back
+                    <a href="../dashboard.html" class="nav-btn">
+                        <span>🏠</span> Dashboard
+                    </a>
+                    <a href="../dashboard.html#profile" class="nav-btn">
+                        <span>👤</span> Profile
                     </a>
                     <button onclick="logout()" class="nav-btn">
                         <span>🚪</span> Logout
@@ -67,113 +147,180 @@
                 </div>
             </div>
         </nav>
+
         <div class="content-area">
             <div class="container">
-                <h1>Add New GIS Location</h1>
-                <p class="subtitle" style="text-align: center;">Fill out the form below to add a new geographic location.</p>
+                <div id="alert-container"></div>
 
-                <div id="messages"></div>
+                <div class="page-header">
+                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <span style="font-size: 36px;">➕</span> Create New User
+                    </h1>
+                    <a href="users.html" class="btn btn-add-location">
+                        <span>←</span> Back to Users
+                    </a>
+                </div>
 
                 <div class="card">
-                    <form id="create-form">
-                        <div class="form-group">
-                            <label for="image">Location Image (Optional):</label>
-                            <input type="file" id="image" name="image" accept="image/*">
+                    <h3>User Information</h3>
+                    <form id="create-user-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="username">Username *</label>
+                                <input type="text" id="username" name="username" required placeholder="Enter username">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email *</label>
+                                <input type="email" id="email" name="email" required placeholder="Enter email">
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="location">Location Name:</label>
-                            <input type="text" id="location" name="location" required 
-                                   placeholder="e.g., MU, City Hall, etc.">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password">Password *</label>
+                                <input type="password" id="password" name="password" required minlength="6" placeholder="Minimum 6 characters">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="role">Role *</label>
+                                <select id="role" name="role" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                                    <option value="">Select Role</option>
+                                    <option value="admin">👑 Admin</option>
+                                    <option value="staff">🛠 Staff</option>
+                                    <option value="member">🧑 Member</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="latitude">Latitude:</label>
-                            <input type="number" id="latitude" name="latitude" step="0.00000001" required
-                                   placeholder="e.g., 8.14954800">
-                            <small>Enter a decimal number between -90 and 90</small>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstname">First Name</label>
+                                <input type="text" id="firstname" name="firstname" placeholder="Enter first name">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastname">Last Name</label>
+                                <input type="text" id="lastname" name="lastname" placeholder="Enter last name">
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="longitude">Longitude:</label>
-                            <input type="number" id="longitude" name="longitude" step="0.00000001" required
-                                   placeholder="e.g., 123.84147700">
-                            <small>Enter a decimal number between -180 and 180</small>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mobile_number">Mobile Number</label>
+                                <input type="tel" id="mobile_number" name="mobile_number" placeholder="+1234567890">
+                            </div>
                         </div>
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Add Location</button>
-                            <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button type="submit" class="btn btn-primary" style="background: #28a745; color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                <span>✅</span> Create User
+                            </button>
+                            <a href="users.html" class="btn" style="background: #6c757d; color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; display: inline-block;">
+                                Cancel
+                            </a>
                         </div>
                     </form>
+                </div>
+
+                <div class="card" style="background: #f8f9fa; margin-top: 20px;">
+                    <h4 style="color: #495057; margin-bottom: 10px;">ℹ️ Role Information</h4>
+                    <ul style="color: #6c757d; line-height: 1.8;">
+                        <li><strong>👑 Admin:</strong> Full system access, manage users, approve/reject submissions</li>
+                        <li><strong>🛠 Staff:</strong> Submit locations, view submission status, receive notifications</li>
+                        <li><strong>🧑 Member:</strong> Browse locations, save favorites, suggest places, report issues</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
+    <script src="../js/auth.js"></script>
     <script>
-        // Check authentication
-        if (!isAuthenticated()) {
-            window.location.href = 'login.html';
-        }
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('auth_token');
+            const userData = localStorage.getItem('user_data');
 
-        document.getElementById('create-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('location', document.getElementById('location').value);
-            formData.append('latitude', document.getElementById('latitude').value);
-            formData.append('longitude', document.getElementById('longitude').value);
-            
-            const image = document.getElementById('image').files[0];
-            if (image) formData.append('image', image);
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Adding...';
-            
+            if (!token || !userData) {
+                window.location.href = '../login.html';
+                return;
+            }
+
             try {
-                const token = getAuthToken();
-                const response = await fetch(API_ENDPOINTS.GIS_CREATE, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                    },
-                    body: formData
-                });
+                const user = JSON.parse(userData);
                 
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to create location');
+                // Check if user is admin
+                if (user.role !== 'admin') {
+                    showAlert('Access denied. Admin only.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '../dashboard.html';
+                    }, 2000);
+                    return;
                 }
-                
-                showMessage('Location created successfully!', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-                
             } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Add Location';
+                console.error('Error:', error);
+                window.location.href = '../login.html';
             }
         });
 
-        function showMessage(message, type) {
-            const messagesDiv = document.getElementById('messages');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-            messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+        // Form submission handler
+        document.getElementById('create-user-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value,
+                firstname: document.getElementById('firstname').value || null,
+                lastname: document.getElementById('lastname').value || null,
+                mobile_number: document.getElementById('mobile_number').value || null,
+            };
+
+            try {
+                const response = await apiRequest(`${API_BASE_URL}/admin/users`, {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.success) {
+                    showAlert(response.message || 'User created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'users.html';
+                    }, 1500);
+                } else {
+                    const errorMsg = response.message || response.error || 'Failed to create user. Please try again.';
+                    showAlert(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                const errorMsg = error.message || 'Failed to create user. Please try again.';
+                showAlert(errorMsg, 'error');
+            }
+        });
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                removeAuthToken();
-                window.location.href = 'index.html';
-            }
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_data');
+            window.location.href = '../login.html';
         }
     </script>
 </body>
 </html>
+
