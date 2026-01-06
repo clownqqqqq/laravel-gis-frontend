@@ -345,14 +345,15 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ email: email })
                 });
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    alert('OTP resent successfully!');
+                if (response.ok && data.success) {
+                    alert('OTP resent successfully! Please check your email (including spam folder).');
                     let countdown = 60;
                     this.textContent = `Resend OTP (${countdown}s)`;
                     const interval = setInterval(() => {
@@ -365,12 +366,15 @@
                         }
                     }, 1000);
                 } else {
-                    alert(data.error || data.message || 'Failed to resend OTP');
+                    const errorMsg = data.error || data.message || 'Failed to resend OTP. Please check your email configuration.';
+                    alert(`Error: ${errorMsg}`);
+                    console.error('Resend OTP error:', data);
                     this.disabled = false;
                     this.textContent = 'Resend OTP';
                 }
             } catch (error) {
-                alert('Failed to resend OTP');
+                console.error('Resend OTP network error:', error);
+                alert(`Network error: ${error.message || 'Failed to resend OTP. Please check your connection.'}`);
                 this.disabled = false;
                 this.textContent = 'Resend OTP';
             }
