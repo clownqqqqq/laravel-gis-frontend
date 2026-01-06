@@ -148,7 +148,13 @@
                     <p style="color: #64748b; margin-bottom: 20px;">
                         Suggest a new location that should be added to the system. Your suggestion will be reviewed by administrators.
                     </p>
-                    <form id="suggestForm">
+                    <form id="suggestForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="image">Location Image (Optional)</label>
+                            <input type="file" id="image" name="image" accept="image/*">
+                            <small style="color: #6c757b; font-size: 12px; display: block; margin-top: 5px;">Upload a photo of the location (Max: 2MB)</small>
+                        </div>
+
                         <div class="form-group">
                             <label for="location">Location Name *</label>
                             <input type="text" id="location" name="location" required 
@@ -220,25 +226,30 @@
         document.getElementById('suggestForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const formData = {
-                location: document.getElementById('location').value.trim(),
-                latitude: parseFloat(document.getElementById('latitude').value),
-                longitude: parseFloat(document.getElementById('longitude').value),
-            };
+            const location = document.getElementById('location').value.trim();
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const imageFile = document.getElementById('image').files[0];
 
             // Validation
-            if (!formData.location) {
+            if (!location) {
                 showAlert('Location name is required', 'error');
                 return;
             }
 
-            if (isNaN(formData.latitude) || formData.latitude < -90 || formData.latitude > 90) {
+            if (isNaN(latitude) || latitude < -90 || latitude > 90) {
                 showAlert('Please enter a valid latitude (-90 to 90)', 'error');
                 return;
             }
 
-            if (isNaN(formData.longitude) || formData.longitude < -180 || formData.longitude > 180) {
+            if (isNaN(longitude) || longitude < -180 || longitude > 180) {
                 showAlert('Please enter a valid longitude (-180 to 180)', 'error');
+                return;
+            }
+
+            // Validate image file size if provided
+            if (imageFile && imageFile.size > 2 * 1024 * 1024) {
+                showAlert('Image size must be less than 2MB', 'error');
                 return;
             }
 
@@ -247,20 +258,42 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = '⏳ Submitting...';
 
-                const response = await apiRequest(`${API_BASE_URL}/member/suggest-place`, {
+                // Use FormData for file upload
+                const formData = new FormData();
+                formData.append('location', location);
+                formData.append('latitude', latitude);
+                formData.append('longitude', longitude);
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
+                // Get auth token
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    showAlert('Authentication required. Please log in again.', 'error');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/member/suggest-place`, {
                     method: 'POST',
-                    body: JSON.stringify(formData)
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
                 });
 
-                if (response.success) {
-                    showAlert(response.message || 'Suggestion submitted successfully! It will be reviewed by administrators.', 'success');
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showAlert(data.message || 'Suggestion submitted successfully! It will be reviewed by administrators.', 'success');
                     document.getElementById('suggestForm').reset();
                     
                     setTimeout(() => {
                         window.location.href = 'my-suggestions.html';
                     }, 2000);
                 } else {
-                    showAlert(response.message || 'Failed to submit suggestion. Please try again.', 'error');
+                    showAlert(data.message || 'Failed to submit suggestion. Please try again.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<span>✅</span> Submit Suggestion';
                 }
