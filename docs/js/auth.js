@@ -156,6 +156,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Prevent double submission
+            if (submitBtn.disabled) {
+                return;
+            }
+            
             // Disable submit button
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.disabled = true;
@@ -182,6 +187,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const data = await response.json();
                 
+                // Handle validation errors (422)
+                if (response.status === 422 && data.errors) {
+                    const errorMessages = [];
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        if (Array.isArray(messages) && messages.length > 0) {
+                            // Convert field names to user-friendly labels
+                            const fieldLabels = {
+                                'username': 'Username',
+                                'email': 'Email',
+                                'password': 'Password',
+                                'firstname': 'First Name',
+                                'lastname': 'Last Name',
+                                'mobilenum': 'Mobile Number'
+                            };
+                            const fieldLabel = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1);
+                            
+                            messages.forEach(msg => {
+                                if (msg.includes('has already been taken')) {
+                                    errorMessages.push(`${fieldLabel} is already taken. Please choose a different one.`);
+                                } else if (msg.includes('required')) {
+                                    errorMessages.push(`${fieldLabel} is required.`);
+                                } else {
+                                    errorMessages.push(`${fieldLabel}: ${msg}`);
+                                }
+                            });
+                        }
+                    }
+                    
+                    const errorMessage = errorMessages.length > 0 
+                        ? errorMessages.join('<br>') 
+                        : (data.message || 'Validation failed. Please check your input.');
+                    
+                    alertContainer.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    return;
+                }
+                
+                // Handle successful registration
                 if (response.ok && data.success) {
                     // Show success message
                     const message = data.message || 'Registration successful! Please check your email for OTP code.';
@@ -199,7 +243,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
                     }, 2000);
                 } else {
-                    throw new Error(data.message || data.error || 'Registration failed. Please try again.');
+                    // Handle other errors
+                    const errorMessage = data.message || data.error || 'Registration failed. Please try again.';
+                    alertContainer.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
                 }
                 
             } catch (error) {
