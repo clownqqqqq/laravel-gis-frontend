@@ -224,7 +224,7 @@
                     <div class="card profile-picture-card">
                         <div class="profile-picture-wrapper">
                             <img id="profile-picture-img" src="" alt="Profile Picture" class="profile-picture"
-                                 onerror="this.src='https://via.placeholder.com/200'">
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23e0e0e0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'64\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E'">
                         </div>
                         <button type="button" onclick="document.getElementById('profile_picture').click()" class="btn btn-outline">
                             <span>📷</span> Change Picture
@@ -347,7 +347,7 @@
             if (user.profile_picture) {
                 img.src = `${API_BASE_URL.replace('/api', '')}/uploads/${user.profile_picture}`;
             } else {
-                img.src = 'https://via.placeholder.com/200';
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23e0e0e0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'64\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E';
             }
         }
 
