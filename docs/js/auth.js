@@ -164,16 +164,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    alertContainer.innerHTML = `<div class="alert alert-success">${data.message || 'Registration successful! Please check your email for OTP code.'}</div>`;
+                    // Show success message
+                    const message = data.message || 'Registration successful! Please check your email for OTP code.';
+                    const alertClass = data.emailError ? 'alert-warning' : 'alert-success';
+                    alertContainer.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
                     
                     // Clear form
                     registerForm.reset();
                     document.getElementById('preview-image').src = 'https://via.placeholder.com/80';
                     
-                    // Redirect to login after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 3000);
+                    // If verification is required, redirect to activation page
+                    if (data.requiresVerification || data.requires_verification) {
+                        // Redirect to activation page with email parameter
+                        const email = data.email || document.getElementById('email').value;
+                        setTimeout(() => {
+                            window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
+                        }, 2000);
+                    } else {
+                        // If no verification needed, redirect to login
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 3000);
+                    }
                 } else {
                     throw new Error(data.message || data.error || 'Registration failed. Please try again.');
                 }
