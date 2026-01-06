@@ -38,6 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const data = await response.json();
                 
+                // Check if account needs activation
+                if (response.status === 403 && data.requires_activation) {
+                    const email = data.email || username;
+                    alertContainer.innerHTML = `<div class="alert alert-warning">Account not activated. Redirecting to activation page...</div>`;
+                    setTimeout(() => {
+                        window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
+                    }, 1500);
+                    return;
+                }
+                
                 if (response.ok && data.success && data.auth_token) {
                     // Save token - ensure it's clean
                     const token = data.auth_token.trim(); // Ensure no whitespace
@@ -101,6 +111,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = 'dashboard.html';
                     }, 800);
                 } else {
+                    // Check if it's an activation required error
+                    if (data.requires_activation && data.email) {
+                        const email = data.email;
+                        alertContainer.innerHTML = `<div class="alert alert-warning">Account not activated. Redirecting to activation page...</div>`;
+                        setTimeout(() => {
+                            window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
+                        }, 1500);
+                        return;
+                    }
                     throw new Error(data.message || data.error || 'Login failed. Please check your credentials.');
                 }
                 
@@ -173,19 +192,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     registerForm.reset();
                     document.getElementById('preview-image').src = 'https://via.placeholder.com/80';
                     
-                    // If verification is required, redirect to activation page
-                    if (data.requiresVerification || data.requires_verification) {
-                        // Redirect to activation page with email parameter
-                        const email = data.email || document.getElementById('email').value;
-                        setTimeout(() => {
-                            window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
-                        }, 2000);
-                    } else {
-                        // If no verification needed, redirect to login
-                        setTimeout(() => {
-                            window.location.href = 'login.html';
-                        }, 3000);
-                    }
+                    // Always redirect to activation page for new registrations
+                    // New accounts always require OTP verification
+                    const email = data.email || document.getElementById('email').value;
+                    setTimeout(() => {
+                        window.location.href = `activate.html?email=${encodeURIComponent(email)}`;
+                    }, 2000);
                 } else {
                     throw new Error(data.message || data.error || 'Registration failed. Please try again.');
                 }
