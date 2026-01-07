@@ -531,13 +531,13 @@
                                         <span class="info-value">${reservation.intended_type.replace('_', ' ').toUpperCase()}</span>
                                     </div>
                                     <div>
-                                        <span class="info-label">Start Date:</span>
-                                        <span class="info-value">${new Date(reservation.intended_start_date).toLocaleDateString()}</span>
+                                        <span class="info-label">Start:</span>
+                                        <span class="info-value">${new Date(reservation.intended_start_date).toLocaleDateString()}${reservation.intended_start_time ? ' ' + new Date('2000-01-01T' + reservation.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
                                     </div>
                                     ${reservation.intended_end_date ? `
                                     <div>
-                                        <span class="info-label">End Date:</span>
-                                        <span class="info-value">${new Date(reservation.intended_end_date).toLocaleDateString()}</span>
+                                        <span class="info-label">End:</span>
+                                        <span class="info-value">${new Date(reservation.intended_end_date).toLocaleDateString()}${reservation.intended_end_time ? ' ' + new Date('2000-01-01T' + reservation.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
                                     </div>
                                     ` : ''}
                                 </div>
@@ -604,12 +604,18 @@
                                 <textarea id="update-description" class="form-textarea" rows="4" maxlength="1000">${reservation.description || ''}</textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Start Date *</label>
-                                <input type="date" id="update-start-date" class="form-input" required min="${today}" value="${reservation.intended_start_date}">
+                                <label class="form-label">Start Date & Time *</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <input type="date" id="update-start-date" class="form-input" required min="${today}" value="${reservation.intended_start_date}">
+                                    <input type="time" id="update-start-time" class="form-input" value="${reservation.intended_start_time || ''}">
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">End Date (Optional)</label>
-                                <input type="date" id="update-end-date" class="form-input" value="${reservation.intended_end_date || ''}">
+                                <label class="form-label">End Date & Time (Optional)</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <input type="date" id="update-end-date" class="form-input" value="${reservation.intended_end_date || ''}">
+                                    <input type="time" id="update-end-time" class="form-input" value="${reservation.intended_end_time || ''}">
+                                </div>
                             </div>
                             <div style="display: flex; gap: 10px; margin-top: 24px;">
                                 <button type="button" onclick="closeUpdateModal()" class="btn" style="flex: 1; background: #6c757d;">Cancel</button>
@@ -625,16 +631,39 @@
             modalDiv.innerHTML = modal;
             document.body.appendChild(modalDiv);
 
-            // Set min end date based on start date
+            // Set min end date based on start date and validate date+time
             const startDateInput = document.getElementById('update-start-date');
+            const startTimeInput = document.getElementById('update-start-time');
             const endDateInput = document.getElementById('update-end-date');
+            const endTimeInput = document.getElementById('update-end-time');
+            
+            function validateUpdateDateTime() {
+                if (!endDateInput.value && !endTimeInput.value) return true;
+                
+                const startDate = startDateInput.value;
+                const startTime = startTimeInput.value || '00:00';
+                const endDate = endDateInput.value || startDate;
+                const endTime = endTimeInput.value || '23:59';
+                
+                const startDateTime = new Date(startDate + 'T' + startTime);
+                const endDateTime = new Date(endDate + 'T' + endTime);
+                
+                if (endDateTime <= startDateTime) {
+                    showMessage('End date/time must be after start date/time', 'error');
+                    return false;
+                }
+                return true;
+            }
+            
             startDateInput.addEventListener('change', function() {
                 if (this.value) {
-                    const startDate = new Date(this.value);
-                    startDate.setDate(startDate.getDate() + 1);
-                    endDateInput.min = startDate.toISOString().split('T')[0];
+                    endDateInput.min = this.value;
                 }
+                validateUpdateDateTime();
             });
+            startTimeInput.addEventListener('change', validateUpdateDateTime);
+            endDateInput.addEventListener('change', validateUpdateDateTime);
+            endTimeInput.addEventListener('change', validateUpdateDateTime);
         }
 
         function closeUpdateModal(event) {
@@ -650,12 +679,21 @@
                 intended_type: document.getElementById('update-intended-type').value,
                 description: document.getElementById('update-description').value || null,
                 intended_start_date: document.getElementById('update-start-date').value,
-                intended_end_date: document.getElementById('update-end-date').value || null
+                intended_start_time: document.getElementById('update-start-time').value || null,
+                intended_end_date: document.getElementById('update-end-date').value || null,
+                intended_end_time: document.getElementById('update-end-time').value || null
             };
 
-            // Validate dates
-            if (formData.intended_end_date && formData.intended_end_date <= formData.intended_start_date) {
-                showMessage('End date must be after start date', 'error');
+            // Validate date+time
+            const startTime = formData.intended_start_time || '00:00';
+            const endTime = formData.intended_end_time || '23:59';
+            const startDateTime = new Date(formData.intended_start_date + 'T' + startTime);
+            const endDateTime = formData.intended_end_date 
+                ? new Date(formData.intended_end_date + 'T' + endTime)
+                : new Date(formData.intended_start_date + 'T' + endTime);
+            
+            if (endDateTime <= startDateTime) {
+                showMessage('End date/time must be after start date/time', 'error');
                 return;
             }
 
