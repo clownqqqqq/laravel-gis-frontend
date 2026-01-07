@@ -339,6 +339,18 @@
                     return null;
                 }
 
+                // Handle 403 Forbidden specifically
+                if (response.status === 403) {
+                    console.error('403 Forbidden - URL:', url);
+                    const errorText = await response.text();
+                    console.error('403 Forbidden - Response:', errorText);
+                    return {
+                        success: false,
+                        error: 'Insufficient permissions',
+                        message: 'You do not have permission to access this resource. Please ensure you are logged in with the correct role.'
+                    };
+                }
+
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -358,6 +370,9 @@
 
         async function loadReservations() {
             const userData = getUserData();
+            console.log('User data:', userData);
+            console.log('User role:', userData?.role);
+            
             if (!userData || !['admin', 'staff'].includes(userData.role)) {
                 showMessage('Access denied. Admin/Staff only.', 'error');
                 setTimeout(() => window.location.href = '../dashboard.html', 2000);
@@ -373,21 +388,34 @@
             `;
 
             try {
-                // Use correct endpoint based on user role
-                const endpoint = userData.role === 'admin' 
-                    ? `${API_BASE_URL}/admin/reservations/pending`
-                    : `${API_BASE_URL}/staff/reservations/pending`;
+                // Since this is admin/reservations.html, default to admin endpoint
+                // Try admin first, then fallback to staff if needed
+                let endpoint = `${API_BASE_URL}/admin/reservations/pending`;
+                let response;
                 
-                console.log('Loading reservations from:', endpoint);
-                const response = await apiRequest(endpoint);
+                console.log('User role detected:', userData.role);
+                console.log('Trying admin endpoint first:', endpoint);
+                
+                response = await apiRequest(endpoint);
+                
+                // If admin endpoint fails with 403 and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    console.log('Admin endpoint failed, trying staff endpoint...');
+                    endpoint = `${API_BASE_URL}/staff/reservations/pending`;
+                    response = await apiRequest(endpoint);
+                }
                 
                 console.log('API Response:', response);
                 
                 if (!response) {
-                    throw new Error('No response from server');
+                    throw new Error('No response from server. Check your authentication and permissions.');
                 }
                 
                 if (!response.success) {
+                    // Check if it's a permission error
+                    if (response.error && response.error.includes('permission')) {
+                        throw new Error('Permission denied. Make sure you are logged in as Admin or Staff.');
+                    }
                     throw new Error(response?.message || response?.error || 'Failed to load reservations');
                 }
 
@@ -531,13 +559,19 @@
 
             try {
                 const userData = getUserData();
-                const endpoint = userData.role === 'admin'
-                    ? `${API_BASE_URL}/admin/reservations/${id}/approve`
-                    : `${API_BASE_URL}/staff/reservations/${id}/approve`;
-                
-                const response = await apiRequest(endpoint, {
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/approve`;
+                let response = await apiRequest(endpoint, {
                     method: 'POST'
                 });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/approve`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
 
                 if (response && response.success) {
                     showMessage(response.message || 'Reservation approved successfully', 'success');
@@ -558,13 +592,19 @@
 
             try {
                 const userData = getUserData();
-                const endpoint = userData.role === 'admin'
-                    ? `${API_BASE_URL}/admin/reservations/${id}/reject`
-                    : `${API_BASE_URL}/staff/reservations/${id}/reject`;
-                
-                const response = await apiRequest(endpoint, {
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/reject`;
+                let response = await apiRequest(endpoint, {
                     method: 'POST'
                 });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/reject`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
 
                 if (response && response.success) {
                     showMessage(response.message || 'Reservation rejected successfully', 'success');
