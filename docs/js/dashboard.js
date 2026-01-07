@@ -410,7 +410,7 @@ function renderLocations(locations) {
             // Members see favorite buttons
             if (isFavorited) {
                 locationActions = `
-                <div class="location-actions">
+                <div class="location-actions" onclick="event.stopPropagation()">
                     <button onclick="removeFavorite(${locationId})" class="btn" style="background: #ffc107; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
                         <span>⭐</span> Remove Favorite
                     </button>
@@ -418,7 +418,7 @@ function renderLocations(locations) {
                 `;
             } else {
                 locationActions = `
-                <div class="location-actions">
+                <div class="location-actions" onclick="event.stopPropagation()">
                     <button onclick="addFavorite(${locationId})" class="btn" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
                         <span>⭐</span> Add to Favorites
                     </button>
@@ -428,7 +428,7 @@ function renderLocations(locations) {
         } else if (canEdit) {
             // Admin and staff see edit/delete buttons
             locationActions = `
-                <div class="location-actions">
+                <div class="location-actions" onclick="event.stopPropagation()">
                     <a href="edit-location.html?id=${locationId}" class="btn btn-edit">
                         <span>✏️</span> Edit
                     </a>
@@ -442,7 +442,7 @@ function renderLocations(locations) {
         }
         
         return `
-            <div class="card location-card">
+            <div class="card location-card" onclick="viewLocationDetails(${locationId})" style="cursor: pointer;">
                 <div class="location-content">
                     ${imageUrl ? `
                     <div class="location-image-wrapper">
@@ -502,9 +502,89 @@ function editLocation(id) {
     window.location.href = `edit-location.html?id=${id}`;
 }
 
-// View location
+// View location details (opens modal or shows details) - globally accessible
+window.viewLocationDetails = async function(id) {
+    try {
+        const userData = getUserData();
+        if (!userData) {
+            showMessage('Please log in to view location details', 'error');
+            return;
+        }
+
+        // Get location details from API
+        const locationData = await apiRequest(`${API_BASE_URL}/member/locations/${id}`);
+        
+        if (!locationData.success || !locationData.data) {
+            showMessage('Location not found', 'error');
+            return;
+        }
+
+        const location = locationData.data;
+        const userRole = userData.role || 'member';
+
+        // Create modal HTML
+        let modalContent = `
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="closeLocationModal(event)">
+                <div class="card" style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+                    <button onclick="closeLocationModal()" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px;">×</button>
+                    <h2 style="color: #0d6efd; margin-bottom: 20px;">${location.location || 'Location Details'}</h2>
+                    ${location.image ? `<img src="https://geocrud.bytevortexz.com/uploads/${location.image}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px;" onerror="this.style.display='none'">` : ''}
+                    <p><strong>Coordinates:</strong> Lat: ${location.latitude}, Lng: ${location.longitude}</p>
+                    ${location.category ? `<p><strong>Category:</strong> ${location.category}</p>` : ''}
+                    ${location.notes ? `<p><strong>Notes:</strong> ${location.notes}</p>` : ''}
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+        `;
+
+        // Add buttons based on user role
+        if (userRole === 'member') {
+            modalContent += `
+                        <button onclick="declareIntendedUse(${location.id})" class="btn" style="background: #0d6efd; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                            <span>📋</span> Declare Intended Use
+                        </button>
+                        <button onclick="viewIntendedUses(${location.id})" class="btn" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+                            <span>👁️</span> View Intended Uses
+                        </button>
+            `;
+        }
+
+        modalContent += `
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('location-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to page
+        const modal = document.createElement('div');
+        modal.id = 'location-modal';
+        modal.innerHTML = modalContent;
+        document.body.appendChild(modal);
+
+    } catch (error) {
+        console.error('Error loading location details:', error);
+        showMessage('Error loading location details: ' + (error.message || 'Unknown error'), 'error');
+    }
+}
+
+// Close location modal - globally accessible
+window.closeLocationModal = function(event) {
+    if (event && event.target !== event.currentTarget) {
+        return; // Don't close if clicking inside modal
+    }
+    const modal = document.getElementById('location-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// View location (legacy function for compatibility)
 function viewLocation(id) {
-    window.location.href = `view-location.html?id=${id}`;
+    viewLocationDetails(id);
 }
 
 // Delete location
@@ -712,6 +792,97 @@ window.removeFavorite = async function(locationId) {
     } catch (error) {
         console.error('Error removing favorite:', error);
         showMessage('Error removing favorite: ' + (error.message || 'Unknown error'), 'error');
+    }
+};
+
+// Declare intended use for a location
+window.declareIntendedUse = async function(locationId) {
+    // Close the modal first
+    closeLocationModal();
+    
+    // Get intended use details from user
+    const intendedType = prompt('What is your intended use?\n\n1. event\n2. business\n3. personal\n4. future_development\n\nEnter the number or type:');
+    if (!intendedType) return;
+
+    let type = intendedType.toLowerCase().trim();
+    if (type === '1') type = 'event';
+    else if (type === '2') type = 'business';
+    else if (type === '3') type = 'personal';
+    else if (type === '4') type = 'future_development';
+
+    if (!['event', 'business', 'personal', 'future_development'].includes(type)) {
+        showMessage('Invalid intended type. Please use: event, business, personal, or future_development', 'error');
+        return;
+    }
+
+    const description = prompt('Description (optional):') || null;
+    const startDate = prompt('Start Date (YYYY-MM-DD):');
+    if (!startDate) {
+        showMessage('Start date is required', 'error');
+        return;
+    }
+
+    const endDate = prompt('End Date (YYYY-MM-DD, optional):') || null;
+
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-use`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                intended_type: type,
+                description: description,
+                intended_start_date: startDate,
+                intended_end_date: endDate
+            })
+        });
+
+        if (response.success) {
+            showMessage(response.message || 'Intended use declared successfully', 'success');
+        } else {
+            showMessage(response.message || 'Failed to declare intended use', 'error');
+        }
+    } catch (error) {
+        console.error('Error declaring intended use:', error);
+        showMessage('Error: ' + (error.message || 'Unknown error'), 'error');
+    }
+};
+
+// View intended uses for a location
+window.viewIntendedUses = async function(locationId) {
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-uses`);
+        
+        if (!response.success || !response.data) {
+            showMessage('No intended uses found for this location', 'info');
+            return;
+        }
+
+        const intendedUses = response.data;
+        let usesList = '<h3>Intended Uses for This Location:</h3><ul style="list-style: none; padding: 0;">';
+        
+        intendedUses.forEach(use => {
+            usesList += `
+                <li style="background: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #0d6efd;">
+                    <strong>Type:</strong> ${use.intended_type}<br>
+                    ${use.description ? `<strong>Description:</strong> ${use.description}<br>` : ''}
+                    <strong>Start Date:</strong> ${use.intended_start_date}<br>
+                    ${use.intended_end_date ? `<strong>End Date:</strong> ${use.intended_end_date}<br>` : ''}
+                    <strong>Status:</strong> ${use.status}<br>
+                    <strong>Declared by:</strong> ${use.user ? use.user.username : 'Unknown'}
+                </li>
+            `;
+        });
+        
+        usesList += '</ul>';
+        
+        // Show in alert or modal
+        alert(usesList.replace(/<[^>]*>/g, '\n')); // Simple alert version
+        
+    } catch (error) {
+        console.error('Error loading intended uses:', error);
+        showMessage('Error loading intended uses: ' + (error.message || 'Unknown error'), 'error');
     }
 };
 
