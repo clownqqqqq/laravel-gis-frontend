@@ -402,13 +402,26 @@
                 console.log('User role detected:', userData.role);
                 console.log('Loading ALL reservations from:', endpoint);
                 
+                // Try admin endpoint first
                 response = await apiRequest(endpoint);
+                console.log('Admin endpoint response:', response);
                 
-                // If admin endpoint fails with 403, try staff endpoint (user might be staff)
-                if (response && (!response.success || response.error) && (response.error && (response.error.includes('permission') || response.error.includes('Insufficient')))) {
-                    console.log('Admin endpoint failed (403), trying staff endpoint...');
+                // Check if admin endpoint failed - if so, try staff endpoint
+                const isAdminError = !response || 
+                    !response.success || 
+                    (response.error && (
+                        response.error.toLowerCase().includes('permission') || 
+                        response.error.toLowerCase().includes('insufficient') || 
+                        response.error.toLowerCase().includes('unauthorized') ||
+                        response.error.toLowerCase().includes('403')
+                    ));
+                
+                if (isAdminError) {
+                    console.log('Admin endpoint failed (403/permission error), trying staff endpoint...');
                     endpoint = `${API_BASE_URL}/staff/reservations/all`;
+                    console.log('Trying staff endpoint:', endpoint);
                     response = await apiRequest(endpoint);
+                    console.log('Staff endpoint response:', response);
                 }
                 
                 console.log('API Response:', response);
@@ -419,7 +432,7 @@
                 
                 if (!response.success) {
                     // Check if it's a permission error
-                    if (response.error && response.error.includes('permission')) {
+                    if (response.error && (response.error.includes('permission') || response.error.includes('Insufficient'))) {
                         throw new Error('Permission denied. Make sure you are logged in as Admin or Staff.');
                     }
                     throw new Error(response?.message || response?.error || 'Failed to load reservations');
