@@ -739,7 +739,8 @@
         }
 
         function viewLocation(locationId) {
-            window.open(`../dashboard.html?location=${locationId}`, '_blank');
+            // Open dashboard in same window, filtered to show only this location
+            window.location.href = `../dashboard.html?location=${locationId}`;
         }
 
         // Load reservations on page load
