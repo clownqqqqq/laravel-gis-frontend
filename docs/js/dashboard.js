@@ -809,12 +809,13 @@ window.removeFavorite = async function(locationId) {
     }
 };
 
-// Declare intended use for a location - shows form modal
+// Declare intended use for a location - shows form modal with calendar pickers
 window.declareIntendedUse = async function(locationId) {
     // Get location details first to check status
+    let location;
     try {
         const locationData = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}`);
-        const location = locationData.data;
+        location = locationData.data;
         
         // Check if location is pending (only pending locations can be reserved)
         if (location.status !== 'pending') {
@@ -829,48 +830,106 @@ window.declareIntendedUse = async function(locationId) {
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
 
-    // Create reservation form modal
+    // Create reservation form modal with better styling
     const formModal = `
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="closeReservationModal(event)">
-            <div class="card" style="max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
-                <button onclick="closeReservationModal()" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px;">×</button>
-                <h2 style="color: #0d6efd; margin-bottom: 20px;">📋 Reserve Location</h2>
-                <form id="reservation-form" onsubmit="submitReservation(event, ${locationId}); return false;">
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Intended Purpose *</label>
-                        <select id="intended-type" name="intended_type" required style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
-                            <option value="">Select purpose...</option>
-                            <option value="event">Event</option>
-                            <option value="business">Business</option>
-                            <option value="personal">Personal</option>
-                            <option value="future_development">Future Development</option>
-                        </select>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Description (Optional)</label>
-                        <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Describe your intended use..." style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px; resize: vertical;"></textarea>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Start Date *</label>
-                        <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
-                        <small style="color: #64748b; display: block; margin-top: 4px;">Cannot select past dates</small>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">End Date (Optional)</label>
-                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
-                        <small style="color: #64748b; display: block; margin-top: 4px;">Must be after start date</small>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 30px;">
-                        <button type="button" onclick="closeReservationModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Cancel</button>
-                        <button type="submit" style="flex: 1; padding: 12px; background: #0d6efd; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Submit Reservation</button>
-                    </div>
-                </form>
+        <div id="reservation-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);" onclick="closeReservationModal(event)">
+            <div style="background: white; max-width: 550px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); padding: 24px; border-radius: 16px 16px 0 0; position: relative;">
+                    <button onclick="closeReservationModal()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 20px; font-weight: bold; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+                    <h2 style="color: white; margin: 0; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 32px;">📋</span> Reserve Location
+                    </h2>
+                    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">${location.location || 'Location'}</p>
+                </div>
+                
+                <!-- Form Content -->
+                <div style="padding: 30px;">
+                    <form id="reservation-form" onsubmit="submitReservation(event, ${locationId}); return false;">
+                        <!-- Intended Purpose -->
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
+                                <span style="color: #ef4444;">*</span> Intended Purpose
+                            </label>
+                            <select id="intended-type" name="intended_type" required style="width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s; cursor: pointer;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                <option value="">-- Select your intended purpose --</option>
+                                <option value="event">🎉 Event (Wedding, Party, Gathering, etc.)</option>
+                                <option value="business">💼 Business (Store, Office, Restaurant, etc.)</option>
+                                <option value="personal">👤 Personal Use</option>
+                                <option value="future_development">🏗️ Future Development (Construction, Building, etc.)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
+                                Description <span style="color: #64748b; font-weight: 400; font-size: 13px;">(Optional)</span>
+                            </label>
+                            <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Provide more details about your intended use..." style="width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; resize: vertical; font-family: inherit; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'"></textarea>
+                            <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Maximum 1000 characters</small>
+                        </div>
+                        
+                        <!-- Date Selection Section -->
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                            <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 20px;">📅</span> Reservation Period
+                            </h3>
+                            
+                            <!-- Start Date -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
+                                    <span style="color: #ef4444;">*</span> Start Date
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                </div>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select today or a future date</small>
+                            </div>
+                            
+                            <!-- End Date -->
+                            <div>
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
+                                    End Date <span style="color: #64748b; font-weight: 400; font-size: 13px;">(Optional)</span>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                </div>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 12px; margin-top: 30px;">
+                            <button type="button" onclick="closeReservationModal()" style="flex: 1; padding: 14px 20px; background: #f3f4f6; color: #374151; border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
+                                Cancel
+                            </button>
+                            <button type="submit" id="submit-reservation-btn" style="flex: 1; padding: 14px 20px; background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(13, 110, 253, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(13, 110, 253, 0.3)'">
+                                <span>✓</span> Submit Reservation
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
+        <style>
+            /* Custom date input styling for better calendar appearance */
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+                opacity: 0;
+                position: absolute;
+                right: 0;
+                width: 100%;
+                height: 100%;
+            }
+            input[type="date"] {
+                position: relative;
+            }
+            input[type="date"]:hover {
+                border-color: #0d6efd !important;
+            }
+        </style>
     `;
 
     // Remove existing reservation modal if any
@@ -889,11 +948,26 @@ window.declareIntendedUse = async function(locationId) {
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
     
+    // Update end date min when start date changes
     startDateInput.addEventListener('change', function() {
         if (this.value) {
             const startDate = new Date(this.value);
             startDate.setDate(startDate.getDate() + 1); // End date must be after start date
-            endDateInput.min = startDate.toISOString().split('T')[0];
+            const minEndDate = startDate.toISOString().split('T')[0];
+            endDateInput.min = minEndDate;
+            
+            // If end date is set and is before new min, clear it
+            if (endDateInput.value && endDateInput.value <= this.value) {
+                endDateInput.value = '';
+            }
+        }
+    });
+    
+    // Validate end date when changed
+    endDateInput.addEventListener('change', function() {
+        if (this.value && startDateInput.value && this.value <= startDateInput.value) {
+            showMessage('End date must be after start date', 'error');
+            this.value = '';
         }
     });
 }
@@ -906,6 +980,11 @@ window.closeReservationModal = function(event) {
     const modal = document.getElementById('reservation-modal');
     if (modal) {
         modal.remove();
+    }
+    // Also close location details modal if open
+    const locationModal = document.getElementById('location-modal');
+    if (locationModal) {
+        locationModal.remove();
     }
 }
 
@@ -931,10 +1010,11 @@ window.submitReservation = async function(event, locationId) {
         return;
     }
     
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
+    const submitBtn = document.getElementById('submit-reservation-btn');
+    const originalHTML = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+    submitBtn.innerHTML = '<span>⏳</span> Submitting...';
+    submitBtn.style.opacity = '0.7';
     
     try {
         const response = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-use`, {
@@ -958,7 +1038,8 @@ window.submitReservation = async function(event, locationId) {
         } else {
             showMessage(response.message || 'Failed to submit reservation', 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.style.opacity = '1';
         }
     } catch (error) {
         console.error('Error submitting reservation:', error);
@@ -973,7 +1054,8 @@ window.submitReservation = async function(event, locationId) {
         
         showMessage('Error: ' + errorMsg, 'error');
         submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalHTML;
+        submitBtn.style.opacity = '1';
     }
 }
 
