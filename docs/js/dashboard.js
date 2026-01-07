@@ -403,6 +403,7 @@ function renderLocations(locations) {
         // Admin and staff can edit approved locations
         const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
         const isFavorited = location.is_favorite || false;
+        const canReserve = location.status === 'pending' && userRole === 'member';
         
         // Build location actions based on role
         let locationActions = '';
@@ -453,6 +454,8 @@ function renderLocations(locations) {
                         <h3 class="location-name">
                             ${locationName}
                             ${statusBadge}
+                            ${canReserve ? '<span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px;">✓ Available for Reservation</span>' : ''}
+                            ${location.status === 'approved' && userRole === 'member' ? '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px;">⚠️ Not Available for Reservation</span>' : ''}
                         </h3>
                         <p class="location-coords">
                             Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
@@ -537,12 +540,23 @@ window.viewLocationDetails = async function(id) {
 
         // Add buttons based on user role
         if (userRole === 'member') {
+            // Only show reserve button if location is pending
+            if (location.status === 'pending') {
+                modalContent += `
+                            <button onclick="declareIntendedUse(${location.id})" class="btn" style="background: #0d6efd; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                                <span>📋</span> Reserve This Location
+                            </button>
+                `;
+            } else {
+                modalContent += `
+                            <p style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                                ⚠️ This location has been approved and can no longer be reserved.
+                            </p>
+                `;
+            }
             modalContent += `
-                        <button onclick="declareIntendedUse(${location.id})" class="btn" style="background: #0d6efd; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
-                            <span>📋</span> Declare Intended Use
-                        </button>
                         <button onclick="viewIntendedUses(${location.id})" class="btn" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
-                            <span>👁️</span> View Intended Uses
+                            <span>👁️</span> View Reservations
                         </button>
             `;
         }
@@ -795,35 +809,133 @@ window.removeFavorite = async function(locationId) {
     }
 };
 
-// Declare intended use for a location
+// Declare intended use for a location - shows form modal
 window.declareIntendedUse = async function(locationId) {
-    // Close the modal first
-    closeLocationModal();
+    // Get location details first to check status
+    try {
+        const locationData = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}`);
+        const location = locationData.data;
+        
+        // Check if location is pending (only pending locations can be reserved)
+        if (location.status !== 'pending') {
+            showMessage('This location has been approved and can no longer be reserved. Only pending locations can be reserved.', 'error');
+            return;
+        }
+    } catch (error) {
+        showMessage('Error loading location: ' + (error.message || 'Unknown error'), 'error');
+        return;
+    }
+
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+
+    // Create reservation form modal
+    const formModal = `
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="closeReservationModal(event)">
+            <div class="card" style="max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+                <button onclick="closeReservationModal()" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px;">×</button>
+                <h2 style="color: #0d6efd; margin-bottom: 20px;">📋 Reserve Location</h2>
+                <form id="reservation-form" onsubmit="submitReservation(event, ${locationId}); return false;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Intended Purpose *</label>
+                        <select id="intended-type" name="intended_type" required style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
+                            <option value="">Select purpose...</option>
+                            <option value="event">Event</option>
+                            <option value="business">Business</option>
+                            <option value="personal">Personal</option>
+                            <option value="future_development">Future Development</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Description (Optional)</label>
+                        <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Describe your intended use..." style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">Start Date *</label>
+                        <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
+                        <small style="color: #64748b; display: block; margin-top: 4px;">Cannot select past dates</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b;">End Date (Optional)</label>
+                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px;">
+                        <small style="color: #64748b; display: block; margin-top: 4px;">Must be after start date</small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 30px;">
+                        <button type="button" onclick="closeReservationModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Cancel</button>
+                        <button type="submit" style="flex: 1; padding: 12px; background: #0d6efd; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">Submit Reservation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+
+    // Remove existing reservation modal if any
+    const existingModal = document.getElementById('reservation-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    const modal = document.createElement('div');
+    modal.id = 'reservation-modal';
+    modal.innerHTML = formModal;
+    document.body.appendChild(modal);
+
+    // Set minimum end date based on start date
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
     
-    // Get intended use details from user
-    const intendedType = prompt('What is your intended use?\n\n1. event\n2. business\n3. personal\n4. future_development\n\nEnter the number or type:');
-    if (!intendedType) return;
+    startDateInput.addEventListener('change', function() {
+        if (this.value) {
+            const startDate = new Date(this.value);
+            startDate.setDate(startDate.getDate() + 1); // End date must be after start date
+            endDateInput.min = startDate.toISOString().split('T')[0];
+        }
+    });
+}
 
-    let type = intendedType.toLowerCase().trim();
-    if (type === '1') type = 'event';
-    else if (type === '2') type = 'business';
-    else if (type === '3') type = 'personal';
-    else if (type === '4') type = 'future_development';
-
-    if (!['event', 'business', 'personal', 'future_development'].includes(type)) {
-        showMessage('Invalid intended type. Please use: event, business, personal, or future_development', 'error');
+// Close reservation modal
+window.closeReservationModal = function(event) {
+    if (event && event.target !== event.currentTarget) {
         return;
     }
+    const modal = document.getElementById('reservation-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
 
-    const description = prompt('Description (optional):') || null;
-    const startDate = prompt('Start Date (YYYY-MM-DD):');
-    if (!startDate) {
-        showMessage('Start date is required', 'error');
+// Submit reservation form
+window.submitReservation = async function(event, locationId) {
+    event.preventDefault();
+    
+    const form = document.getElementById('reservation-form');
+    const formData = new FormData(form);
+    
+    const startDate = formData.get('intended_start_date');
+    const endDate = formData.get('intended_end_date');
+    
+    // Validate dates
+    const today = new Date().toISOString().split('T')[0];
+    if (startDate < today) {
+        showMessage('Start date cannot be in the past', 'error');
         return;
     }
-
-    const endDate = prompt('End Date (YYYY-MM-DD, optional):') || null;
-
+    
+    if (endDate && endDate <= startDate) {
+        showMessage('End date must be after start date', 'error');
+        return;
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
     try {
         const response = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-use`, {
             method: 'POST',
@@ -831,60 +943,116 @@ window.declareIntendedUse = async function(locationId) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                intended_type: type,
-                description: description,
+                intended_type: formData.get('intended_type'),
+                description: formData.get('description') || null,
                 intended_start_date: startDate,
-                intended_end_date: endDate
+                intended_end_date: endDate || null
             })
         });
 
         if (response.success) {
-            showMessage(response.message || 'Intended use declared successfully', 'success');
+            closeReservationModal();
+            showMessage(response.message || 'Reservation request submitted successfully. Waiting for admin/staff approval.', 'success');
+            // Reload locations to update status
+            loadLocations(currentSearch);
         } else {
-            showMessage(response.message || 'Failed to declare intended use', 'error');
+            showMessage(response.message || 'Failed to submit reservation', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         }
     } catch (error) {
-        console.error('Error declaring intended use:', error);
-        showMessage('Error: ' + (error.message || 'Unknown error'), 'error');
+        console.error('Error submitting reservation:', error);
+        let errorMsg = error.message || 'Unknown error';
+        
+        // Handle specific error messages
+        if (errorMsg.includes('already approved')) {
+            errorMsg = 'This location has been approved and can no longer be reserved.';
+        } else if (errorMsg.includes('already reserved')) {
+            errorMsg = 'This location already has an approved reservation.';
+        }
+        
+        showMessage('Error: ' + errorMsg, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
-};
+}
 
-// View intended uses for a location
+// View intended uses for a location - shows modal
 window.viewIntendedUses = async function(locationId) {
     try {
         const response = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-uses`);
         
-        if (!response.success || !response.data) {
-            showMessage('No intended uses found for this location', 'info');
+        if (!response.success || !response.data || response.data.length === 0) {
+            showMessage('No reservations found for this location', 'info');
             return;
         }
 
         const intendedUses = response.data;
-        let usesList = '<h3>Intended Uses for This Location:</h3><ul style="list-style: none; padding: 0;">';
+        const statusColors = {
+            'pending': '#fef3c7',
+            'approved': '#d1f4e0',
+            'rejected': '#fee2e2',
+            'completed': '#e0e7ff',
+            'cancelled': '#f3f4f6'
+        };
+        
+        let usesList = '<h3 style="color: #0d6efd; margin-bottom: 20px;">📋 Reservations for This Location</h3>';
         
         intendedUses.forEach(use => {
+            const statusColor = statusColors[use.status] || '#f9fafb';
             usesList += `
-                <li style="background: #f9fafb; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #0d6efd;">
-                    <strong>Type:</strong> ${use.intended_type}<br>
-                    ${use.description ? `<strong>Description:</strong> ${use.description}<br>` : ''}
-                    <strong>Start Date:</strong> ${use.intended_start_date}<br>
-                    ${use.intended_end_date ? `<strong>End Date:</strong> ${use.intended_end_date}<br>` : ''}
-                    <strong>Status:</strong> ${use.status}<br>
-                    <strong>Declared by:</strong> ${use.user ? use.user.username : 'Unknown'}
-                </li>
+                <div style="background: ${statusColor}; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #0d6efd;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <strong style="text-transform: capitalize; color: #1e293b;">${use.intended_type.replace('_', ' ')}</strong>
+                        <span style="background: ${use.status === 'approved' ? '#10b981' : use.status === 'rejected' ? '#ef4444' : '#f59e0b'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: capitalize;">${use.status}</span>
+                    </div>
+                    ${use.description ? `<p style="margin: 8px 0; color: #475569;"><strong>Description:</strong> ${use.description}</p>` : ''}
+                    <p style="margin: 5px 0; color: #64748b;"><strong>Start Date:</strong> ${use.intended_start_date}</p>
+                    ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End Date:</strong> ${use.intended_end_date}</p>` : ''}
+                    <p style="margin: 5px 0; color: #64748b;"><strong>Reserved by:</strong> ${use.user ? use.user.username : 'Unknown'}</p>
+                    <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${new Date(use.created_at).toLocaleDateString()}</p>
+                </div>
             `;
         });
         
-        usesList += '</ul>';
+        // Create modal
+        const modal = `
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="closeReservationsViewModal(event)">
+                <div class="card" style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; position: relative;" onclick="event.stopPropagation()">
+                    <button onclick="closeReservationsViewModal()" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 18px;">×</button>
+                    ${usesList}
+                </div>
+            </div>
+        `;
         
-        // Show in alert or modal
-        alert(usesList.replace(/<[^>]*>/g, '\n')); // Simple alert version
+        // Remove existing modal if any
+        const existingModal = document.getElementById('reservations-view-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to page
+        const modalDiv = document.createElement('div');
+        modalDiv.id = 'reservations-view-modal';
+        modalDiv.innerHTML = modal;
+        document.body.appendChild(modalDiv);
         
     } catch (error) {
         console.error('Error loading intended uses:', error);
-        showMessage('Error loading intended uses: ' + (error.message || 'Unknown error'), 'error');
+        showMessage('Error loading reservations: ' + (error.message || 'Unknown error'), 'error');
     }
-};
+}
+
+// Close reservations view modal
+window.closeReservationsViewModal = function(event) {
+    if (event && event.target !== event.currentTarget) {
+        return;
+    }
+    const modal = document.getElementById('reservations-view-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
 
 // Check hash on load
 document.addEventListener('DOMContentLoaded', function() {
