@@ -388,20 +388,20 @@
             `;
 
             try {
-                // Since this is admin/reservations.html, default to admin endpoint
-                // Try admin first, then fallback to staff if needed
-                let endpoint = `${API_BASE_URL}/admin/reservations/pending`;
+                // Load ALL reservations (not just pending) so we can filter client-side
+                // This ensures rejected/approved reservations don't disappear after actions
+                let endpoint = `${API_BASE_URL}/admin/reservations/all`;
                 let response;
                 
                 console.log('User role detected:', userData.role);
-                console.log('Trying admin endpoint first:', endpoint);
+                console.log('Loading ALL reservations from:', endpoint);
                 
                 response = await apiRequest(endpoint);
                 
                 // If admin endpoint fails with 403 and user is staff, try staff endpoint
                 if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
                     console.log('Admin endpoint failed, trying staff endpoint...');
-                    endpoint = `${API_BASE_URL}/staff/reservations/pending`;
+                    endpoint = `${API_BASE_URL}/staff/reservations/all`;
                     response = await apiRequest(endpoint);
                 }
                 
@@ -575,10 +575,8 @@
 
                 if (response && response.success) {
                     showMessage(response.message || 'Reservation approved successfully. Other pending reservations for this location have been rejected.', 'success');
-                    // Reload reservations and switch to "All" view to see approved and rejected ones
-                    currentFilter = 'all';
-                    document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-                    document.getElementById('tab-all').classList.add('active');
+                    // Reload ALL reservations (not just pending) to see the updated statuses
+                    // Keep current filter active
                     loadReservations();
                 } else {
                     showMessage(response?.message || 'Failed to approve reservation', 'error');
