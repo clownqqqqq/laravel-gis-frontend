@@ -6,7 +6,7 @@
     <title>GIS Manager - GeoCRUD</title>
     <script>
         // Define API_BASE_URL immediately (before config.js loads)
-        if (typeof API_BASE_URL === 'undefined') {
+        if (typeof window.API_BASE_URL === 'undefined') {
             window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
         }
         
@@ -14,23 +14,7 @@
         window.addEventListener('error', function(e) {
             if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
                 console.warn('config.js failed to load, using fallback API_BASE_URL');
-                if (typeof API_BASE_URL === 'undefined') {
-                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
-                }
-            }
-        }, true);
-    </script>
-    <script>
-        // Define API_BASE_URL immediately (before config.js loads)
-        if (typeof API_BASE_URL === 'undefined') {
-            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
-        }
-        
-        // Fallback if config.js doesn't load
-        window.addEventListener('error', function(e) {
-            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
-                console.warn('config.js failed to load, using fallback API_BASE_URL');
-                if (typeof API_BASE_URL === 'undefined') {
+                if (typeof window.API_BASE_URL === 'undefined') {
                     window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
                 }
             }
@@ -932,7 +916,6 @@
     </div>
     
     <script src="js/auth.js"></script>
-    <script src="js/config.js"></script>
     <script src="js/dashboard.js"></script>
     <script>
         // Authentication check is handled in dashboard.js on DOMContentLoaded
