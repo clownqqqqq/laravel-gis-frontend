@@ -574,7 +574,11 @@
                 }
 
                 if (response && response.success) {
-                    showMessage(response.message || 'Reservation approved successfully', 'success');
+                    showMessage(response.message || 'Reservation approved successfully. Other pending reservations for this location have been rejected.', 'success');
+                    // Reload reservations and switch to "All" view to see approved and rejected ones
+                    currentFilter = 'all';
+                    document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById('tab-all').classList.add('active');
                     loadReservations();
                 } else {
                     showMessage(response?.message || 'Failed to approve reservation', 'error');
