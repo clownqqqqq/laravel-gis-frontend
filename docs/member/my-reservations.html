@@ -422,22 +422,44 @@
                 return;
             }
 
+            // Show loading state
+            document.getElementById('reservations-container').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⏳</div>
+                    <p>Loading reservations...</p>
+                </div>
+            `;
+
             try {
+                console.log('Loading reservations from:', `${API_BASE_URL}/member/my-intended-uses`);
                 const response = await apiRequest(`${API_BASE_URL}/member/my-intended-uses`);
-                if (!response || !response.success) {
-                    throw new Error(response?.message || 'Failed to load reservations');
+                
+                console.log('API Response:', response);
+                
+                if (!response) {
+                    throw new Error('No response from server');
+                }
+                
+                if (!response.success) {
+                    throw new Error(response?.message || response?.error || 'Failed to load reservations');
                 }
 
                 allReservations = response.data || [];
+                console.log('Loaded reservations:', allReservations.length, allReservations);
+                
                 updateCounts();
                 renderReservations();
             } catch (error) {
                 console.error('Error loading reservations:', error);
-                showMessage('Error loading reservations: ' + (error.message || 'Unknown error'), 'error');
+                const errorMsg = error.message || 'Unknown error';
+                showMessage('Error loading reservations: ' + errorMsg, 'error');
                 document.getElementById('reservations-container').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">⚠️</div>
-                        <p>Error loading reservations. Please try again.</p>
+                        <p>Error loading reservations: ${errorMsg}</p>
+                        <p style="margin-top: 16px; font-size: 14px; color: #6b7280;">
+                            Check browser console (F12) for more details.
+                        </p>
                     </div>
                 `;
             }
