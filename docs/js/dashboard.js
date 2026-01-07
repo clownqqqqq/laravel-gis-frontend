@@ -671,8 +671,8 @@ function showProfileMessage(message, type) {
     }, 5000);
 }
 
-// Add favorite location
-async function addFavorite(locationId) {
+// Add favorite location - explicitly attach to window for global access
+window.addFavorite = async function(locationId) {
     try {
         const response = await apiRequest(`${API_BASE_URL}/member/favorites/${locationId}`, {
             method: 'POST'
@@ -689,10 +689,10 @@ async function addFavorite(locationId) {
         console.error('Error adding favorite:', error);
         showMessage('Error adding favorite: ' + (error.message || 'Unknown error'), 'error');
     }
-}
+};
 
-// Remove favorite location
-async function removeFavorite(locationId) {
+// Remove favorite location - explicitly attach to window for global access
+window.removeFavorite = async function(locationId) {
     if (!confirm('Are you sure you want to remove this location from your favorites?')) {
         return;
     }
@@ -713,7 +713,7 @@ async function removeFavorite(locationId) {
         console.error('Error removing favorite:', error);
         showMessage('Error removing favorite: ' + (error.message || 'Unknown error'), 'error');
     }
-}
+};
 
 // Check hash on load
 document.addEventListener('DOMContentLoaded', function() {
