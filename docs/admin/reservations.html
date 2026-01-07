@@ -344,10 +344,16 @@
                     console.error('403 Forbidden - URL:', url);
                     const errorText = await response.text();
                     console.error('403 Forbidden - Response:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { error: 'Insufficient permissions' };
+                    }
                     return {
                         success: false,
-                        error: 'Insufficient permissions',
-                        message: 'You do not have permission to access this resource. Please ensure you are logged in with the correct role.'
+                        error: errorData.error || 'Insufficient permissions',
+                        message: errorData.message || 'You do not have permission to access this resource. Please ensure you are logged in with the correct role.'
                     };
                 }
 
@@ -398,9 +404,9 @@
                 
                 response = await apiRequest(endpoint);
                 
-                // If admin endpoint fails with 403 and user is staff, try staff endpoint
-                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
-                    console.log('Admin endpoint failed, trying staff endpoint...');
+                // If admin endpoint fails with 403, try staff endpoint (user might be staff)
+                if (response && (!response.success || response.error) && (response.error && (response.error.includes('permission') || response.error.includes('Insufficient')))) {
+                    console.log('Admin endpoint failed (403), trying staff endpoint...');
                     endpoint = `${API_BASE_URL}/staff/reservations/all`;
                     response = await apiRequest(endpoint);
                 }
