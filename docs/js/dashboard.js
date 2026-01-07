@@ -403,7 +403,8 @@ function renderLocations(locations) {
         // Admin and staff can edit approved locations
         const canEdit = userRole === 'admin' || (userRole === 'staff' && location.status === 'approved');
         const isFavorited = location.is_favorite || false;
-        const canReserve = location.status === 'pending' && userRole === 'member';
+        // Members can reserve both pending AND approved locations
+        const canReserve = (location.status === 'pending' || location.status === 'approved') && userRole === 'member';
         
         // Build location actions based on role
         let locationActions = '';
@@ -455,7 +456,6 @@ function renderLocations(locations) {
                             ${locationName}
                             ${statusBadge}
                             ${canReserve ? '<span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px;">✓ Available for Reservation</span>' : ''}
-                            ${location.status === 'approved' && userRole === 'member' ? '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px;">⚠️ Not Available for Reservation</span>' : ''}
                         </h3>
                         <p class="location-coords">
                             Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
@@ -540,23 +540,23 @@ window.viewLocationDetails = async function(id) {
 
         // Add buttons based on user role
         if (userRole === 'member') {
-            // Only show reserve button if location is pending
-            if (location.status === 'pending') {
+            // Show reserve button if location is pending OR approved (both are allowed)
+            if (location.status === 'pending' || location.status === 'approved') {
                 modalContent += `
                             <button onclick="declareIntendedUse(${location.id})" class="btn" style="background: #0d6efd; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">
-                                <span>📋</span> Reserve This Location
+                                <span>📋</span> Declare Intended Use
                             </button>
                 `;
             } else {
                 modalContent += `
-                            <p style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                                ⚠️ This location has been approved and can no longer be reserved.
+                            <p style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                                ⚠️ This location is not available for reservation. Only pending or approved locations can be reserved.
                             </p>
                 `;
             }
             modalContent += `
                         <button onclick="viewIntendedUses(${location.id})" class="btn" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
-                            <span>👁️</span> View Reservations
+                            <span>👁️</span> View Intended Uses
                         </button>
             `;
         }
@@ -817,9 +817,9 @@ window.declareIntendedUse = async function(locationId) {
         const locationData = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}`);
         location = locationData.data;
         
-        // Check if location is pending (only pending locations can be reserved)
-        if (location.status !== 'pending') {
-            showMessage('This location has been approved and can no longer be reserved. Only pending locations can be reserved.', 'error');
+        // Check if location is pending or approved (both are allowed for reservations)
+        if (location.status !== 'pending' && location.status !== 'approved') {
+            showMessage('This location is not available for reservation. Only pending or approved locations can be reserved.', 'error');
             return;
         }
     } catch (error) {
