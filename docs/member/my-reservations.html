@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Reservations - GeoCRUD</title>
+    <title>Manage Reservations - GeoCRUD</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
     <link rel="stylesheet" href="../css/backend-styles.css">
     <script src="../js/config.js"></script>
     <script>
-        if (typeof API_BASE_URL === 'undefined') {
+        // Define API_BASE_URL immediately (before config.js loads)
+        if (typeof window.API_BASE_URL === 'undefined') {
             window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
         }
     </script>
@@ -97,10 +98,6 @@
             border-left: 5px solid #ef4444;
             background: #fef2f2;
         }
-        .reservation-card.cancelled {
-            border-left: 5px solid #9ca3af;
-            background: #f9fafb;
-        }
         .reservation-header {
             display: flex;
             justify-content: space-between;
@@ -126,28 +123,28 @@
             transition: all 0.2s;
             font-size: 14px;
         }
-        .btn-update {
-            background: #0d6efd;
+        .btn-approve {
+            background: #10b981;
             color: white;
         }
-        .btn-update:hover {
-            background: #0b5ed7;
+        .btn-approve:hover {
+            background: #059669;
             transform: translateY(-2px);
         }
-        .btn-cancel {
+        .btn-reject {
             background: #ef4444;
             color: white;
         }
-        .btn-cancel:hover {
+        .btn-reject:hover {
             background: #dc2626;
             transform: translateY(-2px);
         }
         .btn-view {
-            background: #6c757d;
+            background: #0d6efd;
             color: white;
         }
         .btn-view:hover {
-            background: #5a6268;
+            background: #0b5ed7;
         }
         .status-badge {
             padding: 6px 12px;
@@ -167,10 +164,6 @@
         .status-rejected {
             background: #fee2e2;
             color: #991b1b;
-        }
-        .status-cancelled {
-            background: #e5e7eb;
-            color: #374151;
         }
         .info-row {
             display: flex;
@@ -233,63 +226,6 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-        }
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-        }
     </style>
 </head>
 <body>
@@ -300,7 +236,7 @@
                     <span>📍</span> GIS Manager
                 </a>
                 <div class="nav-buttons">
-                    <a href="../dashboard.html" class="nav-btn">🏠 Dashboard</a>
+                    <a href="dashboard.html" class="nav-btn">🏠 Admin Dashboard</a>
                     <a href="../dashboard.html#profile" class="nav-btn">👤 Profile</a>
                     <button onclick="logout()" class="nav-btn">🚪 Logout</button>
                 </div>
@@ -313,29 +249,31 @@
 
                 <div class="page-header">
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
-                        <span style="font-size: 36px;">📋</span> My Reservations
+                        <span style="font-size: 36px;">📋</span> Manage Reservations
                     </h1>
-                    <button onclick="loadReservations()" class="btn btn-view">
-                        🔄 Refresh
-                    </button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="loadReservations()" class="btn" style="background: #6c757d;">
+                            🔄 Refresh
+                        </button>
+                        <a href="dashboard.html" class="btn" style="background: #0d6efd;">
+                            🏠 Back to Dashboard
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card">
                     <div class="filter-tabs">
-                        <button class="filter-tab active" onclick="filterReservations('all')" id="tab-all">
-                            📊 All (<span id="count-all">0</span>)
-                        </button>
-                        <button class="filter-tab" onclick="filterReservations('pending')" id="tab-pending">
+                        <button class="filter-tab active" onclick="filterReservations('pending')" id="tab-pending">
                             ⏳ Pending (<span id="count-pending">0</span>)
+                        </button>
+                        <button class="filter-tab" onclick="filterReservations('all')" id="tab-all">
+                            📊 All Reservations
                         </button>
                         <button class="filter-tab" onclick="filterReservations('approved')" id="tab-approved">
                             ✅ Approved (<span id="count-approved">0</span>)
                         </button>
                         <button class="filter-tab" onclick="filterReservations('rejected')" id="tab-rejected">
                             ❌ Rejected (<span id="count-rejected">0</span>)
-                        </button>
-                        <button class="filter-tab" onclick="filterReservations('cancelled')" id="tab-cancelled">
-                            🚫 Cancelled (<span id="count-cancelled">0</span>)
                         </button>
                     </div>
 
@@ -358,7 +296,7 @@
         }
         var API_BASE_URL = window.API_BASE_URL; // Use var instead of const to avoid redeclaration errors
         let allReservations = [];
-        let currentFilter = 'all';
+        let currentFilter = 'pending';
 
         function getUserData() {
             try {
@@ -401,6 +339,24 @@
                     return null;
                 }
 
+                // Handle 403 Forbidden specifically
+                if (response.status === 403) {
+                    console.error('403 Forbidden - URL:', url);
+                    const errorText = await response.text();
+                    console.error('403 Forbidden - Response:', errorText);
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { error: 'Insufficient permissions' };
+                    }
+                    return {
+                        success: false,
+                        error: errorData.error || 'Insufficient permissions',
+                        message: errorData.message || 'You do not have permission to access this resource. Please ensure you are logged in with the correct role.'
+                    };
+                }
+
                 const data = await response.json();
                 return data;
             } catch (error) {
@@ -420,8 +376,11 @@
 
         async function loadReservations() {
             const userData = getUserData();
-            if (!userData || userData.role !== 'member') {
-                showMessage('Access denied. Member only.', 'error');
+            console.log('User data:', userData);
+            console.log('User role:', userData?.role);
+            
+            if (!userData || !['admin', 'staff'].includes(userData.role)) {
+                showMessage('Access denied. Admin/Staff only.', 'error');
                 setTimeout(() => window.location.href = '../dashboard.html', 2000);
                 return;
             }
@@ -435,16 +394,47 @@
             `;
 
             try {
-                console.log('Loading reservations from:', `${API_BASE_URL}/member/my-intended-uses`);
-                const response = await apiRequest(`${API_BASE_URL}/member/my-intended-uses`);
+                // Load ALL reservations (not just pending) so we can filter client-side
+                // This ensures rejected/approved reservations don't disappear after actions
+                let endpoint = `${API_BASE_URL}/admin/reservations/all`;
+                let response;
+                
+                console.log('User role detected:', userData.role);
+                console.log('Loading ALL reservations from:', endpoint);
+                
+                // Try admin endpoint first
+                response = await apiRequest(endpoint);
+                console.log('Admin endpoint response:', response);
+                
+                // Check if admin endpoint failed - if so, try staff endpoint
+                const isAdminError = !response || 
+                    !response.success || 
+                    (response.error && (
+                        response.error.toLowerCase().includes('permission') || 
+                        response.error.toLowerCase().includes('insufficient') || 
+                        response.error.toLowerCase().includes('unauthorized') ||
+                        response.error.toLowerCase().includes('403')
+                    ));
+                
+                if (isAdminError) {
+                    console.log('Admin endpoint failed (403/permission error), trying staff endpoint...');
+                    endpoint = `${API_BASE_URL}/staff/reservations/all`;
+                    console.log('Trying staff endpoint:', endpoint);
+                    response = await apiRequest(endpoint);
+                    console.log('Staff endpoint response:', response);
+                }
                 
                 console.log('API Response:', response);
                 
                 if (!response) {
-                    throw new Error('No response from server');
+                    throw new Error('No response from server. Check your authentication and permissions.');
                 }
                 
                 if (!response.success) {
+                    // Check if it's a permission error
+                    if (response.error && (response.error.includes('permission') || response.error.includes('Insufficient'))) {
+                        throw new Error('Permission denied. Make sure you are logged in as Admin or Staff.');
+                    }
                     throw new Error(response?.message || response?.error || 'Failed to load reservations');
                 }
 
@@ -470,17 +460,13 @@
         }
 
         function updateCounts() {
-            const all = allReservations.length;
             const pending = allReservations.filter(r => r.status === 'pending').length;
             const approved = allReservations.filter(r => r.status === 'approved').length;
             const rejected = allReservations.filter(r => r.status === 'rejected').length;
-            const cancelled = allReservations.filter(r => r.status === 'cancelled').length;
 
-            document.getElementById('count-all').textContent = all;
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-rejected').textContent = rejected;
-            document.getElementById('count-cancelled').textContent = cancelled;
         }
 
         function filterReservations(status) {
@@ -504,9 +490,8 @@
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">${currentFilter === 'all' ? '📋' : '✅'}</div>
+                        <div class="empty-state-icon">${currentFilter === 'pending' ? '✅' : '📋'}</div>
                         <p>No ${currentFilter === 'all' ? '' : currentFilter} reservations found.</p>
-                        ${currentFilter === 'all' ? '<p style="margin-top: 16px;"><a href="../dashboard.html" style="color: #0d6efd;">Browse locations and make a reservation</a></p>' : ''}
                     </div>
                 `;
                 return;
@@ -516,6 +501,7 @@
                 const statusClass = reservation.status;
                 const statusBadgeClass = `status-${reservation.status}`;
                 const location = reservation.location || {};
+                const user = reservation.user || {};
 
                 return `
                     <div class="reservation-card ${statusClass}">
@@ -525,6 +511,12 @@
                                     ${location.location || 'Unknown Location'}
                                     <span class="status-badge ${statusBadgeClass}">${reservation.status}</span>
                                 </h3>
+                                <div class="info-row">
+                                    <div>
+                                        <span class="info-label">Reserved by:</span>
+                                        <span class="info-value">${user.username || 'Unknown'} (${user.email || 'N/A'})</span>
+                                    </div>
+                                </div>
                                 <div class="info-row">
                                     <div>
                                         <span class="info-label">Purpose:</span>
@@ -562,16 +554,13 @@
                             </div>
                             <div class="reservation-actions">
                                 ${reservation.status === 'pending' ? `
-                                <button onclick="updateReservation(${reservation.id})" class="btn btn-update">
-                                    ✏️ Update
+                                <button onclick="approveReservation(${reservation.id})" class="btn btn-approve">
+                                    ✅ Approve
                                 </button>
-                                <button onclick="cancelReservation(${reservation.id})" class="btn btn-cancel">
-                                    🚫 Cancel
+                                <button onclick="rejectReservation(${reservation.id})" class="btn btn-reject">
+                                    ❌ Reject
                                 </button>
                                 ` : ''}
-                                <button onclick="viewLocation(${location.id})" class="btn btn-view">
-                                    📍 View Location
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -579,162 +568,71 @@
             }).join('');
         }
 
-        async function updateReservation(id) {
-            const reservation = allReservations.find(r => r.id === id);
-            if (!reservation) return;
-
-            const today = new Date().toISOString().split('T')[0];
-            const modal = `
-                <div class="modal-overlay" onclick="closeUpdateModal(event)">
-                    <div class="modal-content" onclick="event.stopPropagation()">
-                        <button class="modal-close" onclick="closeUpdateModal()">×</button>
-                        <h2 style="color: #0d6efd; margin-bottom: 20px;">✏️ Update Reservation</h2>
-                        <form id="update-form" onsubmit="submitUpdate(event, ${id})">
-                            <div class="form-group">
-                                <label class="form-label">Intended Purpose *</label>
-                                <select id="update-intended-type" class="form-select" required>
-                                    <option value="event" ${reservation.intended_type === 'event' ? 'selected' : ''}>Event</option>
-                                    <option value="business" ${reservation.intended_type === 'business' ? 'selected' : ''}>Business</option>
-                                    <option value="personal" ${reservation.intended_type === 'personal' ? 'selected' : ''}>Personal</option>
-                                    <option value="future_development" ${reservation.intended_type === 'future_development' ? 'selected' : ''}>Future Development</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Description (Optional)</label>
-                                <textarea id="update-description" class="form-textarea" rows="4" maxlength="1000">${reservation.description || ''}</textarea>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Start Date & Time *</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <input type="date" id="update-start-date" class="form-input" required min="${today}" value="${reservation.intended_start_date}">
-                                    <input type="time" id="update-start-time" class="form-input" value="${reservation.intended_start_time || ''}">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">End Date & Time (Optional)</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <input type="date" id="update-end-date" class="form-input" value="${reservation.intended_end_date || ''}">
-                                    <input type="time" id="update-end-time" class="form-input" value="${reservation.intended_end_time || ''}">
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 24px;">
-                                <button type="button" onclick="closeUpdateModal()" class="btn" style="flex: 1; background: #6c757d;">Cancel</button>
-                                <button type="submit" class="btn btn-update" style="flex: 1;">Update Reservation</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-
-            const modalDiv = document.createElement('div');
-            modalDiv.id = 'update-modal';
-            modalDiv.innerHTML = modal;
-            document.body.appendChild(modalDiv);
-
-            // Set min end date based on start date and validate date+time
-            const startDateInput = document.getElementById('update-start-date');
-            const startTimeInput = document.getElementById('update-start-time');
-            const endDateInput = document.getElementById('update-end-date');
-            const endTimeInput = document.getElementById('update-end-time');
-            
-            function validateUpdateDateTime() {
-                if (!endDateInput.value && !endTimeInput.value) return true;
-                
-                const startDate = startDateInput.value;
-                const startTime = startTimeInput.value || '00:00';
-                const endDate = endDateInput.value || startDate;
-                const endTime = endTimeInput.value || '23:59';
-                
-                const startDateTime = new Date(startDate + 'T' + startTime);
-                const endDateTime = new Date(endDate + 'T' + endTime);
-                
-                if (endDateTime <= startDateTime) {
-                    showMessage('End date/time must be after start date/time', 'error');
-                    return false;
-                }
-                return true;
-            }
-            
-            startDateInput.addEventListener('change', function() {
-                if (this.value) {
-                    endDateInput.min = this.value;
-                }
-                validateUpdateDateTime();
-            });
-            startTimeInput.addEventListener('change', validateUpdateDateTime);
-            endDateInput.addEventListener('change', validateUpdateDateTime);
-            endTimeInput.addEventListener('change', validateUpdateDateTime);
-        }
-
-        function closeUpdateModal(event) {
-            if (event && event.target !== event.currentTarget) return;
-            const modal = document.getElementById('update-modal');
-            if (modal) modal.remove();
-        }
-
-        async function submitUpdate(event, id) {
-            event.preventDefault();
-
-            const formData = {
-                intended_type: document.getElementById('update-intended-type').value,
-                description: document.getElementById('update-description').value || null,
-                intended_start_date: document.getElementById('update-start-date').value,
-                intended_start_time: document.getElementById('update-start-time').value || null,
-                intended_end_date: document.getElementById('update-end-date').value || null,
-                intended_end_time: document.getElementById('update-end-time').value || null
-            };
-
-            // Validate date+time
-            const startTime = formData.intended_start_time || '00:00';
-            const endTime = formData.intended_end_time || '23:59';
-            const startDateTime = new Date(formData.intended_start_date + 'T' + startTime);
-            const endDateTime = formData.intended_end_date 
-                ? new Date(formData.intended_end_date + 'T' + endTime)
-                : new Date(formData.intended_start_date + 'T' + endTime);
-            
-            if (endDateTime <= startDateTime) {
-                showMessage('End date/time must be after start date/time', 'error');
+        async function approveReservation(id) {
+            if (!confirm('Are you sure you want to approve this reservation? This will reject all other pending reservations for this location.')) {
                 return;
             }
 
             try {
-                const response = await apiRequest(`${API_BASE_URL}/member/intended-uses/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(formData)
-                });
-
-                if (response && response.success) {
-                    closeUpdateModal();
-                    showMessage(response.message || 'Reservation updated successfully', 'success');
-                    loadReservations();
-                } else {
-                    showMessage(response?.message || 'Failed to update reservation', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating reservation:', error);
-                showMessage('Error updating reservation: ' + (error.message || 'Unknown error'), 'error');
-            }
-        }
-
-        async function cancelReservation(id) {
-            if (!confirm('Are you sure you want to cancel this reservation?')) {
-                return;
-            }
-
-            try {
-                const response = await apiRequest(`${API_BASE_URL}/member/intended-uses/${id}/cancel`, {
+                const userData = getUserData();
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/approve`;
+                let response = await apiRequest(endpoint, {
                     method: 'POST'
                 });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/approve`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
 
                 if (response && response.success) {
-                    showMessage(response.message || 'Reservation cancelled successfully', 'success');
+                    showMessage(response.message || 'Reservation approved successfully. Other pending reservations for this location have been rejected.', 'success');
+                    // Reload ALL reservations (not just pending) to see the updated statuses
+                    // Keep current filter active
                     loadReservations();
                 } else {
-                    showMessage(response?.message || 'Failed to cancel reservation', 'error');
+                    showMessage(response?.message || 'Failed to approve reservation', 'error');
                 }
             } catch (error) {
-                console.error('Error cancelling reservation:', error);
-                showMessage('Error cancelling reservation: ' + (error.message || 'Unknown error'), 'error');
+                console.error('Error approving reservation:', error);
+                showMessage('Error approving reservation: ' + (error.message || 'Unknown error'), 'error');
+            }
+        }
+
+        async function rejectReservation(id) {
+            if (!confirm('Are you sure you want to reject this reservation?')) {
+                return;
+            }
+
+            try {
+                const userData = getUserData();
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/reject`;
+                let response = await apiRequest(endpoint, {
+                    method: 'POST'
+                });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/reject`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
+
+                if (response && response.success) {
+                    showMessage(response.message || 'Reservation rejected successfully', 'success');
+                    loadReservations();
+                } else {
+                    showMessage(response?.message || 'Failed to reject reservation', 'error');
+                }
+            } catch (error) {
+                console.error('Error rejecting reservation:', error);
+                showMessage('Error rejecting reservation: ' + (error.message || 'Unknown error'), 'error');
             }
         }
 
