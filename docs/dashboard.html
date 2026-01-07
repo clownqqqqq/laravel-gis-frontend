@@ -705,6 +705,70 @@
                 font-size: 14px;
             }
         }
+
+        /* Reservation Form Modal Styles */
+        #reservation-modal input[type="date"] {
+            cursor: pointer;
+            position: relative;
+        }
+
+        #reservation-modal input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        #reservation-modal input[type="date"]:hover {
+            border-color: #0d6efd !important;
+            background-color: #f8fafc;
+        }
+
+        #reservation-modal input[type="date"]:focus {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1) !important;
+            outline: none;
+        }
+
+        #reservation-modal select:focus {
+            outline: none;
+        }
+
+        #reservation-modal textarea:focus {
+            outline: none;
+        }
+
+        /* Smooth modal animation */
+        #reservation-modal-overlay {
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        #reservation-modal > div {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
