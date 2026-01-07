@@ -837,17 +837,8 @@ window.declareIntendedUse = async function(locationId) {
             console.warn('Could not load existing reservations:', err);
         }
         
-        // Check if location already has approved reservation
-        const hasApproved = existingReservations.some(r => r.status === 'approved');
-        if (hasApproved) {
-            const approved = existingReservations.find(r => r.status === 'approved');
-            const startDate = new Date(approved.intended_start_date).toLocaleDateString();
-            const endDate = approved.intended_end_date 
-                ? new Date(approved.intended_end_date).toLocaleDateString()
-                : startDate;
-            showMessage(`This location is already reserved from ${startDate} to ${endDate}. Please choose a different location or wait until the reservation period ends.`, 'error');
-            return;
-        }
+        // Note: Multiple users CAN reserve the same location
+        // Date+time conflicts will be checked on submit by the backend
     } catch (error) {
         showMessage('Error loading location: ' + (error.message || 'Unknown error'), 'error');
         return;
@@ -901,28 +892,40 @@ window.declareIntendedUse = async function(locationId) {
                                 <span style="font-size: 20px;">📅</span> Reservation Period
                             </h3>
                             
-                            <!-- Start Date -->
+                            <!-- Start Date and Time -->
                             <div style="margin-bottom: 20px;">
                                 <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
-                                    <span style="color: #ef4444;">*</span> Start Date
+                                    <span style="color: #ef4444;">*</span> Start Date & Time
                                 </label>
-                                <div style="position: relative;">
-                                    <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
-                                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div style="position: relative;">
+                                        <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <input type="time" id="start-time" name="intended_start_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
+                                    </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select today or a future date</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date and time (time is optional, defaults to 12:00 AM)</small>
                             </div>
                             
-                            <!-- End Date -->
+                            <!-- End Date and Time -->
                             <div>
                                 <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #1e293b; font-size: 15px;">
-                                    End Date <span style="color: #64748b; font-weight: 400; font-size: 13px;">(Optional)</span>
+                                    End Date & Time <span style="color: #64748b; font-weight: 400; font-size: 13px;">(Optional)</span>
                                 </label>
-                                <div style="position: relative;">
-                                    <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
-                                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div style="position: relative;">
+                                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <input type="time" id="end-time" name="intended_end_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
+                                    </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date/time (time defaults to 11:59 PM if not specified)</small>
                             </div>
                         </div>
                         
@@ -970,32 +973,47 @@ window.declareIntendedUse = async function(locationId) {
     modal.innerHTML = formModal;
     document.body.appendChild(modal);
 
-    // Set minimum end date based on start date
+    // Set minimum end date based on start date and validate date+time
     const startDateInput = document.getElementById('start-date');
+    const startTimeInput = document.getElementById('start-time');
     const endDateInput = document.getElementById('end-date');
+    const endTimeInput = document.getElementById('end-time');
     
     // Update end date min when start date changes
     startDateInput.addEventListener('change', function() {
         if (this.value) {
-            const startDate = new Date(this.value);
-            startDate.setDate(startDate.getDate() + 1); // End date must be after start date
-            const minEndDate = startDate.toISOString().split('T')[0];
-            endDateInput.min = minEndDate;
-            
-            // If end date is set and is before new min, clear it
-            if (endDateInput.value && endDateInput.value <= this.value) {
-                endDateInput.value = '';
-            }
+            endDateInput.min = this.value; // End date can be same or after start date
         }
     });
     
-    // Validate end date when changed
-    endDateInput.addEventListener('change', function() {
-        if (this.value && startDateInput.value && this.value <= startDateInput.value) {
-            showMessage('End date must be after start date', 'error');
-            this.value = '';
+    // Validate end date/time when changed
+    function validateEndDateTime() {
+        if (!endDateInput.value && !endTimeInput.value) return true;
+        
+        const startDate = startDateInput.value;
+        const startTime = startTimeInput.value || '00:00';
+        const endDate = endDateInput.value || startDate;
+        const endTime = endTimeInput.value || '23:59';
+        
+        const startDateTime = new Date(startDate + 'T' + startTime);
+        const endDateTime = new Date(endDate + 'T' + endTime);
+        
+        if (endDateTime <= startDateTime) {
+            showMessage('End date/time must be after start date/time', 'error');
+            if (endDateInput.value === startDate) {
+                endTimeInput.value = '';
+            } else {
+                endDateInput.value = '';
+            }
+            return false;
         }
-    });
+        return true;
+    }
+    
+    endDateInput.addEventListener('change', validateEndDateTime);
+    endTimeInput.addEventListener('change', validateEndDateTime);
+    startDateInput.addEventListener('change', validateEndDateTime);
+    startTimeInput.addEventListener('change', validateEndDateTime);
 }
 
 // Close reservation modal
@@ -1022,7 +1040,9 @@ window.submitReservation = async function(event, locationId) {
     const formData = new FormData(form);
     
     const startDate = formData.get('intended_start_date');
+    const startTime = formData.get('intended_start_time') || '00:00';
     const endDate = formData.get('intended_end_date');
+    const endTime = formData.get('intended_end_time') || '23:59';
     
     // Validate dates
     const today = new Date().toISOString().split('T')[0];
@@ -1031,9 +1051,22 @@ window.submitReservation = async function(event, locationId) {
         return;
     }
     
-    if (endDate && endDate <= startDate) {
-        showMessage('End date must be after start date', 'error');
+    // Validate date+time
+    const startDateTime = new Date(startDate + 'T' + startTime);
+    const endDateTime = endDate ? new Date(endDate + 'T' + endTime) : new Date(startDate + 'T' + endTime);
+    
+    if (endDateTime <= startDateTime) {
+        showMessage('End date/time must be after start date/time', 'error');
         return;
+    }
+    
+    // Check if start date/time is in the past
+    if (startDate === today) {
+        const now = new Date();
+        if (startDateTime < now) {
+            showMessage('Start date/time cannot be in the past', 'error');
+            return;
+        }
     }
     
     const submitBtn = document.getElementById('submit-reservation-btn');
@@ -1052,7 +1085,9 @@ window.submitReservation = async function(event, locationId) {
                 intended_type: formData.get('intended_type'),
                 description: formData.get('description') || null,
                 intended_start_date: startDate,
-                intended_end_date: endDate || null
+                intended_start_time: formData.get('intended_start_time') || null,
+                intended_end_date: endDate || null,
+                intended_end_time: formData.get('intended_end_time') || null
             })
         });
 
@@ -1127,8 +1162,8 @@ window.viewIntendedUses = async function(locationId) {
                         <span style="background: ${use.status === 'approved' ? '#10b981' : use.status === 'rejected' ? '#ef4444' : '#f59e0b'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: capitalize;">${use.status}</span>
                     </div>
                     ${use.description ? `<p style="margin: 8px 0; color: #475569;"><strong>Description:</strong> ${use.description}</p>` : ''}
-                    <p style="margin: 5px 0; color: #64748b;"><strong>Start Date:</strong> ${use.intended_start_date}</p>
-                    ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End Date:</strong> ${use.intended_end_date}</p>` : ''}
+                    <p style="margin: 5px 0; color: #64748b;"><strong>Start:</strong> ${new Date(use.intended_start_date).toLocaleDateString()}${use.intended_start_time ? ' at ' + new Date('2000-01-01T' + use.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>
+                    ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End:</strong> ${new Date(use.intended_end_date).toLocaleDateString()}${use.intended_end_time ? ' at ' + new Date('2000-01-01T' + use.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Reserved by:</strong> ${use.user ? use.user.username : 'Unknown'}</p>
                     <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${new Date(use.created_at).toLocaleDateString()}</p>
                 </div>
