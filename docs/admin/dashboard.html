@@ -223,9 +223,14 @@
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
                         <span style="font-size: 36px;">👑</span> Admin Dashboard
                     </h1>
-                    <a href="users.html" class="btn btn-add-location">
-                        <span>👥</span> Manage Users
-                    </a>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="reservations.html" class="btn btn-add-location" style="background: #10b981;">
+                            <span>📋</span> Manage Reservations
+                        </a>
+                        <a href="users.html" class="btn btn-add-location">
+                            <span>👥</span> Manage Users
+                        </a>
+                    </div>
                 </div>
 
                 <div id="messages"></div>
@@ -242,6 +247,7 @@
                         <a href="users.html?status=blocked" class="quick-action-btn">🚫 View Blocked Users</a>
                         <a href="pending-locations.html" class="quick-action-btn" id="pending-locations-link">⏳ Review Pending Locations (0)</a>
                         <a href="suggestions.html" class="quick-action-btn" id="suggestions-link">💡 Review Place Suggestions (0)</a>
+                        <a href="reservations.html" class="quick-action-btn" id="reservations-link">📋 Manage Reservations (0)</a>
                         <a href="../dashboard.html" class="quick-action-btn">📍 View All Locations</a>
                     </div>
                 </div>
@@ -367,6 +373,11 @@
                     <div class="stat-value">${stats.pending_suggestions}</div>
                     ${stats.pending_suggestions > 0 ? '<div style="margin-top: 10px; font-size: 12px; color: #0d6efd;">Click to review →</div>' : ''}
                 </a>
+                <a href="reservations.html" class="stat-card clickable" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
+                    <h3 class="stat-label" style="color: white;">Pending Reservations</h3>
+                    <div class="stat-value" id="reservations-stat-count" style="color: white;">-</div>
+                    <div style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.9);">Click to manage →</div>
+                </a>
                 <div class="stat-card">
                     <h3 class="stat-label">Staff Members</h3>
                     <div class="stat-value">${stats.total_staff}</div>
@@ -384,6 +395,42 @@
             // Update quick action links
             document.getElementById('pending-locations-link').textContent = `⏳ Review Pending Locations (${stats.pending_requests})`;
             document.getElementById('suggestions-link').textContent = `💡 Review Place Suggestions (${stats.pending_suggestions})`;
+            
+            // Load pending reservations count
+            loadPendingReservationsCount();
+        }
+
+        async function loadPendingReservationsCount() {
+            try {
+                const apiBaseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'https://geocrud.bytevortexz.com/api';
+                const response = await fetch(`${apiBaseUrl}/staff/reservations/pending`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const pendingCount = result.data.filter(r => r.status === 'pending').length;
+                        
+                        // Update Quick Actions link
+                        const reservationsLink = document.getElementById('reservations-link');
+                        if (reservationsLink) {
+                            reservationsLink.textContent = `📋 Manage Reservations (${pendingCount})`;
+                        }
+                        
+                        // Update stat card count
+                        const reservationsStatCount = document.getElementById('reservations-stat-count');
+                        if (reservationsStatCount) {
+                            reservationsStatCount.textContent = pendingCount;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading pending reservations count:', error);
+            }
         }
 
         function showMessage(message, type) {
