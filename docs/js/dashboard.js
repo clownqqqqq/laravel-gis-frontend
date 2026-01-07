@@ -671,6 +671,50 @@ function showProfileMessage(message, type) {
     }, 5000);
 }
 
+// Add favorite location
+async function addFavorite(locationId) {
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/member/favorites/${locationId}`, {
+            method: 'POST'
+        });
+
+        if (response.success) {
+            showMessage(response.message || 'Location added to favorites', 'success');
+            // Reload locations to update favorite status
+            loadLocations(currentSearch);
+        } else {
+            showMessage(response.message || 'Failed to add favorite. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding favorite:', error);
+        showMessage('Error adding favorite: ' + (error.message || 'Unknown error'), 'error');
+    }
+}
+
+// Remove favorite location
+async function removeFavorite(locationId) {
+    if (!confirm('Are you sure you want to remove this location from your favorites?')) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest(`${API_BASE_URL}/member/favorites/${locationId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.success) {
+            showMessage(response.message || 'Location removed from favorites', 'success');
+            // Reload locations to update favorite status
+            loadLocations(currentSearch);
+        } else {
+            showMessage(response.message || 'Failed to remove favorite. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error('Error removing favorite:', error);
+        showMessage('Error removing favorite: ' + (error.message || 'Unknown error'), 'error');
+    }
+}
+
 // Check hash on load
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash === '#profile') {
