@@ -50,7 +50,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Load user info and locations
             loadUserInfo().catch(() => {}); // Non-critical
-            loadLocations();
+            
+            // Check if a specific location ID is requested via URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const locationId = urlParams.get('location');
+            if (locationId) {
+                loadSingleLocation(locationId);
+            } else {
+                loadLocations();
+            }
             
             // Search on Enter key
             const searchInput = document.getElementById('search');
@@ -223,6 +231,138 @@ async function loadStaffStatistics() {
         }
     } catch (error) {
         console.error('Error loading staff statistics:', error);
+    }
+}
+
+// Load a single location by ID
+async function loadSingleLocation(locationId) {
+    const loadingDiv = document.getElementById('loading');
+    const container = document.getElementById('locations-container');
+    const emptyState = document.getElementById('empty-state');
+    const searchForm = document.getElementById('searchForm');
+    const searchSection = searchForm ? searchForm.closest('.search-section') || searchForm.parentElement : null;
+    
+    // Hide search section when viewing a single location
+    if (searchSection) {
+        searchSection.style.display = 'none';
+    }
+    
+    // Add a "Back to All Locations" button at the top
+    const pageTitle = document.querySelector('h1');
+    if (pageTitle && !document.getElementById('back-to-all-btn')) {
+        const backBtn = document.createElement('button');
+        backBtn.id = 'back-to-all-btn';
+        backBtn.innerHTML = '← Back to All Locations';
+        backBtn.className = 'btn';
+        backBtn.style.cssText = 'margin-left: 20px; background: #6c757d; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;';
+        backBtn.onclick = () => {
+            window.location.href = 'dashboard.html';
+        };
+        pageTitle.parentElement.insertBefore(backBtn, pageTitle.nextSibling);
+    }
+    
+    // Verify token before making request
+    const token = getAuthToken();
+    if (!token) {
+        console.error('No token found when loading location!');
+        loadingDiv.style.display = 'none';
+        showMessage('Authentication error. Please log in again.', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+    
+    loadingDiv.style.display = 'block';
+    container.innerHTML = '';
+    emptyState.style.display = 'none';
+    
+    try {
+        // Get user role to determine the correct endpoint
+        const userData = getUserData();
+        let url;
+        
+        if (userData && userData.role === 'member') {
+            url = `${API_BASE_URL}/member/locations/${locationId}`;
+        } else {
+            // For admin/staff, try to get from member endpoint or use a general endpoint
+            url = `${API_BASE_URL}/member/locations/${locationId}`;
+        }
+        
+        const data = await apiRequest(url);
+        
+        console.log('📍 Single Location API response:', data);
+        
+        if (data.success && data.data) {
+            const location = data.data;
+            currentLocations = [location];
+            
+            // Check if it's a favorite (for members)
+            if (userData && userData.role === 'member') {
+                try {
+                    const favoritesResponse = await apiRequest(`${API_BASE_URL}/member/favorites`);
+                    if (favoritesResponse.success && Array.isArray(favoritesResponse.data)) {
+                        const favoriteIds = favoritesResponse.data.map(f => f.id || f.location_id);
+                        currentLocations[0].is_favorite = favoriteIds.includes(location.id);
+                    }
+                } catch (error) {
+                    console.warn('Could not load favorites (non-fatal):', error);
+                }
+            }
+            
+            loadingDiv.style.display = 'none';
+            
+            if (currentLocations.length === 0) {
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
+                        <p style="color: #6b7280; font-size: 16px;">Location not found.</p>
+                        <button onclick="window.location.href='dashboard.html'" class="btn" style="margin-top: 16px; background: #0d6efd; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">
+                            ← Back to All Locations
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            console.log('🎨 Rendering single location...');
+            renderLocations(currentLocations);
+            console.log('✅ Location rendered successfully!');
+            
+            // Scroll to the location card
+            setTimeout(() => {
+                const locationCard = document.querySelector('.location-card');
+                if (locationCard) {
+                    locationCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        } else {
+            loadingDiv.style.display = 'none';
+            emptyState.style.display = 'block';
+            emptyState.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
+                    <p style="color: #6b7280; font-size: 16px;">Location not found or you don't have permission to view it.</p>
+                    <button onclick="window.location.href='dashboard.html'" class="btn" style="margin-top: 16px; background: #0d6efd; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">
+                        ← Back to All Locations
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        console.error('Error loading single location:', error);
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <p style="color: #6b7280; font-size: 16px;">Error loading location: ${error.message || 'Unknown error'}</p>
+                <button onclick="window.location.href='dashboard.html'" class="btn" style="margin-top: 16px; background: #0d6efd; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">
+                    ← Back to All Locations
+                </button>
+            </div>
+        `;
     }
 }
 
