@@ -251,9 +251,14 @@
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
                         <span style="font-size: 36px;">📋</span> Manage Reservations
                     </h1>
-                    <button onclick="loadReservations()" class="btn btn-view" style="background: #6c757d;">
-                        🔄 Refresh
-                    </button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="loadReservations()" class="btn" style="background: #6c757d;">
+                            🔄 Refresh
+                        </button>
+                        <a href="dashboard.html" class="btn" style="background: #0d6efd;">
+                            🏠 Back to Dashboard
+                        </a>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -368,8 +373,13 @@
             `;
 
             try {
-                console.log('Loading reservations from:', `${API_BASE_URL}/staff/reservations/pending`);
-                const response = await apiRequest(`${API_BASE_URL}/staff/reservations/pending`);
+                // Use correct endpoint based on user role
+                const endpoint = userData.role === 'admin' 
+                    ? `${API_BASE_URL}/admin/reservations/pending`
+                    : `${API_BASE_URL}/staff/reservations/pending`;
+                
+                console.log('Loading reservations from:', endpoint);
+                const response = await apiRequest(endpoint);
                 
                 console.log('API Response:', response);
                 
@@ -520,7 +530,12 @@
             }
 
             try {
-                const response = await apiRequest(`${API_BASE_URL}/staff/reservations/${id}/approve`, {
+                const userData = getUserData();
+                const endpoint = userData.role === 'admin'
+                    ? `${API_BASE_URL}/admin/reservations/${id}/approve`
+                    : `${API_BASE_URL}/staff/reservations/${id}/approve`;
+                
+                const response = await apiRequest(endpoint, {
                     method: 'POST'
                 });
 
@@ -542,7 +557,12 @@
             }
 
             try {
-                const response = await apiRequest(`${API_BASE_URL}/staff/reservations/${id}/reject`, {
+                const userData = getUserData();
+                const endpoint = userData.role === 'admin'
+                    ? `${API_BASE_URL}/admin/reservations/${id}/reject`
+                    : `${API_BASE_URL}/staff/reservations/${id}/reject`;
+                
+                const response = await apiRequest(endpoint, {
                     method: 'POST'
                 });
 
