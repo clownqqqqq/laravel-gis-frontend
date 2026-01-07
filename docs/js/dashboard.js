@@ -861,7 +861,7 @@ window.declareIntendedUse = async function(locationId) {
                 </div>
                 
                 <!-- Form Content -->
-                <div style="padding: 30px;">
+                <div class="reservation-form-content" style="padding: 30px;">
                     <form id="reservation-form" onsubmit="submitReservation(event, ${locationId}); return false;">
                         <!-- Intended Purpose -->
                         <div style="margin-bottom: 24px;">
@@ -1016,6 +1016,84 @@ window.declareIntendedUse = async function(locationId) {
     startTimeInput.addEventListener('change', validateEndDateTime);
 }
 
+// Show prominent error message in the reservation modal
+window.showModalError = function(message) {
+    // Remove existing error if any
+    const existingError = document.getElementById('reservation-modal-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Find the form content container
+    const formContent = document.querySelector('#reservation-modal .reservation-form-content');
+    if (!formContent) {
+        // Fallback: find the form itself
+        const form = document.getElementById('reservation-form');
+        if (!form) return;
+        
+        // Create error alert box
+        const errorBox = document.createElement('div');
+        errorBox.id = 'reservation-modal-error';
+        errorBox.style.cssText = 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); position: relative; animation: slideDown 0.3s ease-out;';
+        errorBox.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="font-size: 24px; flex-shrink: 0;">⚠️</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">Cannot Reserve This Location</div>
+                    <div style="font-size: 14px; line-height: 1.5; opacity: 0.95;">${message}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 18px; font-weight: bold; flex-shrink: 0; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+            </div>
+        `;
+        
+        // Insert before the form
+        form.parentNode.insertBefore(errorBox, form);
+        
+        // Auto-scroll to error
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        // Create error alert box
+        const errorBox = document.createElement('div');
+        errorBox.id = 'reservation-modal-error';
+        errorBox.style.cssText = 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); position: relative; animation: slideDown 0.3s ease-out;';
+        errorBox.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="font-size: 24px; flex-shrink: 0;">⚠️</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">Cannot Reserve This Location</div>
+                    <div style="font-size: 14px; line-height: 1.5; opacity: 0.95;">${message}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 18px; font-weight: bold; flex-shrink: 0; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">×</button>
+            </div>
+        `;
+        
+        // Insert at the top of form content
+        formContent.insertBefore(errorBox, formContent.firstChild);
+        
+        // Auto-scroll to error
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    // Add animation style if not already added
+    if (!document.getElementById('reservation-error-animation-style')) {
+        const style = document.createElement('style');
+        style.id = 'reservation-error-animation-style';
+        style.textContent = `
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
 // Close reservation modal
 window.closeReservationModal = function(event) {
     if (event && event.target !== event.currentTarget) {
@@ -1047,7 +1125,9 @@ window.submitReservation = async function(event, locationId) {
     // Validate dates
     const today = new Date().toISOString().split('T')[0];
     if (startDate < today) {
-        showMessage('Start date cannot be in the past', 'error');
+        const errorMsg = 'Start date cannot be in the past';
+        showModalError(errorMsg);
+        showMessage(errorMsg, 'error');
         return;
     }
     
@@ -1056,7 +1136,9 @@ window.submitReservation = async function(event, locationId) {
     const endDateTime = endDate ? new Date(endDate + 'T' + endTime) : new Date(startDate + 'T' + endTime);
     
     if (endDateTime <= startDateTime) {
-        showMessage('End date/time must be after start date/time', 'error');
+        const errorMsg = 'End date/time must be after start date/time';
+        showModalError(errorMsg);
+        showMessage(errorMsg, 'error');
         return;
     }
     
@@ -1064,7 +1146,9 @@ window.submitReservation = async function(event, locationId) {
     if (startDate === today) {
         const now = new Date();
         if (startDateTime < now) {
-            showMessage('Start date/time cannot be in the past', 'error');
+            const errorMsg = 'Start date/time cannot be in the past';
+            showModalError(errorMsg);
+            showMessage(errorMsg, 'error');
             return;
         }
     }
@@ -1099,6 +1183,11 @@ window.submitReservation = async function(event, locationId) {
         if (response.error || !response.success) {
             // Show detailed error message from backend (includes date conflicts)
             const errorMsg = response.message || response.error || 'Failed to submit reservation';
+            
+            // Show prominent error popup in the modal
+            showModalError(errorMsg);
+            
+            // Also show toast message
             showMessage(errorMsg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalHTML;
@@ -1107,6 +1196,12 @@ window.submitReservation = async function(event, locationId) {
         }
 
         if (response.success) {
+            // Remove any error messages
+            const existingError = document.getElementById('reservation-modal-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
             closeReservationModal();
             showMessage(response.message || 'Reservation request submitted successfully. Waiting for admin/staff approval.', 'success');
             // Reload locations to update status
@@ -1121,10 +1216,14 @@ window.submitReservation = async function(event, locationId) {
             errorMsg = 'This location has been approved and can no longer be reserved.';
         } else if (errorMsg.includes('already reserved') || errorMsg.includes('Location already reserved')) {
             errorMsg = errorMsg; // Use the detailed message from backend
-        } else if (errorMsg.includes('Date conflict') || errorMsg.includes('conflict')) {
+        } else if (errorMsg.includes('Date conflict') || errorMsg.includes('conflict') || errorMsg.includes('cannot be reserved')) {
             errorMsg = errorMsg; // Use the detailed message from backend
         }
         
+        // Show prominent error popup in the modal
+        showModalError('Error: ' + errorMsg);
+        
+        // Also show toast message
         showMessage('Error: ' + errorMsg, 'error');
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalHTML;
