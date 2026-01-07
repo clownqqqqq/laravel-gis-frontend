@@ -3,7 +3,10 @@
 if (typeof window.API_BASE_URL === 'undefined') {
     window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
 }
-const API_BASE_URL = window.API_BASE_URL;
+// Only declare if not already declared (prevents redeclaration error)
+if (typeof API_BASE_URL === 'undefined') {
+    var API_BASE_URL = window.API_BASE_URL;
+}
 
 // API Endpoints
 const API_ENDPOINTS = {
