@@ -813,6 +813,8 @@ window.removeFavorite = async function(locationId) {
 window.declareIntendedUse = async function(locationId) {
     // Get location details first to check status
     let location;
+    let existingReservations = [];
+    
     try {
         const locationData = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}`);
         location = locationData.data;
@@ -820,6 +822,30 @@ window.declareIntendedUse = async function(locationId) {
         // Check if location is pending or approved (both are allowed for reservations)
         if (location.status !== 'pending' && location.status !== 'approved') {
             showMessage('This location is not available for reservation. Only pending or approved locations can be reserved.', 'error');
+            return;
+        }
+        
+        // Load existing reservations to check for conflicts
+        try {
+            const reservationsData = await apiRequest(`${API_BASE_URL}/member/locations/${locationId}/intended-uses`);
+            if (reservationsData && reservationsData.success && reservationsData.data) {
+                existingReservations = reservationsData.data.filter(r => 
+                    r.status === 'approved' || r.status === 'pending'
+                );
+            }
+        } catch (err) {
+            console.warn('Could not load existing reservations:', err);
+        }
+        
+        // Check if location already has approved reservation
+        const hasApproved = existingReservations.some(r => r.status === 'approved');
+        if (hasApproved) {
+            const approved = existingReservations.find(r => r.status === 'approved');
+            const startDate = new Date(approved.intended_start_date).toLocaleDateString();
+            const endDate = approved.intended_end_date 
+                ? new Date(approved.intended_end_date).toLocaleDateString()
+                : startDate;
+            showMessage(`This location is already reserved from ${startDate} to ${endDate}. Please choose a different location or wait until the reservation period ends.`, 'error');
             return;
         }
     } catch (error) {
@@ -1030,26 +1056,38 @@ window.submitReservation = async function(event, locationId) {
             })
         });
 
+        // Check if response has error
+        if (!response) {
+            throw new Error('No response from server');
+        }
+
+        if (response.error || !response.success) {
+            // Show detailed error message from backend (includes date conflicts)
+            const errorMsg = response.message || response.error || 'Failed to submit reservation';
+            showMessage(errorMsg, 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.style.opacity = '1';
+            return;
+        }
+
         if (response.success) {
             closeReservationModal();
             showMessage(response.message || 'Reservation request submitted successfully. Waiting for admin/staff approval.', 'success');
             // Reload locations to update status
             loadLocations(currentSearch);
-        } else {
-            showMessage(response.message || 'Failed to submit reservation', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalHTML;
-            submitBtn.style.opacity = '1';
         }
     } catch (error) {
         console.error('Error submitting reservation:', error);
         let errorMsg = error.message || 'Unknown error';
         
-        // Handle specific error messages
+        // Handle specific error messages from backend
         if (errorMsg.includes('already approved')) {
             errorMsg = 'This location has been approved and can no longer be reserved.';
-        } else if (errorMsg.includes('already reserved')) {
-            errorMsg = 'This location already has an approved reservation.';
+        } else if (errorMsg.includes('already reserved') || errorMsg.includes('Location already reserved')) {
+            errorMsg = errorMsg; // Use the detailed message from backend
+        } else if (errorMsg.includes('Date conflict') || errorMsg.includes('conflict')) {
+            errorMsg = errorMsg; // Use the detailed message from backend
         }
         
         showMessage('Error: ' + errorMsg, 'error');
