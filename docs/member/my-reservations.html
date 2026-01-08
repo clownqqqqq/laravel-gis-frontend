@@ -233,6 +233,143 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        /* Responsive Styles */
+        @media screen and (max-width: 768px) {
+            .content-area {
+                padding: 20px 15px !important;
+            }
+
+            .top-nav .container {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .top-nav .logo {
+                font-size: 20px !important;
+            }
+
+            .nav-buttons {
+                width: 100% !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .nav-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 10px 16px !important;
+            }
+
+            .page-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
+            }
+
+            .page-header h1 {
+                font-size: 24px !important;
+            }
+
+            .card {
+                padding: 20px !important;
+            }
+
+            .filter-tabs {
+                flex-wrap: wrap !important;
+                overflow-x: auto !important;
+            }
+
+            .filter-tab {
+                padding: 10px 16px !important;
+                font-size: 14px !important;
+                white-space: nowrap !important;
+            }
+
+            .reservation-card {
+                padding: 16px !important;
+            }
+
+            .reservation-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .reservation-actions {
+                width: 100% !important;
+                flex-direction: column !important;
+            }
+
+            .reservation-actions .btn {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .info-row {
+                flex-direction: column !important;
+                gap: 4px !important;
+            }
+
+            .info-label {
+                min-width: auto !important;
+                font-size: 14px !important;
+            }
+
+            .info-value {
+                font-size: 14px !important;
+            }
+
+            .modal-content {
+                max-width: 95% !important;
+                margin: 10px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-area {
+                padding: 15px 10px !important;
+            }
+
+            .page-header h1 {
+                font-size: 20px !important;
+            }
+
+            .card {
+                padding: 15px !important;
+            }
+
+            .reservation-card {
+                padding: 12px !important;
+            }
+
+            .filter-tab {
+                padding: 8px 12px !important;
+                font-size: 12px !important;
+            }
+
+            .btn {
+                padding: 10px 16px !important;
+                font-size: 13px !important;
+            }
+
+            .top-nav .logo {
+                font-size: 18px !important;
+            }
+
+            .nav-btn {
+                padding: 8px 12px !important;
+                font-size: 12px !important;
+            }
+
+            .modal-content {
+                max-width: 100% !important;
+                margin: 5px !important;
+                padding: 15px !important;
+            }
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0;
