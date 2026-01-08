@@ -194,9 +194,10 @@ function updateUIWithUserData(userData) {
     const profileSection = document.getElementById('profile-section');
     if (staffDashboard) {
         if (userData.role === 'staff') {
-            // Only show staff dashboard if profile section is hidden (i.e., locations section is visible)
-            const isProfileVisible = profileSection && profileSection.style.display === 'block';
-            if (!isProfileVisible) {
+            // Check if profile is active via hash or display style
+            const isProfileActive = window.location.hash === '#profile' || 
+                                   (profileSection && profileSection.style.display === 'block');
+            if (!isProfileActive) {
                 staffDashboard.style.display = 'block';
                 loadStaffStatistics();
             } else {
