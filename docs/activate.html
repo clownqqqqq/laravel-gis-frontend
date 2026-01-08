@@ -114,7 +114,8 @@
             font-size: 14px;
         }
 
-        .form-group input[type="text"] {
+        .form-group input[type="tel"],
+        .form-group input#otp_code {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #d1d5db;
@@ -125,6 +126,25 @@
             transition: all 0.2s ease;
             background: #ffffff;
             color: #2c3e50;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+            appearance: none;
+        }
+
+        /* Hide number input spinners */
+        .form-group input[type="tel"]::-webkit-outer-spin-button,
+        .form-group input[type="tel"]::-webkit-inner-spin-button,
+        .form-group input#otp_code::-webkit-outer-spin-button,
+        .form-group input#otp_code::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        .form-group input[type="tel"],
+        .form-group input#otp_code {
+            -moz-appearance: textfield;
         }
 
         .form-group input:focus {
@@ -246,9 +266,11 @@
             <form id="activate-form" method="POST">
                 <div class="form-group">
                     <label for="otp_code">OTP Code</label>
-                    <input type="text" id="otp_code" name="otp_code" required 
+                    <input type="tel" id="otp_code" name="otp_code" required 
                            maxlength="6" pattern="[0-9]{6}" 
-                           placeholder="000000" autocomplete="off">
+                           inputmode="numeric"
+                           placeholder="000000" 
+                           autocomplete="one-time-code">
                 </div>
 
                 <button type="submit" class="btn-primary">Verify & Activate</button>
@@ -272,11 +294,46 @@
         }
 
         // Auto-focus OTP input
-        document.getElementById('otp_code').focus();
+        const otpInput = document.getElementById('otp_code');
+        otpInput.focus();
 
-        // Only allow numbers
-        document.getElementById('otp_code').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
+        // Prevent non-numeric characters from being typed
+        otpInput.addEventListener('keypress', function(e) {
+            // Allow only numbers (0-9) and control keys (Backspace, Delete, Tab, Arrow keys, etc.)
+            const key = e.key || String.fromCharCode(e.which || e.keyCode);
+            const isNumber = /[0-9]/.test(key);
+            const isControlKey = e.ctrlKey || e.metaKey || 
+                                 ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key);
+            
+            if (!isNumber && !isControlKey) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Filter out non-numeric characters on input (handles paste and other input methods)
+        otpInput.addEventListener('input', function(e) {
+            // Remove any non-numeric characters
+            const originalValue = this.value;
+            const numericOnly = originalValue.replace(/[^0-9]/g, '');
+            
+            // Limit to 6 digits
+            this.value = numericOnly.slice(0, 6);
+            
+            // If value changed, prevent default and update
+            if (originalValue !== this.value) {
+                e.preventDefault();
+            }
+        });
+
+        // Handle paste events to extract only numbers
+        otpInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            const numbersOnly = pastedText.replace(/[^0-9]/g, '').slice(0, 6);
+            this.value = numbersOnly;
+            // Trigger input event for validation
+            this.dispatchEvent(new Event('input', { bubbles: true }));
         });
 
         // Activate form
@@ -286,9 +343,10 @@
             const alertContainer = document.getElementById('alert-container');
             const submitBtn = this.querySelector('button[type="submit"]');
             
-            // Validate OTP code
+            // Validate OTP code (should already be numeric due to input restrictions)
             if (!otpCode || otpCode.length !== 6 || !/^\d{6}$/.test(otpCode)) {
                 alertContainer.innerHTML = `<div class="alert alert-error">Please enter a valid 6-digit OTP code.</div>`;
+                document.getElementById('otp_code').focus();
                 return;
             }
             
