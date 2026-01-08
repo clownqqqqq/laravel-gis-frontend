@@ -514,7 +514,10 @@
                                 <div class="info-row">
                                     <div>
                                         <span class="info-label">Reserved by:</span>
-                                        <span class="info-value">${user.username || 'Unknown'} (${user.email || 'N/A'})</span>
+                                        <span class="info-value">${(() => {
+                                            const fullName = ((user.firstname || '') + ' ' + (user.lastname || '')).trim();
+                                            return fullName || user.username || 'Unknown';
+                                        })()}</span>
                                     </div>
                                 </div>
                                 <div class="info-row">
