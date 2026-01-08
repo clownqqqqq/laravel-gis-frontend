@@ -1009,6 +1009,11 @@
         function showProfileSection() {
             document.getElementById('profile-section').style.display = 'block';
             document.getElementById('locations-section').style.display = 'none';
+            // Hide staff dashboard when showing profile
+            const staffDashboard = document.getElementById('staff-dashboard');
+            if (staffDashboard) {
+                staffDashboard.style.display = 'none';
+            }
             window.location.hash = 'profile';
             loadProfileData();
         }
@@ -1017,6 +1022,20 @@
         function showLocationsSection() {
             document.getElementById('profile-section').style.display = 'none';
             document.getElementById('locations-section').style.display = 'block';
+            // Show staff dashboard again if user is staff (getUserData is from dashboard.js)
+            try {
+                const userData = typeof getUserData !== 'undefined' ? getUserData() : null;
+                const staffDashboard = document.getElementById('staff-dashboard');
+                if (staffDashboard && userData && userData.role === 'staff') {
+                    staffDashboard.style.display = 'block';
+                    // Reload staff statistics if function exists
+                    if (typeof loadStaffStatistics !== 'undefined') {
+                        loadStaffStatistics();
+                    }
+                }
+            } catch (e) {
+                console.log('Could not check user role for staff dashboard');
+            }
             window.location.hash = '';
         }
 
