@@ -829,6 +829,19 @@
 
         // Load reservations on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Verify user is authenticated as a member
+            const userData = getUserData();
+            const token = getAuthToken();
+            
+            if (!token) {
+                showMessage('Please log in to view your reservations.', 'error');
+                setTimeout(() => window.location.href = '../login.html', 2000);
+                return;
+            }
+            
+            // Note: We don't check role here - let the backend API handle authorization
+            // This allows the page to load and show proper error messages from the API
+            console.log('Page loaded for user:', userData);
             loadReservations();
         });
     </script>
