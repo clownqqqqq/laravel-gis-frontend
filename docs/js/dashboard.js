@@ -139,13 +139,10 @@ function updateUIWithUserData(userData) {
         }
     }
     
-    // Show admin button if user is admin
+    // Hide admin button - removed per user request
     const adminBtn = document.getElementById('admin-btn');
-    if (adminBtn && userData.role === 'admin') {
-        adminBtn.style.display = 'flex';
-        adminBtn.onclick = function() {
-            window.location.href = 'admin/dashboard.html';
-        };
+    if (adminBtn) {
+        adminBtn.style.display = 'none';
     }
     
     // Show admin access panel if user is admin
