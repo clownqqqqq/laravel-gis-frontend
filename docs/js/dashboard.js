@@ -158,13 +158,13 @@ function updateUIWithUserData(userData) {
         }
     }
     
-    // Show Manage Users button if user is admin
-    const manageUsersBtn = document.getElementById('manage-users-btn');
-    if (manageUsersBtn) {
+    // Show admin access buttons (Manage Reservations) if user is admin
+    const adminAccessButtons = document.getElementById('admin-access-buttons');
+    if (adminAccessButtons) {
         if (userData.role === 'admin') {
-            manageUsersBtn.style.display = 'inline-block';
+            adminAccessButtons.style.display = 'block';
         } else {
-            manageUsersBtn.style.display = 'none';
+            adminAccessButtons.style.display = 'none';
         }
     }
     
