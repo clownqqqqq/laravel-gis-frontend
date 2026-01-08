@@ -608,6 +608,12 @@
                 allReservations = response.data || [];
                 console.log('Loaded reservations:', allReservations.length, allReservations);
                 
+                // Ensure sort is initialized
+                const sortSelect = document.getElementById('sort-select');
+                if (sortSelect) {
+                    sortSelect.value = currentSort;
+                }
+                
                 updateCounts();
                 renderReservations();
             } catch (error) {
@@ -641,7 +647,10 @@
             
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            const activeTab = document.getElementById(`tab-${status}`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
 
             renderReservations();
         }
@@ -653,14 +662,28 @@
         }
 
         function sortReservations(reservations) {
+            if (!reservations || reservations.length === 0) {
+                return reservations;
+            }
+            
             const sorted = [...reservations];
+            
+            console.log('Sorting reservations by:', currentSort, 'Total:', sorted.length);
             
             switch (currentSort) {
                 case 'date-desc':
-                    sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateB - dateA;
+                    });
                     break;
                 case 'date-asc':
-                    sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateA - dateB;
+                    });
                     break;
                 case 'location-asc':
                     sorted.sort((a, b) => {
@@ -703,21 +726,43 @@
                     break;
                 case 'start-date-desc':
                     sorted.sort((a, b) => {
-                        const dateA = new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''));
-                        const dateB = new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''));
-                        return dateB - dateA;
+                        try {
+                            const dateA = a.intended_start_date 
+                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
+                                : new Date(0);
+                            const dateB = b.intended_start_date 
+                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
+                                : new Date(0);
+                            return dateB - dateA;
+                        } catch (e) {
+                            console.error('Error sorting by start date:', e);
+                            return 0;
+                        }
                     });
                     break;
                 case 'start-date-asc':
                     sorted.sort((a, b) => {
-                        const dateA = new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''));
-                        const dateB = new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''));
-                        return dateA - dateB;
+                        try {
+                            const dateA = a.intended_start_date 
+                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
+                                : new Date(0);
+                            const dateB = b.intended_start_date 
+                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
+                                : new Date(0);
+                            return dateA - dateB;
+                        } catch (e) {
+                            console.error('Error sorting by start date:', e);
+                            return 0;
+                        }
                     });
                     break;
                 default:
                     // Default to date-desc
-                    sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateB - dateA;
+                    });
             }
             
             return sorted;
@@ -731,11 +776,24 @@
                 filtered = allReservations.filter(r => r.status === currentFilter);
             }
 
+            console.log('Before sorting - Filter:', currentFilter, 'Count:', filtered.length);
+            
             // Apply sorting
             filtered = sortReservations(filtered);
+            
+            console.log('After sorting - Count:', filtered.length);
 
             // Update count display
-            document.getElementById('reservation-count').textContent = filtered.length;
+            const countElement = document.getElementById('reservation-count');
+            if (countElement) {
+                countElement.textContent = filtered.length;
+            }
+            
+            // Ensure sort dropdown is set to current sort
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect && sortSelect.value !== currentSort) {
+                sortSelect.value = currentSort;
+            }
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -892,6 +950,11 @@
 
         // Load reservations on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize sort dropdown to default value
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect) {
+                sortSelect.value = currentSort;
+            }
             loadReservations();
         });
     </script>
