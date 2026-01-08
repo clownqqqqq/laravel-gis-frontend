@@ -139,31 +139,22 @@ function updateUIWithUserData(userData) {
         }
     }
     
-    // Hide admin button - removed per user request
+    // Hide admin pill button in the header (no longer used)
     const adminBtn = document.getElementById('admin-btn');
     if (adminBtn) {
         adminBtn.style.display = 'none';
     }
     
-    // Show admin access panel if user is admin
-    const adminAccessPanel = document.getElementById('admin-access-panel');
-    if (adminAccessPanel) {
-        if (userData.role === 'admin') {
-            adminAccessPanel.style.display = 'block';
-        } else {
-            adminAccessPanel.style.display = 'none';
-        }
-    }
-    
-    // Show admin access buttons (Manage Reservations) if user is admin
-    const adminAccessButtons = document.getElementById('admin-access-buttons');
-    if (adminAccessButtons) {
-        if (userData.role === 'admin') {
-            adminAccessButtons.style.display = 'block';
-        } else {
-            adminAccessButtons.style.display = 'none';
-        }
-    }
+    // Show admin header buttons (beside Add Location) only for admin users
+    const adminHeaderButtons = [
+        document.getElementById('admin-dashboard-btn'),
+        document.getElementById('admin-manage-users-btn'),
+        document.getElementById('admin-manage-reservations-btn'),
+    ];
+    adminHeaderButtons.forEach(btn => {
+        if (!btn) return;
+        btn.style.display = userData.role === 'admin' ? 'inline-flex' : 'none';
+    });
     
     // Show Test Database Connection button if user is admin
     const databaseTestBtn = document.getElementById('database-test-btn');
