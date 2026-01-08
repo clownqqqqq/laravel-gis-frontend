@@ -87,19 +87,84 @@
             gap: 16px;
         }
         @media screen and (max-width: 768px) {
+            .content-area {
+                padding: 20px 15px !important;
+            }
+
+            .top-nav .container {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .top-nav .logo {
+                font-size: 20px !important;
+            }
+
+            .nav-buttons {
+                width: 100% !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .nav-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 10px 16px !important;
+            }
+
             .page-header {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
             }
+
             .page-header h1 {
-                font-size: 24px;
+                font-size: 24px !important;
             }
+
             .page-header h1 span {
-                font-size: 28px;
+                font-size: 28px !important;
             }
+
             .page-header .btn {
-                width: 100%;
-                justify-content: center;
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .card {
+                padding: 20px !important;
+            }
+
+            .form-group textarea {
+                min-height: 120px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-area {
+                padding: 15px 10px !important;
+            }
+
+            .page-header h1 {
+                font-size: 20px !important;
+            }
+
+            .page-header h1 span {
+                font-size: 24px !important;
+            }
+
+            .card {
+                padding: 15px !important;
+            }
+
+            .top-nav .logo {
+                font-size: 18px !important;
+            }
+
+            .nav-btn {
+                padding: 8px 12px !important;
+                font-size: 12px !important;
             }
         }
     </style>
