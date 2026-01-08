@@ -248,13 +248,91 @@
             border: 1px solid #b8d4da;
         }
 
-        @media (max-width: 640px) {
+        @media screen and (max-width: 768px) {
+            .auth-header .container {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .auth-header .logo {
+                font-size: 20px !important;
+            }
+
+            .auth-header .header-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 10px 16px !important;
+            }
+
+            .auth-container {
+                padding: 20px 15px !important;
+            }
+
             .auth-card {
-                padding: 35px 25px;
+                padding: 35px 25px !important;
             }
 
             .auth-title {
-                font-size: 28px;
+                font-size: 28px !important;
+            }
+
+            .auth-subtitle {
+                font-size: 14px !important;
+            }
+
+            .form-group {
+                margin-bottom: 18px !important;
+            }
+
+            .btn-submit {
+                width: 100% !important;
+                padding: 14px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-header {
+                padding: 12px 0 !important;
+            }
+
+            .auth-header .logo {
+                font-size: 18px !important;
+            }
+
+            .auth-container {
+                padding: 15px 10px !important;
+            }
+
+            .auth-card {
+                padding: 25px 20px !important;
+            }
+
+            .auth-icon {
+                font-size: 48px !important;
+                margin-bottom: 15px !important;
+            }
+
+            .auth-title {
+                font-size: 24px !important;
+            }
+
+            .auth-subtitle {
+                font-size: 13px !important;
+            }
+
+            .form-group label {
+                font-size: 14px !important;
+            }
+
+            .form-group input {
+                padding: 12px 14px !important;
+                font-size: 14px !important;
+            }
+
+            .btn-submit {
+                padding: 12px !important;
+                font-size: 14px !important;
             }
         }
     </style>
