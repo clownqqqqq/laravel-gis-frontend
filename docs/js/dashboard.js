@@ -153,7 +153,13 @@ function updateUIWithUserData(userData) {
     ];
     adminHeaderButtons.forEach(btn => {
         if (!btn) return;
-        btn.style.display = userData.role === 'admin' ? 'inline-flex' : 'none';
+        if (userData.role === 'admin') {
+            btn.style.display = 'inline-flex';
+            btn.style.visibility = 'visible';
+        } else {
+            btn.style.display = 'none';
+            btn.style.visibility = 'hidden';
+        }
     });
     
     // Show Test Database Connection button if user is admin
