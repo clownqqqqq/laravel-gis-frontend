@@ -1130,11 +1130,62 @@ window.declareIntendedUse = async function(locationId) {
     const endDateInput = document.getElementById('end-date');
     const endTimeInput = document.getElementById('end-time');
     
+    // Function to validate start date/time is not in the past
+    function validateStartDateTime() {
+        const startDate = startDateInput.value;
+        const startTime = startTimeInput.value || '00:00';
+        
+        if (!startDate) return true;
+        
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const startDateTime = new Date(startDate + 'T' + startTime);
+        
+        // Check if date is in the past
+        if (startDate < today) {
+            showMessage('Start date cannot be in the past', 'error');
+            startDateInput.value = today;
+            startTimeInput.value = '';
+            return false;
+        }
+        
+        // If date is today, check if time is in the past
+        if (startDate === today && startDateTime < now) {
+            const errorMsg = 'Start time cannot be in the past. Please select a future time.';
+            showMessage(errorMsg, 'error');
+            // Set min time to current time + 1 minute
+            const currentHour = now.getHours().toString().padStart(2, '0');
+            const currentMinute = (now.getMinutes() + 1).toString().padStart(2, '0');
+            const minTime = `${currentHour}:${currentMinute}`;
+            startTimeInput.min = minTime;
+            startTimeInput.value = '';
+            return false;
+        }
+        
+        // If date is today, set min time to current time
+        if (startDate === today) {
+            const currentHour = now.getHours().toString().padStart(2, '0');
+            const currentMinute = (now.getMinutes() + 1).toString().padStart(2, '0');
+            startTimeInput.min = `${currentHour}:${currentMinute}`;
+        } else {
+            // For future dates, remove min time restriction
+            startTimeInput.removeAttribute('min');
+        }
+        
+        return true;
+    }
+    
     // Update end date min when start date changes
     startDateInput.addEventListener('change', function() {
+        validateStartDateTime();
         if (this.value) {
             endDateInput.min = this.value; // End date can be same or after start date
         }
+    });
+    
+    // When start time changes, validate it's not in the past
+    startTimeInput.addEventListener('change', function() {
+        validateStartDateTime();
     });
     
     // Validate end date/time when changed
@@ -1163,7 +1214,6 @@ window.declareIntendedUse = async function(locationId) {
     
     endDateInput.addEventListener('change', validateEndDateTime);
     endTimeInput.addEventListener('change', validateEndDateTime);
-    startDateInput.addEventListener('change', validateEndDateTime);
     startTimeInput.addEventListener('change', validateEndDateTime);
 }
 
@@ -1286,22 +1336,20 @@ window.submitReservation = async function(event, locationId) {
     const startDateTime = new Date(startDate + 'T' + startTime);
     const endDateTime = endDate ? new Date(endDate + 'T' + endTime) : new Date(startDate + 'T' + endTime);
     
-    if (endDateTime <= startDateTime) {
-        const errorMsg = 'End date/time must be after start date/time';
+    // Check if start date/time is in the past (for both today and past dates)
+    const now = new Date();
+    if (startDateTime < now) {
+        const errorMsg = 'Start date and time cannot be in the past. Please select a future date and time.';
         showModalError(errorMsg);
         showMessage(errorMsg, 'error');
         return;
     }
     
-    // Check if start date/time is in the past
-    if (startDate === today) {
-        const now = new Date();
-        if (startDateTime < now) {
-            const errorMsg = 'Start date/time cannot be in the past';
-            showModalError(errorMsg);
-            showMessage(errorMsg, 'error');
-            return;
-        }
+    if (endDateTime <= startDateTime) {
+        const errorMsg = 'End date/time must be after start date/time';
+        showModalError(errorMsg);
+        showMessage(errorMsg, 'error');
+        return;
     }
     
     const submitBtn = document.getElementById('submit-reservation-btn');
