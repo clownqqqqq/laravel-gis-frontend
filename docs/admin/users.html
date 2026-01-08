@@ -417,6 +417,8 @@
             window.ADMIN_USERS_VERSION = '2.0';
         }
         let currentUser = null;
+        let sortBy = 'role'; // Default sort by role
+        let sortOrder = 'asc'; // 'asc' or 'desc'
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', async function() {
@@ -499,18 +501,32 @@
                         return;
                     }
 
+                    // Sort users by role
+                    const sortedUsers = [...users].sort((a, b) => {
+                        // Define role priority: admin > staff > member
+                        const rolePriority = { admin: 1, staff: 2, member: 3 };
+                        const priorityA = rolePriority[a.role] || 999;
+                        const priorityB = rolePriority[b.role] || 999;
+                        
+                        if (sortOrder === 'asc') {
+                            return priorityA - priorityB;
+                        } else {
+                            return priorityB - priorityA;
+                        }
+                    });
+
                     let html = '<div style="overflow-x: auto;"><table><thead><tr>' +
                         '<th>ID</th>' +
                         '<th>Username</th>' +
                         '<th>Email</th>' +
                         '<th>Name</th>' +
-                        '<th>Role</th>' +
+                        `<th style="cursor: pointer; user-select: none;" onclick="toggleRoleSort()">Role ${sortBy === 'role' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}</th>` +
                         '<th>Status</th>' +
                         '<th>Created</th>' +
                         '<th>Actions</th>' +
                         '</tr></thead><tbody>';
 
-                    users.forEach(user => {
+                    sortedUsers.forEach(user => {
                         const isCurrentUser = currentUser && currentUser.id === user.id;
                         const rowClass = isCurrentUser ? 'current-user-row' : '';
                         
@@ -569,6 +585,17 @@
                 console.error('Error loading users:', error);
                 container.innerHTML = '<p style="text-align: center; color: #721c24; padding: 40px;">Error loading users: ' + error.message + '</p>';
             }
+        }
+
+        // Toggle role sorting
+        function toggleRoleSort() {
+            if (sortBy === 'role') {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortBy = 'role';
+                sortOrder = 'asc';
+            }
+            loadUsers();
         }
 
         // Load specific page
