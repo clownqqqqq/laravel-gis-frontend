@@ -501,12 +501,18 @@
                         return;
                     }
 
-                    // Sort users by role
+                    // Sort users by role (always sort by role by default)
                     const sortedUsers = [...users].sort((a, b) => {
                         // Define role priority: admin > staff > member
-                        const rolePriority = { admin: 1, staff: 2, member: 3 };
-                        const priorityA = rolePriority[a.role] || 999;
-                        const priorityB = rolePriority[b.role] || 999;
+                        const rolePriority = { 
+                            'admin': 1, 
+                            'staff': 2, 
+                            'member': 3
+                        };
+                        const roleA = (a.role || '').toLowerCase();
+                        const roleB = (b.role || '').toLowerCase();
+                        const priorityA = rolePriority[roleA] || 999;
+                        const priorityB = rolePriority[roleB] || 999;
                         
                         if (sortOrder === 'asc') {
                             return priorityA - priorityB;
@@ -514,13 +520,19 @@
                             return priorityB - priorityA;
                         }
                     });
+                    
+                    console.log('Sorting users by role:', {
+                        sortOrder: sortOrder,
+                        before: users.map(u => ({ id: u.id, username: u.username, role: u.role })),
+                        after: sortedUsers.map(u => ({ id: u.id, username: u.username, role: u.role }))
+                    });
 
                     let html = '<div style="overflow-x: auto;"><table><thead><tr>' +
                         '<th>ID</th>' +
                         '<th>Username</th>' +
                         '<th>Email</th>' +
                         '<th>Name</th>' +
-                        `<th style="cursor: pointer; user-select: none;" onclick="toggleRoleSort()">Role ${sortBy === 'role' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}</th>` +
+                        `<th style="cursor: pointer; user-select: none; position: relative;" onclick="toggleRoleSort()">Role ${sortBy === 'role' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''} <span style="font-size: 10px; color: #0d6efd;">(click to sort)</span></th>` +
                         '<th>Status</th>' +
                         '<th>Created</th>' +
                         '<th>Actions</th>' +
