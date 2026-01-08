@@ -1007,15 +1007,30 @@
 
         // Show profile section
         function showProfileSection() {
-            document.getElementById('profile-section').style.display = 'block';
+            // Hide locations section first
             document.getElementById('locations-section').style.display = 'none';
-            // Hide staff dashboard when showing profile
+            
+            // Hide staff dashboard immediately when showing profile
             const staffDashboard = document.getElementById('staff-dashboard');
             if (staffDashboard) {
                 staffDashboard.style.display = 'none';
             }
+            
+            // Show profile section
+            document.getElementById('profile-section').style.display = 'block';
+            
+            // Set hash
             window.location.hash = 'profile';
+            
+            // Load profile data
             loadProfileData();
+            
+            // Double-check staff dashboard is hidden (in case any other script tries to show it)
+            setTimeout(() => {
+                if (staffDashboard) {
+                    staffDashboard.style.display = 'none';
+                }
+            }, 50);
         }
 
         // Show locations section
@@ -1205,6 +1220,17 @@
             if (window.location.hash === '#profile') {
                 showProfileSection();
             }
+            
+            // Ensure staff dashboard is hidden if profile is active (run after a short delay to ensure all scripts loaded)
+            setTimeout(() => {
+                const profileSection = document.getElementById('profile-section');
+                const staffDashboard = document.getElementById('staff-dashboard');
+                if (profileSection && staffDashboard) {
+                    if (profileSection.style.display === 'block' || window.location.hash === '#profile') {
+                        staffDashboard.style.display = 'none';
+                    }
+                }
+            }, 100);
         }, 1000);
     </script>
 </body>
