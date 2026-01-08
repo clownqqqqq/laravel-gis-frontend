@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (locationId) {
                 loadSingleLocation(locationId);
             } else {
-                loadLocations();
+            loadLocations();
             }
             
             // Search on Enter key
@@ -189,12 +189,19 @@ function updateUIWithUserData(userData) {
         }
     }
     
-    // Show/hide staff dashboard
+    // Show/hide staff dashboard (only show in locations section, not in profile section)
     const staffDashboard = document.getElementById('staff-dashboard');
+    const profileSection = document.getElementById('profile-section');
     if (staffDashboard) {
         if (userData.role === 'staff') {
-            staffDashboard.style.display = 'block';
-            loadStaffStatistics();
+            // Only show staff dashboard if profile section is hidden (i.e., locations section is visible)
+            const isProfileVisible = profileSection && profileSection.style.display === 'block';
+            if (!isProfileVisible) {
+                staffDashboard.style.display = 'block';
+                loadStaffStatistics();
+            } else {
+                staffDashboard.style.display = 'none';
+            }
         } else {
             staffDashboard.style.display = 'none';
         }
