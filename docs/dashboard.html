@@ -812,8 +812,14 @@
                 <div id="admin-access-panel" style="display: none; background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b8d4da;">
                     <strong>👑 Admin Access:</strong> 
                     <a href="admin/dashboard.html" style="color: #0d6efd; text-decoration: underline; margin: 0 10px;">Dashboard</a> | 
-                    <a href="admin/reservations.html" style="color: #0d6efd; text-decoration: underline; margin: 0 10px;">📋 Manage Reservations</a> | 
                     <a href="admin/users.html" style="color: #0d6efd; text-decoration: underline;">Manage Users</a>
+                </div>
+                
+                <!-- Admin Access Buttons (Below Panel) -->
+                <div id="admin-access-buttons" style="display: none; margin-bottom: 20px;">
+                    <a href="admin/reservations.html" class="btn" style="background: #10b981; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>📋</span> Manage Reservations
+                    </a>
                 </div>
 
                 <!-- Staff Dashboard -->
@@ -955,9 +961,6 @@
                         <span style="font-size: 36px;">📍</span> My Geographic Locations
                     </h1>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <a id="manage-users-btn" href="admin/users.html" class="btn" style="display: none; background: #0d6efd; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; display: inline-block;">
-                            <span>👥</span> Manage Users
-                        </a>
                         <a href="create-location.html" class="btn-add-location">
                             <span>➕</span> Add Location
                         </a>
