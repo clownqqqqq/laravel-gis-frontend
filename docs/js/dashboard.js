@@ -203,6 +203,15 @@ function updateUIWithUserData(userData) {
             } else {
                 staffDashboard.style.display = 'none';
             }
+            
+            // Set up a periodic check to ensure staff dashboard stays hidden when profile is active
+            setInterval(() => {
+                const profileActive = window.location.hash === '#profile' || 
+                                    (profileSection && profileSection.style.display === 'block');
+                if (profileActive && staffDashboard.style.display !== 'none') {
+                    staffDashboard.style.display = 'none';
+                }
+            }, 100);
         } else {
             staffDashboard.style.display = 'none';
         }
