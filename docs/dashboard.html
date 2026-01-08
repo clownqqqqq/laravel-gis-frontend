@@ -769,6 +769,17 @@
                 opacity: 1;
             }
         }
+        /* Hide staff dashboard when profile section is visible */
+        #profile-section[style*="display: block"] ~ #staff-dashboard,
+        #profile-section:not([style*="display: none"]) ~ #staff-dashboard,
+        body:has(#profile-section[style*="display: block"]) #staff-dashboard {
+            display: none !important;
+        }
+        
+        /* Alternative: Hide staff dashboard when hash is #profile */
+        body:has([href="#profile"]:target) #staff-dashboard {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1010,14 +1021,17 @@
             // Hide locations section first
             document.getElementById('locations-section').style.display = 'none';
             
-            // Hide staff dashboard immediately when showing profile
+            // Hide staff dashboard immediately when showing profile - use multiple methods
             const staffDashboard = document.getElementById('staff-dashboard');
             if (staffDashboard) {
                 staffDashboard.style.display = 'none';
+                staffDashboard.style.visibility = 'hidden';
+                staffDashboard.setAttribute('data-profile-active', 'true');
             }
             
             // Show profile section
-            document.getElementById('profile-section').style.display = 'block';
+            const profileSection = document.getElementById('profile-section');
+            profileSection.style.display = 'block';
             
             // Set hash
             window.location.hash = 'profile';
@@ -1025,24 +1039,38 @@
             // Load profile data
             loadProfileData();
             
-            // Double-check staff dashboard is hidden (in case any other script tries to show it)
-            setTimeout(() => {
-                if (staffDashboard) {
-                    staffDashboard.style.display = 'none';
-                }
-            }, 50);
+            // Continuously check to ensure staff dashboard stays hidden (every 50ms)
+            if (!window.staffDashboardHideInterval) {
+                window.staffDashboardHideInterval = setInterval(() => {
+                    const sd = document.getElementById('staff-dashboard');
+                    const ps = document.getElementById('profile-section');
+                    if (sd && (window.location.hash === '#profile' || (ps && ps.style.display === 'block'))) {
+                        sd.style.display = 'none';
+                        sd.style.visibility = 'hidden';
+                    }
+                }, 50);
+            }
         }
 
         // Show locations section
         function showLocationsSection() {
             document.getElementById('profile-section').style.display = 'none';
             document.getElementById('locations-section').style.display = 'block';
+            
+            // Clear the hide interval when leaving profile
+            if (window.staffDashboardHideInterval) {
+                clearInterval(window.staffDashboardHideInterval);
+                window.staffDashboardHideInterval = null;
+            }
+            
             // Show staff dashboard again if user is staff (getUserData is from dashboard.js)
             try {
                 const userData = typeof getUserData !== 'undefined' ? getUserData() : null;
                 const staffDashboard = document.getElementById('staff-dashboard');
                 if (staffDashboard && userData && userData.role === 'staff') {
                     staffDashboard.style.display = 'block';
+                    staffDashboard.style.visibility = '';
+                    staffDashboard.removeAttribute('data-profile-active');
                     // Reload staff statistics if function exists
                     if (typeof loadStaffStatistics !== 'undefined') {
                         loadStaffStatistics();
