@@ -59,7 +59,7 @@ window.syncDateInput = function(textInput, hiddenInputId) {
     hiddenInput.value = formattedDate;
 };
 
-// Function to update date display from date picker (YYYY-MM-DD to mm/dd/yyyy)
+// Function to update date display from date picker (YYYY-MM-DD to MM-DD-YYYY)
 window.updateDateDisplayFromPicker = function(dateInput, displayId, hiddenInputId) {
     const displayElement = document.getElementById(displayId);
     const hiddenInput = document.getElementById(hiddenInputId);
@@ -75,19 +75,19 @@ window.updateDateDisplayFromPicker = function(dateInput, displayId, hiddenInputI
         hiddenInput.value = dateInput.value;
     }
     
-    // Convert to mm/dd/yyyy for display
-    const date = new Date(dateInput.value + 'T00:00:00');
-    if (isNaN(date.getTime())) {
+    // Convert to MM-DD-YYYY for display
+    const dateStr = dateInput.value.split('T')[0];
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        const year = parts[0]; // Full year
+        
+        if (displayElement) {
+            displayElement.textContent = `${month}-${day}-${year}`;
+        }
+    } else {
         if (displayElement) displayElement.textContent = '';
-        return;
-    }
-    
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear();
-    
-    if (displayElement) {
-        displayElement.textContent = `${month}/${day}/${year}`;
     }
 };
 
@@ -1151,7 +1151,7 @@ window.declareIntendedUse = async function(locationId) {
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as mm/dd/yyyy). Time is optional, defaults to 12:00 AM</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as MM-DD-YYYY). Time is optional, defaults to 12:00 AM</small>
                             </div>
                             
                             <!-- End Date and Time -->
@@ -1171,7 +1171,7 @@ window.declareIntendedUse = async function(locationId) {
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as mm/dd/yyyy). Must be after start date/time. Time defaults to 11:59 PM if not specified</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as MM-DD-YYYY). Must be after start date/time. Time defaults to 11:59 PM if not specified</small>
                             </div>
                         </div>
                         
@@ -1583,18 +1583,28 @@ window.viewIntendedUses = async function(locationId) {
                     </div>
                     ${use.description ? `<p style="margin: 8px 0; color: #475569;"><strong>Description:</strong> ${use.description}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Start:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_start_date) : (() => {
-                        const date = new Date(use.intended_start_date);
+                        // Parse date explicitly to avoid timezone issues
+                        const dateStr = use.intended_start_date.split('T')[0];
+                        const parts = dateStr.split('-');
+                        const date = parts.length === 3 
+                            ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
+                            : new Date(use.intended_start_date);
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
-                        const year = String(date.getFullYear()).slice(-2);
-                        return `${month}-${day}-${year}`;
+                        const year = String(date.getFullYear()); // Full year
+                        return `${month}-${day}-${year}`; // MM-DD-YYYY format
                     })()}${use.intended_start_time ? ' at ' + new Date('2000-01-01T' + use.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>
                     ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_end_date) : (() => {
-                        const date = new Date(use.intended_end_date);
+                        // Parse date explicitly to avoid timezone issues
+                        const dateStr = use.intended_end_date.split('T')[0];
+                        const parts = dateStr.split('-');
+                        const date = parts.length === 3 
+                            ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
+                            : new Date(use.intended_end_date);
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
-                        const year = String(date.getFullYear()).slice(-2);
-                        return `${month}-${day}-${year}`;
+                        const year = String(date.getFullYear()); // Full year
+                        return `${month}-${day}-${year}`; // MM-DD-YYYY format
                     })()}${use.intended_end_time ? ' at ' + new Date('2000-01-01T' + use.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Reserved by:</strong> ${use.user ? use.user.username : 'Unknown'}</p>
                     <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.created_at) : (() => {
