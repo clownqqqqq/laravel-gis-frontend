@@ -409,11 +409,11 @@
 
                 <div class="card">
                     <div class="filter-tabs">
-                        <button class="filter-tab active" onclick="filterReservations('pending')" id="tab-pending">
-                            ⏳ Pending (<span id="count-pending">0</span>)
+                        <button class="filter-tab active" onclick="filterReservations('all')" id="tab-all">
+                            📊 All (<span id="count-all">0</span>)
                         </button>
-                        <button class="filter-tab" onclick="filterReservations('all')" id="tab-all">
-                            📊 All Reservations
+                        <button class="filter-tab" onclick="filterReservations('pending')" id="tab-pending">
+                            ⏳ Pending (<span id="count-pending">0</span>)
                         </button>
                         <button class="filter-tab" onclick="filterReservations('approved')" id="tab-approved">
                             ✅ Approved (<span id="count-approved">0</span>)
@@ -446,7 +446,7 @@
         }
         var API_BASE_URL = window.API_BASE_URL; // Use var instead of const to avoid redeclaration errors
         let allReservations = [];
-        let currentFilter = 'pending';
+        let currentFilter = 'all';
         let currentSort = 'date-desc';
 
         function getUserData() {
@@ -611,18 +611,17 @@
         }
 
         function updateCounts() {
+            const all = allReservations.length;
             const pending = allReservations.filter(r => (r.status || '').toLowerCase() === 'pending').length;
             const approved = allReservations.filter(r => (r.status || '').toLowerCase() === 'approved').length;
             const rejected = allReservations.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
             const cancelled = allReservations.filter(r => (r.status || '').toLowerCase() === 'cancelled').length;
 
+            document.getElementById('count-all').textContent = all;
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-rejected').textContent = rejected;
-            const cancelledCountEl = document.getElementById('count-cancelled');
-            if (cancelledCountEl) {
-                cancelledCountEl.textContent = cancelled;
-            }
+            document.getElementById('count-cancelled').textContent = cancelled;
         }
 
         function filterReservations(status) {
@@ -701,7 +700,7 @@
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">${currentFilter === 'pending' ? '✅' : '📋'}</div>
+                        <div class="empty-state-icon">${currentFilter === 'all' ? '📋' : '✅'}</div>
                         <p>No ${currentFilter === 'all' ? '' : currentFilter} reservations found.</p>
                     </div>
                 `;
