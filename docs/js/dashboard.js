@@ -1053,8 +1053,9 @@ window.declareIntendedUse = async function(locationId) {
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
-                                        <input type="date" id="start-date" name="intended_start_date" required min="${tomorrow}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <input type="date" id="start-date" name="intended_start_date" required min="${tomorrow}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'" onchange="updateDateDisplay(this, 'start-date-display')">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                        <span id="start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="start-time" name="intended_start_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
@@ -1073,7 +1074,7 @@ window.declareIntendedUse = async function(locationId) {
                                     <div style="position: relative;">
                                         <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'" onchange="updateDateDisplay(this, 'end-date-display')">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
-                                        <span id="end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; pointer-events: none; background: white; padding: 0 4px;"></span>
+                                        <span id="end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="end-time" name="intended_end_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
@@ -1128,11 +1129,37 @@ window.declareIntendedUse = async function(locationId) {
     modal.innerHTML = formModal;
     document.body.appendChild(modal);
 
+    // Function to update date display in mm/dd/yyyy format (must be global for onchange)
+    window.updateDateDisplay = function(dateInput, displayId) {
+        const displayElement = document.getElementById(displayId);
+        if (!displayElement || !dateInput.value) {
+            if (displayElement) displayElement.textContent = '';
+            return;
+        }
+        const date = new Date(dateInput.value + 'T00:00:00');
+        if (isNaN(date.getTime())) {
+            displayElement.textContent = '';
+            return;
+        }
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const year = date.getFullYear();
+        displayElement.textContent = `${month}/${day}/${year}`;
+    };
+
     // Set minimum end date based on start date and validate date+time
     const startDateInput = document.getElementById('start-date');
     const startTimeInput = document.getElementById('start-time');
     const endDateInput = document.getElementById('end-date');
     const endTimeInput = document.getElementById('end-time');
+    
+    // Initialize date displays if values exist
+    if (startDateInput && startDateInput.value) {
+        updateDateDisplay(startDateInput, 'start-date-display');
+    }
+    if (endDateInput && endDateInput.value) {
+        updateDateDisplay(endDateInput, 'end-date-display');
+    }
     
     // Function to validate start date/time must be tomorrow or later
     function validateStartDateTime() {
