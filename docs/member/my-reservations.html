@@ -939,9 +939,17 @@
                                             return `${month}-${day}-${year}`;
                                         })() : 'N/A')}${reservation.intended_start_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
-                                            const timeStr = reservation.intended_start_time.includes(':') ? reservation.intended_start_time.substring(0, 5) : reservation.intended_start_time;
+                                            let timeStr = reservation.intended_start_time;
+                                            // Handle formats like "16:55:00" or "16:55"
+                                            if (timeStr.includes(':')) {
+                                                const parts = timeStr.split(':');
+                                                timeStr = `${parts[0]}:${parts[1]}`; // Get HH:MM
+                                            }
                                             const [hours, minutes] = timeStr.split(':');
                                             const hour24 = parseInt(hours, 10);
+                                            if (isNaN(hour24) || isNaN(parseInt(minutes, 10))) {
+                                                return ` ${timeStr}`; // Return original if parsing fails
+                                            }
                                             const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
                                             const ampm = hour24 >= 12 ? 'PM' : 'AM';
                                             return ` ${hour12}:${minutes} ${ampm}`;
@@ -958,9 +966,17 @@
                                             return `${month}-${day}-${year}`;
                                         })()}${reservation.intended_end_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
-                                            const timeStr = reservation.intended_end_time.includes(':') ? reservation.intended_end_time.substring(0, 5) : reservation.intended_end_time;
+                                            let timeStr = reservation.intended_end_time;
+                                            // Handle formats like "18:55:00" or "18:55"
+                                            if (timeStr.includes(':')) {
+                                                const parts = timeStr.split(':');
+                                                timeStr = `${parts[0]}:${parts[1]}`; // Get HH:MM
+                                            }
                                             const [hours, minutes] = timeStr.split(':');
                                             const hour24 = parseInt(hours, 10);
+                                            if (isNaN(hour24) || isNaN(parseInt(minutes, 10))) {
+                                                return ` ${timeStr}`; // Return original if parsing fails
+                                            }
                                             const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
                                             const ampm = hour24 >= 12 ? 'PM' : 'AM';
                                             return ` ${hour12}:${minutes} ${ampm}`;
