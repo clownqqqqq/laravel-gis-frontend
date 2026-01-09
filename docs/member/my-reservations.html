@@ -453,9 +453,9 @@
             cursor: pointer;
             opacity: 1;
             position: absolute;
-            right: 100px;
-            width: 20px;
-            height: 20px;
+            right: 85px;
+            width: 18px;
+            height: 18px;
             z-index: 5;
         }
         /* Ensure date display overlays are always visible and properly positioned */
@@ -1095,8 +1095,20 @@
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
             // Format dates for date input (YYYY-MM-DD format required)
+            // Use same parsing method as display to avoid timezone issues
             const formatDateForInput = (dateString) => {
                 if (!dateString) return '';
+                // Parse date explicitly to avoid timezone issues (same as display function)
+                const dateStr = dateString.split('T')[0];
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    // Use UTC to avoid timezone conversion
+                    const year = parts[0];
+                    const month = parts[1];
+                    const day = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+                // Fallback to Date parsing if format is different
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) return '';
                 const year = date.getFullYear();
@@ -1169,30 +1181,30 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Start Date & Time *</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
-                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
-                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
+                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
+                                        <span id="update-start-date-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 75px; text-align: left;"></span>
                                     </div>
                                     <div style="position: relative;">
-                                        <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}" style="padding-right: 80px; color: transparent !important;">
-                                        <span id="update-start-time-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 60px; text-align: left;"></span>
+                                        <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}" style="padding: 8px 65px 8px 12px; font-size: 14px; color: transparent !important;">
+                                        <span id="update-start-time-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 55px; text-align: left;"></span>
                                     </div>
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Start date must be tomorrow or later</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">End Date & Time (Optional)</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
-                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
+                                        <span id="update-end-date-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 75px; text-align: left;"></span>
                                     </div>
                                     <div style="position: relative;">
-                                        <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}" style="padding-right: 80px; color: transparent !important;">
-                                        <span id="update-end-time-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 60px; text-align: left;"></span>
+                                        <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}" style="padding: 8px 65px 8px 12px; font-size: 14px; color: transparent !important;">
+                                        <span id="update-end-time-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 55px; text-align: left;"></span>
                                     </div>
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Must be after start date/time</small>
