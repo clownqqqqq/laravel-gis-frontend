@@ -473,6 +473,23 @@
             .api-token-input {
                 font-size: 11px;
             }
+
+            #change-password-form .form-group {
+                margin-bottom: 18px !important;
+            }
+
+            #change-password-form input[type="password"] {
+                padding: 12px 14px !important;
+                font-size: 16px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            #change-password-form button {
+                padding: 14px !important;
+                font-size: 16px !important;
+                min-height: 48px !important;
+            }
         }
 
         .locations-list {
@@ -1114,6 +1131,36 @@
                             ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
                         </p>
                     </div>
+
+                    <!-- Change Password Section -->
+                    <div class="card" style="margin-top: 30px; border: 1px solid #d1d5db;">
+                        <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                            <span style="font-size: 28px;">🔒</span> Change Password
+                        </h4>
+                        <form id="change-password-form" onsubmit="changePassword(event); return false;">
+                            <div class="form-group">
+                                <label for="current_password">Current Password</label>
+                                <input type="password" id="current_password" name="current_password" required 
+                                       placeholder="Enter your current password">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="new_password">New Password</label>
+                                <input type="password" id="new_password" name="password" required 
+                                       minlength="6" placeholder="Enter your new password (min. 6 characters)">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password_confirmation">Confirm New Password</label>
+                                <input type="password" id="password_confirmation" name="password_confirmation" required 
+                                       minlength="6" placeholder="Confirm your new password">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span>🔒</span> Change Password
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Locations Section -->
@@ -1397,6 +1444,74 @@
                 showProfileMessage('Error: ' + error.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>✓</span> Update Profile';
+            }
+        }
+
+        // Change password
+        async function changePassword(e) {
+            e.preventDefault();
+            const userData = getUserData();
+            const userId = userData?.id;
+
+            if (!userId) {
+                showProfileMessage('User ID not found. Please log in again.', 'error');
+                return;
+            }
+
+            const currentPassword = document.getElementById('current_password').value;
+            const newPassword = document.getElementById('new_password').value;
+            const passwordConfirmation = document.getElementById('password_confirmation').value;
+
+            // Client-side validation
+            if (!currentPassword || !newPassword || !passwordConfirmation) {
+                showProfileMessage('Please fill in all password fields.', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showProfileMessage('New password must be at least 6 characters long.', 'error');
+                return;
+            }
+
+            if (newPassword !== passwordConfirmation) {
+                showProfileMessage('New password and confirmation do not match.', 'error');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#change-password-form button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳</span> Changing Password...';
+
+            try {
+                const token = getAuthToken();
+                const response = await fetch(API_ENDPOINTS.PROFILE_CHANGE_PASSWORD(userId), {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        password: newPassword,
+                        password_confirmation: passwordConfirmation
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showProfileMessage('Password changed successfully!', 'success');
+                    // Clear the form
+                    document.getElementById('change-password-form').reset();
+                } else {
+                    throw new Error(data.message || data.error || 'Failed to change password.');
+                }
+            } catch (error) {
+                showProfileMessage('Error changing password: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>🔒</span> Change Password';
             }
         }
 
