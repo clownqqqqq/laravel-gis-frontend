@@ -439,6 +439,16 @@
         input[type="date"]:valid {
             color: transparent !important;
         }
+        /* Hide native time input text - show only 12-hour format overlay */
+        input[type="time"] {
+            color: transparent !important;
+        }
+        input[type="time"]:focus {
+            color: transparent !important;
+        }
+        input[type="time"]:valid {
+            color: transparent !important;
+        }
         input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
             opacity: 1;
@@ -451,6 +461,14 @@
         /* Ensure date display overlays are always visible and properly positioned */
         #update-start-date-display,
         #update-end-date-display {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            text-align: left !important;
+        }
+        /* Ensure time display overlays are always visible and properly positioned */
+        #update-start-time-display,
+        #update-end-time-display {
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -1157,7 +1175,10 @@
                                         <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
                                         <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
                                     </div>
-                                    <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}">
+                                    <div style="position: relative;">
+                                        <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}" style="padding-right: 80px; color: transparent !important;">
+                                        <span id="update-start-time-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 60px; text-align: left;"></span>
+                                    </div>
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Start date must be tomorrow or later</small>
                             </div>
@@ -1169,7 +1190,10 @@
                                         <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
                                         <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
                                     </div>
-                                    <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
+                                    <div style="position: relative;">
+                                        <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}" style="padding-right: 80px; color: transparent !important;">
+                                        <span id="update-end-time-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 60px; text-align: left;"></span>
+                                    </div>
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Must be after start date/time</small>
                             </div>
@@ -1261,6 +1285,27 @@
                 return true;
             }
             
+            // Function to convert 24-hour time to 12-hour format for display
+            const formatTime12Hour = (time24) => {
+                if (!time24) return '';
+                const [hours, minutes] = time24.split(':');
+                const hour24 = parseInt(hours, 10);
+                if (isNaN(hour24) || isNaN(parseInt(minutes, 10))) return '';
+                const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                return `${hour12}:${minutes} ${ampm}`;
+            };
+            
+            // Function to update time display overlay
+            const updateTimeDisplay = (timeInput, displayId) => {
+                const displayElement = document.getElementById(displayId);
+                if (timeInput && timeInput.value && displayElement) {
+                    displayElement.textContent = formatTime12Hour(timeInput.value);
+                } else if (displayElement) {
+                    displayElement.textContent = '';
+                }
+            };
+            
             // Initialize hidden inputs and display overlays on load
             // SINGLE SOURCE OF TRUTH: Only updateDateDisplayFromPicker formats dates for display
             const initDateDisplays = () => {
@@ -1269,6 +1314,13 @@
                 }
                 if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
                     window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
+                }
+                // Initialize time displays
+                if (startTimeInput) {
+                    updateTimeDisplay(startTimeInput, 'update-start-time-display');
+                }
+                if (endTimeInput) {
+                    updateTimeDisplay(endTimeInput, 'update-end-time-display');
                 }
             };
             
@@ -1287,14 +1339,20 @@
                 validateUpdateStartDate();
             });
             
-            startTimeInput.addEventListener('change', validateUpdateDateTime);
+            startTimeInput.addEventListener('change', function() {
+                updateTimeDisplay(this, 'update-start-time-display');
+                validateUpdateDateTime();
+            });
             endDateInput.addEventListener('change', function() {
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
                     window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');
                 }
                 validateUpdateDateTime();
             });
-            endTimeInput.addEventListener('change', validateUpdateDateTime);
+            endTimeInput.addEventListener('change', function() {
+                updateTimeDisplay(this, 'update-end-time-display');
+                validateUpdateDateTime();
+            });
         }
 
         function closeUpdateModal(event) {
