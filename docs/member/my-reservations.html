@@ -446,6 +446,14 @@
             right: 100px;
             width: 20px;
             height: 20px;
+            z-index: 5;
+        }
+        /* Ensure date display overlays are always visible and properly positioned */
+        #update-start-date-display,
+        #update-end-date-display {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
     </style>
 </head>
@@ -1157,12 +1165,12 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');}">
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
                                         <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: center;"></span>
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
                                 </div>
-                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date</small>
+                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Must be after start date/time</small>
                             </div>
                             <div style="display: flex; gap: 10px; margin-top: 24px;">
                                 <button type="button" onclick="closeUpdateModal()" class="btn" style="flex: 1; background: #6c757d;">Cancel</button>
