@@ -2,292 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, shrink-to-fit=no">
-    <title>GIS Manager - GeoCRUD</title>
-    <script>
-        // Define API_BASE_URL immediately (before config.js loads)
-        if (typeof window.API_BASE_URL === 'undefined') {
-            window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
-        }
-        
-        // Fallback if config.js doesn't load
-        window.addEventListener('error', function(e) {
-            if (e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('config.js')) {
-                console.warn('config.js failed to load, using fallback API_BASE_URL');
-                if (typeof window.API_BASE_URL === 'undefined') {
-                    window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
-                }
-            }
-        }, true);
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - GeoCRUD</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
+    <link rel="stylesheet" href="css/backend-styles.css">
     <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            color: #2c3e50;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        .main-container {
-            min-height: 100vh;
-        }
-
-        .top-nav {
-            background: #0d6efd;
-            padding: 15px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .top-nav .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .top-nav .logo {
-            color: white;
-            font-size: 24px;
-            font-weight: 600;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .top-nav .nav-buttons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .top-nav .nav-btn {
-            color: white;
-            text-decoration: none;
-            padding: 8px 20px;
-            border: 2px solid white;
-            border-radius: 8px;
-            font-weight: 500;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            border: none;
-        }
-
-        .top-nav .nav-btn:hover {
-            background: white;
-            color: #0d6efd;
-        }
-
-        .profile-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 5px;
-            border: 2px solid white;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .profile-avatar-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 5px;
-            border: 2px solid white;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .profile-avatar-placeholder span {
-            font-size: 20px;
-        }
-
-        .content-area {
-            padding: 40px 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        h1 {
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-add-location {
-            background: #0d6efd;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn-add-location:hover {
-            background: #0b5ed7;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            border: none;
-            margin-bottom: 20px;
-        }
-
-        .search-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 15px;
-        }
-
-        .search-label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #1e293b;
-            font-size: 16px;
-        }
-
-        .search-wrapper {
-            display: flex;
-            gap: 0;
-            margin-bottom: 0;
-        }
-
-        .search-icon-wrapper {
-            background: #0d6efd;
-            padding: 16px 18px;
-            border-radius: 10px 0 0 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-icon-wrapper span {
-            color: white;
-            font-size: 18px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 16px 18px;
-            border: 2px solid #d1d5db;
-            border-left: none;
-            border-right: none;
-            background: #ffffff;
-            color: #2c3e50;
-            font-size: 16px;
-            outline: none;
-        }
-
-        .search-input:focus {
-            border-color: #0d6efd;
-        }
-
-        .btn-search {
-            margin: 0;
-            border-radius: 0 10px 10px 0;
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: auto;
-            border: 2px solid #0d6efd;
-            background: #10b981;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-height: 52px;
-            font-size: 16px;
-        }
-
-        .btn-search:hover {
-            background: #059669;
-        }
-
-        .alert {
-            padding: 18px 24px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-
-        .alert-success {
-            background: #d1f4e0;
-            color: #0f5132;
-            border: 1px solid #a3e1c5;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #b8d4da;
-        }
-
-        /* Profile Section Styles */
         .profile-container {
             display: grid;
             grid-template-columns: 300px 1fr;
@@ -326,11 +47,6 @@
             margin: 0 auto;
             width: 100%;
             max-width: 250px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
         }
 
         .btn-outline:hover {
@@ -491,489 +207,6 @@
                 min-height: 48px !important;
             }
         }
-
-        .locations-list {
-            display: block;
-        }
-
-        .location-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .location-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-            cursor: pointer;
-        }
-        
-        .location-card[onclick] {
-            cursor: pointer;
-        }
-
-        .location-content {
-            display: flex;
-            align-items: flex-start;
-            gap: 24px;
-            margin-bottom: 20px;
-        }
-
-        .location-image-wrapper {
-            flex-shrink: 0;
-        }
-
-        .location-image {
-            width: 200px;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 3px solid #0d6efd;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .location-details {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .location-name {
-            margin: 0 0 12px 0;
-            color: #0d6efd;
-            font-weight: 600;
-            font-size: 22px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .location-coords {
-            margin: 0;
-            color: #64748b;
-            font-weight: 400;
-            font-size: 15px;
-            word-break: break-word;
-        }
-
-        .location-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .location-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .btn-edit {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: white;
-            border: 2px solid #0d6efd;
-            color: #0d6efd;
-        }
-
-        .btn-edit:hover {
-            background: #f0f7ff;
-        }
-
-        .location-delete-form {
-            flex: 1;
-        }
-
-        .btn-delete {
-            width: 100%;
-            background: #fef2f2;
-            border: 2px solid #fecaca;
-            color: #dc2626;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-delete:hover {
-            background: #fee2e2;
-            border-color: #fca5a5;
-        }
-
-        #loading {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-            font-size: 16px;
-        }
-
-        #empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #64748b;
-            font-size: 16px;
-        }
-
-        @media screen and (max-width: 768px) {
-            .content-area {
-                padding: 20px 15px !important;
-            }
-
-            .page-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 16px !important;
-            }
-
-            .page-header h1 {
-                font-size: 24px !important;
-            }
-
-            .page-header > div {
-                width: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .page-header > div > a,
-            .page-header > div > .btn {
-                width: 100% !important;
-                justify-content: center !important;
-                padding: 12px 16px !important;
-                font-size: 14px !important;
-            }
-
-            .btn-add-location {
-                width: 100% !important;
-                max-width: 100% !important;
-                justify-content: center !important;
-            }
-
-            .card {
-                padding: 20px !important;
-                border-radius: 12px !important;
-            }
-
-            .search-wrapper {
-                flex-direction: column !important;
-            }
-
-            .search-icon-wrapper {
-                border-radius: 10px 10px 0 0 !important;
-                padding: 12px !important;
-            }
-
-            .search-input {
-                border: 2px solid #d1d5db !important;
-                border-radius: 0 !important;
-                border-left: 2px solid #d1d5db !important;
-                border-right: 2px solid #d1d5db !important;
-            }
-
-            .btn-search {
-                border-radius: 0 0 10px 10px !important;
-                width: 100% !important;
-                justify-content: center !important;
-            }
-
-            .location-content {
-                flex-direction: column !important;
-                gap: 16px !important;
-            }
-
-            .location-image {
-                width: 100% !important;
-                height: auto !important;
-                max-height: 250px !important;
-            }
-
-            .location-name {
-                font-size: 20px !important;
-            }
-
-            .location-actions {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .btn-edit,
-            .location-delete-form {
-                width: 100% !important;
-            }
-
-            .btn-edit,
-            .btn-delete {
-                width: 100% !important;
-            }
-
-            h1 {
-                font-size: 28px !important;
-            }
-
-            .top-nav {
-                padding: 12px 0 !important;
-            }
-
-            .top-nav .container {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px !important;
-            }
-
-            .top-nav .logo {
-                font-size: 20px !important;
-            }
-
-            .top-nav .nav-buttons {
-                width: 100% !important;
-                gap: 8px !important;
-                flex-wrap: wrap !important;
-            }
-
-            .top-nav .nav-btn {
-                padding: 8px 16px !important;
-                font-size: 14px !important;
-                flex: 1 1 auto !important;
-                min-width: 0 !important;
-            }
-
-            .profile-avatar,
-            .profile-avatar-placeholder {
-                width: 32px !important;
-                height: 32px !important;
-            }
-
-            /* Admin Access Panel Responsive */
-            #admin-access-panel {
-                padding: 12px !important;
-                font-size: 14px !important;
-            }
-
-            #admin-access-panel a {
-                display: block !important;
-                margin: 5px 0 !important;
-            }
-
-            #admin-access-buttons {
-                width: 100% !important;
-            }
-
-            #admin-access-buttons .btn {
-                width: 100% !important;
-                justify-content: center !important;
-            }
-
-            /* Staff Dashboard Responsive */
-            #staff-dashboard {
-                padding: 20px !important;
-            }
-
-            #staff-dashboard > div:first-of-type {
-                margin-bottom: 15px !important;
-            }
-
-            #staff-dashboard > div:first-of-type a {
-                width: 100% !important;
-                justify-content: center !important;
-            }
-
-            /* Member Features Responsive */
-            #member-features {
-                padding: 20px !important;
-            }
-
-            #member-features > div {
-                grid-template-columns: 1fr !important;
-            }
-
-            /* Modal Responsive */
-            #location-modal,
-            #reservation-modal-overlay > div {
-                max-width: 95% !important;
-                margin: 10px !important;
-            }
-
-            #reservation-modal-overlay {
-                padding: 10px !important;
-            }
-
-            #reservation-modal-overlay > div {
-                max-height: 95vh !important;
-                border-radius: 12px !important;
-            }
-
-            .reservation-form-content {
-                padding: 20px !important;
-            }
-
-            .reservation-form-content > div[style*="grid-template-columns"] {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .content-area {
-                padding: 15px 10px !important;
-            }
-
-            .page-header h1 {
-                font-size: 20px !important;
-            }
-
-            .page-header h1 span {
-                font-size: 28px !important;
-            }
-
-            .location-name {
-                font-size: 18px !important;
-            }
-
-            .location-coords {
-                font-size: 14px !important;
-            }
-
-            .card {
-                padding: 15px !important;
-            }
-
-            .top-nav .logo {
-                font-size: 18px !important;
-            }
-
-            .top-nav .nav-btn {
-                padding: 6px 12px !important;
-                font-size: 12px !important;
-            }
-
-            .top-nav .nav-btn span {
-                font-size: 14px !important;
-            }
-
-            h1 {
-                font-size: 24px !important;
-            }
-
-            .search-title {
-                font-size: 16px !important;
-            }
-
-            #reservation-modal-overlay > div {
-                max-width: 100% !important;
-                margin: 5px !important;
-                border-radius: 10px !important;
-            }
-
-            .reservation-form-content {
-                padding: 15px !important;
-            }
-
-            .reservation-form-content label {
-                font-size: 14px !important;
-            }
-
-            .reservation-form-content input,
-            .reservation-form-content select,
-            .reservation-form-content textarea {
-                padding: 12px 14px !important;
-                font-size: 14px !important;
-            }
-        }
-
-        /* Reservation Form Modal Styles */
-        #reservation-modal input[type="date"] {
-            cursor: pointer;
-            position: relative;
-        }
-
-        #reservation-modal input[type="date"]::-webkit-calendar-picker-indicator {
-            cursor: pointer;
-            opacity: 0;
-            position: absolute;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-        }
-
-        #reservation-modal input[type="date"]:hover {
-            border-color: #0d6efd !important;
-            background-color: #f8fafc;
-        }
-
-        #reservation-modal input[type="date"]:focus {
-            border-color: #0d6efd !important;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1) !important;
-            outline: none;
-        }
-
-        #reservation-modal select:focus {
-            outline: none;
-        }
-
-        #reservation-modal textarea:focus {
-            outline: none;
-        }
-
-        /* Smooth modal animation */
-        #reservation-modal-overlay {
-            animation: fadeIn 0.2s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        #reservation-modal > div {
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        /* Hide staff dashboard when profile section is visible */
-        #profile-section[style*="display: block"] ~ #staff-dashboard,
-        #profile-section:not([style*="display: none"]) ~ #staff-dashboard,
-        body:has(#profile-section[style*="display: block"]) #staff-dashboard {
-            display: none !important;
-        }
-        
-        /* Alternative: Hide staff dashboard when hash is #profile */
-        body:has([href="#profile"]:target) #staff-dashboard {
-            display: none !important;
-        }
     </style>
 </head>
 <body>
@@ -984,12 +217,9 @@
                     <span>📍</span> GIS Manager
                 </a>
                 <div class="nav-buttons">
-                    <img id="profile-avatar" src="" alt="Profile" class="profile-avatar" style="display: none;" onclick="window.location.href='#profile'">
-                    <div id="profile-avatar-placeholder" class="profile-avatar-placeholder" onclick="window.location.href='#profile'">
-                        <span>👤</span>
-                    </div>
-                    <!-- Admin pill removed per request; admin actions are now inline with Add Location -->
-                    <a href="#profile" class="nav-btn">
+                    <span id="profile-avatar-container"></span>
+                    <span id="admin-button-container"></span>
+                    <a href="profile.html" class="nav-btn">
                         <span>👤</span> Profile
                     </a>
                     <button onclick="logout()" class="nav-btn">
@@ -1000,461 +230,234 @@
         </nav>
         <div class="content-area">
             <div class="container">
+                <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
+                    <span style="font-size: 36px;">👤</span> Profile
+                </h1>
 
-                <!-- Staff Dashboard -->
-                <div id="staff-dashboard" class="card" style="background: #ffffff; border: 1px solid #e5e7eb; margin-bottom: 20px; display: none;">
-                    <h3 style="color: #1f2937; margin-bottom: 15px;">🛠 Staff Dashboard</h3>
-                    <div style="margin-bottom: 20px;">
-                        <a href="admin/reservations.html" style="background: #0d6efd; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#0b5ed7'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#0d6efd'; this.style.transform='translateY(0)'">
-                            <span>📋</span> Manage Reservations
-                        </a>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            <div id="staff-pending-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
-                            <div style="font-size: 14px; color: #6b7280;">Pending</div>
+                <div id="messages"></div>
+
+                <div class="profile-container">
+                    <!-- Left Column - Profile Picture -->
+                    <div class="card profile-picture-card">
+                        <div class="profile-picture-wrapper">
+                            <img id="profile-picture-img" src="" alt="Profile Picture" class="profile-picture"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23e0e0e0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'64\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E'">
                         </div>
-                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            <div id="staff-approved-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
-                            <div style="font-size: 14px; color: #6b7280;">Approved</div>
-                        </div>
-                        
-                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            <div id="staff-rejected-count" style="font-size: 24px; font-weight: bold; color: #1f2937;">0</div>
-                            <div style="font-size: 14px; color: #6b7280;">Rejected</div>
-                        </div>
+                        <button type="button" onclick="document.getElementById('profile_picture').click()" class="btn btn-outline">
+                            <span>📷</span> Change Picture
+                        </button>
                     </div>
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 14px; color: #6b7280;">
-                            <strong>Your Role:</strong> Field Data Collector - Submit locations for admin approval
-                        </p>
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <a href="staff/my-submissions.html" style="background: #ffffff; padding: 12px 20px; border-radius: 8px; color: #1f2937; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'">
-                            <span>📋</span> View My Submissions
-                        </a>
-                    </div>
-                </div>
 
-                <!-- Member Features -->
-                <div id="member-features" class="card" style="background: #ffffff; border: 1px solid #e5e7eb; margin-bottom: 20px; display: none;">
-                    <h3 style="color: #1f2937; margin-bottom: 15px;">🧑 Member Features</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                        <a href="member/favorites.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
-                            <span>⭐</span> My Favorites
-                        </a>
-                        <a href="member/my-reservations.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
-                            <span>📋</span> My Reservations
-                        </a>
-                        <a href="member/suggest.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
-                            <span>💡</span> Suggest Place
-                        </a>
-                        <a href="member/my-suggestions.html" style="background: #f9fafb; padding: 12px; border-radius: 8px; color: #1f2937; text-decoration: none; display: flex; align-items: center; gap: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;" onmouseover="this.style.borderColor='#0d6efd'; this.style.color='#0d6efd'; this.style.background='#f0f7ff'" onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#1f2937'; this.style.background='#f9fafb'">
-                            <span>📝</span> My Suggestions
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Profile Section -->
-                <div id="profile-section" style="display: none;">
-                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 30px;">
-                        <span style="font-size: 36px;">👤</span> Profile
-                    </h1>
-
-                    <div id="profile-messages"></div>
-
-                    <div class="profile-container">
-                        <!-- Left Column - Profile Picture -->
-                        <div class="card profile-picture-card">
-                            <div class="profile-picture-wrapper">
-                                <img id="profile-picture-display" src="" alt="Profile Picture" class="profile-picture"
-                                     onerror="this.src='https://geocrud.bytevortexz.com/uploads/default/default-profile.svg'">
-                            </div>
-                            <button type="button" onclick="document.getElementById('profile-picture').click()" class="btn btn-outline">
-                                <span>📷</span> Change Picture
-                            </button>
-                        </div>
-
-                        <!-- Right Column - Form -->
-                        <div class="card profile-form-card">
-                            <form id="profile-form" onsubmit="updateProfile(event); return false;">
-                                <input type="file" id="profile-picture" name="profile_picture" accept="image/*" style="display: none;" onchange="handleProfilePictureChange(event)">
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="profile-firstname">First Name</label>
-                                        <input type="text" id="profile-firstname" name="firstname">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="profile-lastname">Last Name</label>
-                                        <input type="text" id="profile-lastname" name="lastname">
-                                    </div>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="profile-username">Username</label>
-                                        <input type="text" id="profile-username" name="username" required>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="profile-email">Email</label>
-                                        <input type="email" id="profile-email" name="email" required>
-                                    </div>
+                    <!-- Right Column - Form -->
+                    <div class="card profile-form-card">
+                        <form id="profile-form" onsubmit="updateProfile(event); return false;" enctype="multipart/form-data">
+                            <input type="file" id="profile_picture" name="profile_picture" accept="image/*" style="display: none;" onchange="handleProfilePictureChange(event)">
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstname">First Name</label>
+                                    <input type="text" id="firstname" name="firstname">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="profile-mobile">Mobile Number</label>
-                                    <input type="tel" id="profile-mobile" name="mobile_number">
+                                    <label for="lastname">Last Name</label>
+                                    <input type="text" id="lastname" name="lastname">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="username">Username</label>
+                                    <input type="text" id="username" name="username" required>
                                 </div>
 
-                                <button type="submit" class="btn btn-primary btn-full">
-                                    <span>✓</span> Update Profile
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- API Token Section -->
-                    <div class="card api-token-card">
-                        <h4 class="api-token-title">
-                            <span>🔑</span> Your API Authentication Token
-                        </h4>
-                        <p class="api-token-description">Use this token for Postman or API requests:</p>
-                        <input type="text" readonly id="authToken" class="api-token-input"
-                               onclick="this.select()">
-                        <p class="api-token-usage">
-                            <strong>Usage:</strong> Add header <code class="api-token-code" id="api-token-code"></code>
-                        </p>
-                        <p class="api-token-note">
-                            ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
-                        </p>
-                    </div>
-
-                    <!-- Change Password Section -->
-                    <div class="card" style="margin-top: 30px; border: 1px solid #d1d5db;">
-                        <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-                            <span style="font-size: 28px;">🔒</span> Change Password
-                        </h4>
-                        <form id="change-password-form" onsubmit="changePassword(event); return false;">
-                            <div class="form-group">
-                                <label for="current_password">Current Password</label>
-                                <input type="password" id="current_password" name="current_password" required 
-                                       placeholder="Enter your current password">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="new_password">New Password</label>
-                                <input type="password" id="new_password" name="password" required 
-                                       minlength="6" placeholder="Enter your new password (min. 6 characters)">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="password_confirmation">Confirm New Password</label>
-                                <input type="password" id="password_confirmation" name="password_confirmation" required 
-                                       minlength="6" placeholder="Confirm your new password">
+                                <label for="mobile_number">Mobile Number</label>
+                                <input type="tel" id="mobile_number" name="mobile_number">
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-full">
-                                <span>🔒</span> Change Password
+                                <span>✓</span> Update Profile
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Locations Section -->
-                <div id="locations-section" style="display: block;">
-
-                <div class="page-header">
-                    <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
-                        <span style="font-size: 36px;">📍</span> My Geographic Locations
-                    </h1>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <!-- Admin-only buttons (shown beside Add Location when user is admin) -->
-                        <a id="admin-dashboard-btn" href="admin/dashboard.html" class="btn" style="display: none; background: #2563eb; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; align-items: center; gap: 8px;">
-                            <span>👑</span> Admin Dashboard
-                        </a>
-                        <a id="admin-manage-users-btn" href="admin/users.html" class="btn" style="display: none; background: #2563eb; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; align-items: center; gap: 8px;">
-                            <span>👥</span> Manage Users
-                        </a>
-                        <a id="admin-manage-reservations-btn" href="admin/reservations.html" class="btn" style="display: none; background: #10b981; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; align-items: center; gap: 8px;">
-                            <span>📋</span> Manage Reservations
-                        </a>
-                        <a href="create-location.html" class="btn-add-location">
-                            <span>➕</span> Add Location
-                        </a>
-                    </div>
+                <!-- API Token Section -->
+                <div class="card api-token-card">
+                    <h4 class="api-token-title">
+                        <span>🔑</span> Your API Authentication Token
+                    </h4>
+                    <p class="api-token-description">Use this token for Postman or API requests:</p>
+                    <input type="text" readonly id="authToken" class="api-token-input"
+                           onclick="this.select()">
+                    <p class="api-token-usage">
+                        <strong>Usage:</strong> Add header <code class="api-token-code" id="token-code"></code>
+                    </p>
+                    <p class="api-token-note">
+                        ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
+                    </p>
                 </div>
 
-                <div class="card">
-                    <h3 class="search-title">Search Locations</h3>
-                    <form id="searchForm" onsubmit="searchLocations(event); return false;">
-                        <div class="search-wrapper">
-                            <div class="search-icon-wrapper">
-                                <span>🔍</span>
-                            </div>
-                            <input type="text" id="search" name="search" 
-                                   placeholder="Search locations by name..." 
-                                   class="search-input">
-                            <button type="submit" class="btn-search">
-                                <span>🔍</span> Search
-                            </button>
+                <!-- Change Password Section -->
+                <div class="card" id="change-password-card" style="margin-top: 30px; border: 2px solid #0d6efd; background: #f8f9ff; display: block !important; visibility: visible !important;">
+                    <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 22px; font-weight: 600;">
+                        <span style="font-size: 28px;">🔒</span> Change Password
+                    </h4>
+                    <form id="change-password-form" onsubmit="changePassword(event); return false;">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" id="current_password" name="current_password" required 
+                                   placeholder="Enter your current password">
                         </div>
+
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" id="new_password" name="password" required 
+                                   minlength="6" placeholder="Enter your new password (min. 6 characters)">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password_confirmation">Confirm New Password</label>
+                            <input type="password" id="password_confirmation" name="password_confirmation" required 
+                                   minlength="6" placeholder="Confirm your new password">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>🔒</span> Change Password
+                        </button>
                     </form>
-                </div>
-
-                <div id="messages"></div>
-
-                <div id="loading" style="display: none; text-align: center; padding: 20px;">
-                    <p style="color: #64748b;">Loading locations...</p>
-                </div>
-
-                <div id="error-container"></div>
-                
-                <div id="locations-container" class="locations-list"></div>
-
-                <div id="empty-state" style="display: none; text-align: center; padding: 40px;">
-                    <p style="color: #64748b; font-size: 16px;">📍 No locations found. <a href="create-location.html" style="color: #0d6efd; text-decoration: none; font-weight: 500;">Add your first location</a></p>
-                </div>
-                
-                <div id="database-test-btn" style="margin-top: 2rem; text-align: center; display: none;">
-                    <a href="database-test.html" style="color: #0d6efd; text-decoration: none; font-size: 14px;">🔌 Test Database Connection</a>
-                </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
     <script>
-        // Authentication check is handled in dashboard.js on DOMContentLoaded
-        // Just define logout function here
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                removeAuthToken();
-                removeUserData();
-                window.location.href = 'login.html';
-            }
-        }
+        let currentUser = null;
 
-        // Show profile section
-        function showProfileSection() {
-            // Hide locations section first
-            document.getElementById('locations-section').style.display = 'none';
-            
-            // Hide staff dashboard immediately when showing profile - use multiple methods
-            const staffDashboard = document.getElementById('staff-dashboard');
-            if (staffDashboard) {
-                staffDashboard.style.display = 'none';
-                staffDashboard.style.visibility = 'hidden';
-                staffDashboard.setAttribute('data-profile-active', 'true');
-            }
-            
-            // Show profile section
-            const profileSection = document.getElementById('profile-section');
-            profileSection.style.display = 'block';
-            
-            // Set hash
-            window.location.hash = 'profile';
-            
-            // Load profile data
-            loadProfileData();
-            
-            // Continuously check to ensure staff dashboard stays hidden (every 50ms)
-            if (!window.staffDashboardHideInterval) {
-                window.staffDashboardHideInterval = setInterval(() => {
-                    const sd = document.getElementById('staff-dashboard');
-                    const ps = document.getElementById('profile-section');
-                    if (sd && (window.location.hash === '#profile' || (ps && ps.style.display === 'block'))) {
-                        sd.style.display = 'none';
-                        sd.style.visibility = 'hidden';
-                    }
-                }, 50);
-            }
-        }
-
-        // Show locations section
-        function showLocationsSection() {
-            document.getElementById('profile-section').style.display = 'none';
-            document.getElementById('locations-section').style.display = 'block';
-            
-            // Clear the hide interval when leaving profile
-            if (window.staffDashboardHideInterval) {
-                clearInterval(window.staffDashboardHideInterval);
-                window.staffDashboardHideInterval = null;
-            }
-            
-            // Show staff dashboard again if user is staff (getUserData is from dashboard.js)
-            try {
-                const userData = typeof getUserData !== 'undefined' ? getUserData() : null;
-                const staffDashboard = document.getElementById('staff-dashboard');
-                if (staffDashboard && userData && userData.role === 'staff') {
-                    staffDashboard.style.display = 'block';
-                    staffDashboard.style.visibility = '';
-                    staffDashboard.removeAttribute('data-profile-active');
-                    // Reload staff statistics if function exists
-                    if (typeof loadStaffStatistics !== 'undefined') {
-                        loadStaffStatistics();
-                    }
-                }
-            } catch (e) {
-                console.log('Could not check user role for staff dashboard');
-            }
-            window.location.hash = '';
-        }
-
-        // Load profile data
-        async function loadProfileData() {
+        // Load user profile on page load
+        async function loadProfile() {
             const userData = getUserData();
             if (!userData || !userData.id) {
-                showProfileMessage('Error: User data not found', 'error');
+                showMessage('Please login to view your profile.', 'error');
+                setTimeout(() => window.location.href = 'login.html', 2000);
                 return;
             }
 
+            currentUser = userData;
+            const userId = userData.id;
+
             try {
-                const data = await apiRequest(API_ENDPOINTS.PROFILE(userData.id));
-                const user = data.user || data;
-                
-                document.getElementById('profile-username').value = user.username || '';
-                document.getElementById('profile-email').value = user.email || '';
-                document.getElementById('profile-firstname').value = user.firstname || '';
-                document.getElementById('profile-lastname').value = user.lastname || '';
-                document.getElementById('profile-mobile').value = user.mobile_number || '';
-                
-                // Update profile picture display
-                if (user.profile_picture) {
-                    const imageUrl = `https://geocrud.bytevortexz.com/uploads/${user.profile_picture}`;
-                    document.getElementById('profile-picture-display').src = imageUrl;
-                }
-                
-                // Update API token display
-                const token = getAuthToken();
-                if (token) {
-                    document.getElementById('authToken').value = token;
-                    document.getElementById('api-token-code').textContent = `Authorization: Bearer ${token}`;
+                const data = await apiRequest(API_ENDPOINTS.PROFILE(userId));
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    populateForm(data.user);
+                    updateProfilePicture(data.user);
+                    updateAuthToken();
+                } else {
+                    // Use stored data if API fails
+                    populateForm(userData);
+                    updateProfilePicture(userData);
+                    updateAuthToken();
                 }
             } catch (error) {
-                showProfileMessage('Error loading profile: ' + error.message, 'error');
+                console.error('Error loading profile:', error);
+                // Use stored data if API fails
+                populateForm(userData);
+                updateProfilePicture(userData);
+                updateAuthToken();
             }
         }
 
-        // Handle profile picture change
+        function populateForm(user) {
+            document.getElementById('firstname').value = user.firstname || '';
+            document.getElementById('lastname').value = user.lastname || '';
+            document.getElementById('username').value = user.username || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('mobile_number').value = user.mobile_number || '';
+        }
+
+        function updateProfilePicture(user) {
+            const img = document.getElementById('profile-picture-img');
+            if (user.profile_picture) {
+                img.src = `${API_BASE_URL.replace('/api', '')}/uploads/${user.profile_picture}`;
+            } else {
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23e0e0e0\' width=\'200\' height=\'200\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'64\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E';
+            }
+        }
+
+        function updateAuthToken() {
+            const token = getAuthToken();
+            if (token) {
+                document.getElementById('authToken').value = token;
+                document.getElementById('token-code').textContent = `Authorization: Bearer ${token}`;
+            }
+        }
+
         function handleProfilePictureChange(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('profile-picture-display').src = e.target.result;
+                    document.getElementById('profile-picture-img').src = e.target.result;
                 };
                 reader.readAsDataURL(file);
-                
                 // Auto-submit form when picture is selected
-                setTimeout(() => {
-                    document.getElementById('profile-form').dispatchEvent(new Event('submit'));
-                }, 100);
+                document.getElementById('profile-form').requestSubmit();
             }
         }
 
-        // Handle profile picture change
-        function handleProfilePictureChange(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profile-picture-display').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-                
-                // Auto-submit form when picture is selected
-                document.getElementById('profile-form').dispatchEvent(new Event('submit'));
-            }
-        }
-
-        // Update profile
         async function updateProfile(e) {
             e.preventDefault();
-            
+            const formData = new FormData(document.getElementById('profile-form'));
             const userData = getUserData();
-            if (!userData || !userData.id) {
-                showProfileMessage('Error: User data not found', 'error');
+            const userId = userData?.id;
+
+            if (!userId) {
+                showMessage('User ID not found for profile update.', 'error');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('username', document.getElementById('profile-username').value);
-            formData.append('email', document.getElementById('profile-email').value);
-            
-            const firstname = document.getElementById('profile-firstname').value;
-            if (firstname) formData.append('firstname', firstname);
-            
-            const lastname = document.getElementById('profile-lastname').value;
-            if (lastname) formData.append('lastname', lastname);
-            
-            const mobile = document.getElementById('profile-mobile').value;
-            if (mobile) formData.append('mobile_number', mobile);
-            
-            const profilePicture = document.getElementById('profile-picture').files[0];
-            if (profilePicture) formData.append('profile_picture', profilePicture);
-            
-            formData.append('_method', 'PUT');
-            
             const submitBtn = document.querySelector('#profile-form button[type="submit"]');
-            const originalHTML = submitBtn.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>⏳</span> Updating...';
-            
+            submitBtn.textContent = 'Updating...';
+
             try {
-                const token = getAuthToken();
-                const response = await fetch(API_ENDPOINTS.PROFILE_UPDATE(userData.id), {
+                formData.append('_method', 'PUT');
+                const data = await apiRequest(API_ENDPOINTS.PROFILE_UPDATE(userId), {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                    },
-                    body: formData
+                    body: formData,
                 });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.message || 'Failed to update profile');
-                }
-                
-                // Update user data in localStorage
-                if (data.user) {
+
+                if (data.success && data.user) {
                     setUserData(data.user);
-                    if (typeof updateUIWithUserData === 'function') {
-                        updateUIWithUserData(data.user);
-                    }
-                    
-                    // Update profile picture display if changed
-                    if (data.user.profile_picture) {
-                        const imageUrl = `https://geocrud.bytevortexz.com/uploads/${data.user.profile_picture}`;
-                        document.getElementById('profile-picture-display').src = imageUrl;
-                    }
+                    currentUser = data.user;
+                    updateProfilePicture(data.user);
+                    showMessage('Profile updated successfully!', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to update profile.');
                 }
-                
-                showProfileMessage('Profile updated successfully!', 'success');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✓</span> Update Profile';
-                
             } catch (error) {
-                showProfileMessage('Error: ' + error.message, 'error');
+                showMessage('Error updating profile: ' + error.message, 'error');
+            } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>✓</span> Update Profile';
+                submitBtn.textContent = 'Update Profile';
             }
         }
 
-        // Change password
         async function changePassword(e) {
             e.preventDefault();
             const userData = getUserData();
             const userId = userData?.id;
 
             if (!userId) {
-                showProfileMessage('User ID not found. Please log in again.', 'error');
+                showMessage('User ID not found. Please log in again.', 'error');
                 return;
             }
 
@@ -1464,17 +467,17 @@
 
             // Client-side validation
             if (!currentPassword || !newPassword || !passwordConfirmation) {
-                showProfileMessage('Please fill in all password fields.', 'error');
+                showMessage('Please fill in all password fields.', 'error');
                 return;
             }
 
             if (newPassword.length < 6) {
-                showProfileMessage('New password must be at least 6 characters long.', 'error');
+                showMessage('New password must be at least 6 characters long.', 'error');
                 return;
             }
 
             if (newPassword !== passwordConfirmation) {
-                showProfileMessage('New password and confirmation do not match.', 'error');
+                showMessage('New password and confirmation do not match.', 'error');
                 return;
             }
 
@@ -1483,14 +486,8 @@
             submitBtn.innerHTML = '<span>⏳</span> Changing Password...';
 
             try {
-                const token = getAuthToken();
-                const response = await fetch(API_ENDPOINTS.PROFILE_CHANGE_PASSWORD(userId), {
+                const data = await apiRequest(API_ENDPOINTS.PROFILE_CHANGE_PASSWORD(userId), {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify({
                         current_password: currentPassword,
                         password: newPassword,
@@ -1498,59 +495,72 @@
                     })
                 });
 
-                const data = await response.json();
-
                 if (data.success) {
-                    showProfileMessage('Password changed successfully!', 'success');
+                    showMessage('Password changed successfully!', 'success');
                     // Clear the form
                     document.getElementById('change-password-form').reset();
                 } else {
                     throw new Error(data.message || data.error || 'Failed to change password.');
                 }
             } catch (error) {
-                showProfileMessage('Error changing password: ' + error.message, 'error');
+                showMessage('Error changing password: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>🔒</span> Change Password';
             }
         }
 
-        // Show profile message
-        function showProfileMessage(message, type) {
-            const messagesDiv = document.getElementById('profile-messages');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-            messagesDiv.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
-            
+        function showMessage(message, type) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
             setTimeout(() => {
                 messagesDiv.innerHTML = '';
             }, 5000);
         }
 
-        // Add click handlers for profile links after page loads
-        setTimeout(() => {
-            document.querySelectorAll('a[href="#profile"]').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    showProfileSection();
-                });
-            });
-            
-            // Check hash on load
-            if (window.location.hash === '#profile') {
-                showProfileSection();
+        function getUserData() {
+            try {
+                const userData = localStorage.getItem('user_data');
+                return userData ? JSON.parse(userData) : null;
+            } catch (e) {
+                return null;
             }
-            
-            // Ensure staff dashboard is hidden if profile is active (run after a short delay to ensure all scripts loaded)
-            setTimeout(() => {
-                const profileSection = document.getElementById('profile-section');
-                const staffDashboard = document.getElementById('staff-dashboard');
-                if (profileSection && staffDashboard) {
-                    if (profileSection.style.display === 'block' || window.location.hash === '#profile') {
-                        staffDashboard.style.display = 'none';
-                    }
+        }
+
+        function setUserData(user) {
+            localStorage.setItem('user_data', JSON.stringify(user));
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfile();
+            // Load navigation elements
+            const userData = getUserData();
+            if (userData) {
+                // Profile avatar
+                const avatarContainer = document.getElementById('profile-avatar-container');
+                if (userData.profile_picture) {
+                    avatarContainer.innerHTML = `<img src="${API_BASE_URL.replace('/api', '')}/uploads/${userData.profile_picture}" alt="Profile" class="profile-avatar" onclick="window.location.href='profile.html'">`;
+                } else {
+                    avatarContainer.innerHTML = `<div class="profile-avatar-placeholder" onclick="window.location.href='profile.html'"><span>👤</span></div>`;
                 }
-            }, 100);
-        }, 1000);
+                
+                // Admin button
+                if (userData.role === 'admin') {
+                    document.getElementById('admin-button-container').innerHTML = `<a href="admin/dashboard.html" class="nav-btn" style="background: rgba(255,215,0,0.3); border: 2px solid rgba(255,215,0,0.6); font-weight: bold;"><span>👑</span> Admin</a>`;
+                }
+            }
+        });
     </script>
 </body>
 </html>
+
