@@ -565,32 +565,35 @@
         }
 
         // Function to update date display from date picker (YYYY-MM-DD to mm/dd/yyyy)
+        // SINGLE SOURCE OF TRUTH: This is the ONLY function that formats dates for display
+        // All date formatting must go through this function - no duplicates, no inline formatting
         if (typeof window.updateDateDisplayFromPicker === 'undefined') {
             window.updateDateDisplayFromPicker = function(dateInput, hiddenInputId, displayId) {
-                // Support both signatures: (dateInput, hiddenInputId) or (dateInput, hiddenInputId, displayId)
+                // Get elements - support both signatures
                 const hiddenInput = document.getElementById(hiddenInputId);
                 const displayElement = displayId ? document.getElementById(displayId) : null;
                 
+                // Validate input
                 if (!dateInput || !dateInput.value) {
                     if (displayElement) displayElement.textContent = '';
                     if (hiddenInput) hiddenInput.value = '';
                     return;
                 }
                 
-                // Date input already has YYYY-MM-DD format, store it in hidden input
+                // Store YYYY-MM-DD format in hidden input (for API submission)
                 if (hiddenInput) {
                     hiddenInput.value = dateInput.value;
                 }
                 
-                // Convert to MM-DD-YYYY for display overlay
+                // Format as MM-DD-YYYY for display overlay (SINGLE SOURCE OF TRUTH)
                 if (displayElement) {
-                    const dateStr = dateInput.value.split('T')[0];
+                    const dateStr = dateInput.value.split('T')[0]; // Get date part only
                     const parts = dateStr.split('-');
                     if (parts.length === 3) {
                         const month = parts[1].padStart(2, '0');
                         const day = parts[2].padStart(2, '0');
-                        const year = parts[0]; // Full year
-                        displayElement.textContent = `${month}-${day}-${year}`;
+                        const year = parts[0]; // Full year (YYYY)
+                        displayElement.textContent = `${month}-${day}-${year}`; // MM-DD-YYYY format
                     } else {
                         displayElement.textContent = '';
                     }
@@ -1136,17 +1139,7 @@
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
                                         <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
-                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${startDateValue ? (() => {
-                                            const dateStr = startDateValue.split('T')[0];
-                                            const parts = dateStr.split('-');
-                                            if (parts.length === 3) {
-                                                const month = parts[1].padStart(2, '0');
-                                                const day = parts[2].padStart(2, '0');
-                                                const year = parts[0]; // Full year
-                                                return `${month}-${day}-${year}`;
-                                            }
-                                            return '';
-                                        })() : ''}</span>
+                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}">
                                 </div>
@@ -1158,17 +1151,7 @@
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
                                         <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');}">
-                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${endDateValue ? (() => {
-                                            const dateStr = endDateValue.split('T')[0];
-                                            const parts = dateStr.split('-');
-                                            if (parts.length === 3) {
-                                                const month = parts[1].padStart(2, '0');
-                                                const day = parts[2].padStart(2, '0');
-                                                const year = parts[0]; // Full year
-                                                return `${month}-${day}-${year}`;
-                                            }
-                                            return '';
-                                        })() : ''}</span>
+                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
                                 </div>
@@ -1263,12 +1246,15 @@
             }
             
             // Initialize hidden inputs and display overlays on load
-            if (startDateInput && startDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
-            }
-            if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
-            }
+            // SINGLE SOURCE OF TRUTH: Only updateDateDisplayFromPicker formats dates for display
+            setTimeout(() => {
+                if (startDateInput && startDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
+                    window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
+                }
+                if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
+                    window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
+                }
+            }, 10);
             
             // Update end date min when start date changes
             startDateInput.addEventListener('change', function() {
