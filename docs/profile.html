@@ -289,22 +289,6 @@
                     </div>
                 </div>
 
-                <!-- API Token Section -->
-                <div class="card api-token-card">
-                    <h4 class="api-token-title">
-                        <span>🔑</span> Your API Authentication Token
-                    </h4>
-                    <p class="api-token-description">Use this token for Postman or API requests:</p>
-                    <input type="text" readonly id="authToken" class="api-token-input"
-                           onclick="this.select()">
-                    <p class="api-token-usage">
-                        <strong>Usage:</strong> Add header <code class="api-token-code" id="token-code"></code>
-                    </p>
-                    <p class="api-token-note">
-                        ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
-                    </p>
-                </div>
-
                 <!-- Change Password Section -->
                 <div class="card" id="change-password-card" style="margin-top: 30px; border: 2px solid #0d6efd; background: #f8f9ff; display: block !important; visibility: visible !important;">
                     <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 22px; font-weight: 600;">
@@ -312,9 +296,9 @@
                     </h4>
                     <form id="change-password-form" onsubmit="changePassword(event); return false;">
                         <div class="form-group">
-                            <label for="current_password">Current Password</label>
-                            <input type="password" id="current_password" name="current_password" required 
-                                   placeholder="Enter your current password">
+                            <label for="current_password">Current Password (optional)</label>
+                            <input type="password" id="current_password" name="current_password" 
+                                   placeholder="Enter your current password (optional)">
                         </div>
 
                         <div class="form-group">
@@ -333,6 +317,22 @@
                             <span>🔒</span> Change Password
                         </button>
                     </form>
+                </div>
+
+                <!-- API Token Section -->
+                <div class="card api-token-card">
+                    <h4 class="api-token-title">
+                        <span>🔑</span> Your API Authentication Token
+                    </h4>
+                    <p class="api-token-description">Use this token for Postman or API requests:</p>
+                    <input type="text" readonly id="authToken" class="api-token-input"
+                           onclick="this.select()">
+                    <p class="api-token-usage">
+                        <strong>Usage:</strong> Add header <code class="api-token-code" id="token-code"></code>
+                    </p>
+                    <p class="api-token-note">
+                        ℹ️ Token is automatically saved to Local Storage (press F12 → Application → Local Storage)
+                    </p>
                 </div>
             </div>
         </div>
@@ -466,8 +466,8 @@
             const passwordConfirmation = document.getElementById('password_confirmation').value;
 
             // Client-side validation
-            if (!currentPassword || !newPassword || !passwordConfirmation) {
-                showMessage('Please fill in all password fields.', 'error');
+            if (!newPassword || !passwordConfirmation) {
+                showMessage('Please fill in new password and confirmation.', 'error');
                 return;
             }
 
@@ -486,13 +486,19 @@
             submitBtn.innerHTML = '<span>⏳</span> Changing Password...';
 
             try {
+                const requestBody = {
+                    password: newPassword,
+                    password_confirmation: passwordConfirmation
+                };
+                
+                // Only include current_password if provided
+                if (currentPassword && currentPassword.trim() !== '') {
+                    requestBody.current_password = currentPassword;
+                }
+                
                 const data = await apiRequest(API_ENDPOINTS.PROFILE_CHANGE_PASSWORD(userId), {
                     method: 'PUT',
-                    body: JSON.stringify({
-                        current_password: currentPassword,
-                        password: newPassword,
-                        password_confirmation: passwordConfirmation
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (data.success) {
