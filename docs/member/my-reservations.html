@@ -931,23 +931,23 @@
                                     </div>
                                     <div>
                                         <span class="info-label">Start:</span>
-                                        <span class="info-value">${reservation.intended_start_date ? (() => {
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_start_date) : (reservation.intended_start_date ? (() => {
                                             const date = new Date(reservation.intended_start_date);
-                                            const month = date.getMonth() + 1;
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
-                                            return `${month}/${day}/${year}`;
-                                        })() : 'N/A'}${reservation.intended_start_time ? ' ' + (reservation.intended_start_time.includes(':') ? reservation.intended_start_time.substring(0, 5) : reservation.intended_start_time) : ''}</span>
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()).slice(-2);
+                                            return `${month}-${day}-${year}`;
+                                        })() : 'N/A')}${reservation.intended_start_time ? ' ' + (reservation.intended_start_time.includes(':') ? reservation.intended_start_time.substring(0, 5) : reservation.intended_start_time) : ''}</span>
                                     </div>
                                     ${reservation.intended_end_date ? `
                                     <div>
                                         <span class="info-label">End:</span>
-                                        <span class="info-value">${(() => {
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_end_date) : (() => {
                                             const date = new Date(reservation.intended_end_date);
-                                            const month = date.getMonth() + 1;
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
-                                            return `${month}/${day}/${year}`;
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()).slice(-2);
+                                            return `${month}-${day}-${year}`;
                                         })()}${reservation.intended_end_time ? ' ' + (reservation.intended_end_time.includes(':') ? reservation.intended_end_time.substring(0, 5) : reservation.intended_end_time) : ''}</span>
                                     </div>
                                     ` : ''}
@@ -963,17 +963,20 @@
                                 <div class="info-row">
                                     <div>
                                         <span class="info-label">Submitted:</span>
-                                        <span class="info-value">${(() => {
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.created_at) : (() => {
                                             const date = new Date(reservation.created_at);
-                                            const month = date.getMonth() + 1;
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()).slice(-2);
+                                            return `${month}-${day}-${year}`;
+                                        })()} ${(() => {
+                                            const date = new Date(reservation.created_at);
                                             const hours = date.getHours();
                                             const minutes = date.getMinutes();
                                             const ampm = hours >= 12 ? 'PM' : 'AM';
                                             const displayHours = hours % 12 || 12;
                                             const displayMinutes = minutes.toString().padStart(2, '0');
-                                            return `${month}/${day}/${year}, ${displayHours}:${displayMinutes} ${ampm}`;
+                                            return `${displayHours}:${displayMinutes} ${ampm}`;
                                         })()}</span>
                                     </div>
                                 </div>
