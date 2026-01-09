@@ -192,8 +192,8 @@ function updateUIWithUserData(userData) {
             const isProfileActive = window.location.hash === '#profile' || 
                                    (profileSection && profileSection.style.display === 'block');
             if (!isProfileActive) {
-                staffDashboard.style.display = 'block';
-                loadStaffStatistics();
+            staffDashboard.style.display = 'block';
+            loadStaffStatistics();
             } else {
                 staffDashboard.style.display = 'none';
             }
@@ -997,6 +997,9 @@ window.declareIntendedUse = async function(locationId) {
 
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
     // Create reservation form modal with better styling
     const formModal = `
@@ -1050,7 +1053,7 @@ window.declareIntendedUse = async function(locationId) {
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
-                                        <input type="date" id="start-date" name="intended_start_date" required min="${today}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <input type="date" id="start-date" name="intended_start_date" required min="${tomorrow}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
                                     </div>
                                     <div style="position: relative;">
@@ -1130,35 +1133,33 @@ window.declareIntendedUse = async function(locationId) {
     const endDateInput = document.getElementById('end-date');
     const endTimeInput = document.getElementById('end-time');
     
-    // Function to validate start date/time is not in the past
+    // Function to validate start date/time must be tomorrow or later
     function validateStartDateTime() {
         const startDate = startDateInput.value;
         const startTime = startTimeInput.value || '00:00';
         
         if (!startDate) return true;
         
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
         const startDateTime = new Date(startDate + 'T' + startTime);
         
-        // Check if date is in the past
-        if (startDate < today) {
-            showMessage('Start date cannot be in the past', 'error');
-            startDateInput.value = today;
+        // Check if date is today or in the past (must be tomorrow or later)
+        if (startDate < tomorrowStr) {
+            showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
+            startDateInput.value = tomorrowStr;
             startTimeInput.value = '';
             return false;
         }
         
-        // If date is today, check if time is in the past
-        if (startDate === today && startDateTime < now) {
+        // If date is tomorrow, check if time is in the past
+        if (startDate === tomorrowStr && startDateTime < tomorrow) {
             const errorMsg = 'Start time cannot be in the past. Please select a future time.';
             showMessage(errorMsg, 'error');
-            // Set min time to current time + 1 minute
-            const currentHour = now.getHours().toString().padStart(2, '0');
-            const currentMinute = (now.getMinutes() + 1).toString().padStart(2, '0');
-            const minTime = `${currentHour}:${currentMinute}`;
-            startTimeInput.min = minTime;
-            startTimeInput.value = '';
+            // Set min time to midnight
+            startTimeInput.value = '00:00';
             return false;
         }
         
@@ -1324,9 +1325,12 @@ window.submitReservation = async function(event, locationId) {
     const endTime = formData.get('intended_end_time') || '23:59';
     
     // Validate dates
-    const today = new Date().toISOString().split('T')[0];
-    if (startDate < today) {
-        const errorMsg = 'Start date cannot be in the past';
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    if (startDate < tomorrowStr) {
+        const errorMsg = 'Start date must be tomorrow or later. Reservations cannot be made for today.';
         showModalError(errorMsg);
         showMessage(errorMsg, 'error');
         return;
