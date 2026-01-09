@@ -1021,8 +1021,48 @@
                 return `${year}-${month}-${day}`;
             };
             
+            // Normalize time for time input (HH:MM format required)
+            const normalizeTimeForInput = (timeString) => {
+                if (!timeString) return '';
+                
+                // Remove whitespace
+                timeString = timeString.trim();
+                
+                // If already in HH:MM format, return it
+                if (/^\d{2}:\d{2}$/.test(timeString)) {
+                    return timeString;
+                }
+                
+                // If in HH:MM:SS format, extract HH:MM
+                if (/^\d{2}:\d{2}:\d{2}$/.test(timeString)) {
+                    return timeString.substring(0, 5);
+                }
+                
+                // Try to parse various formats
+                const timeMatch = timeString.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?/i);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1], 10);
+                    const minutes = timeMatch[2];
+                    const ampm = timeMatch[4] ? timeMatch[4].toUpperCase() : null;
+                    
+                    // Convert 12-hour to 24-hour if needed
+                    if (ampm === 'PM' && hours !== 12) {
+                        hours += 12;
+                    } else if (ampm === 'AM' && hours === 12) {
+                        hours = 0;
+                    }
+                    
+                    return `${String(hours).padStart(2, '0')}:${minutes}`;
+                }
+                
+                // If we can't parse it, return empty string
+                return '';
+            };
+            
             const startDateValue = formatDateForInput(reservation.intended_start_date);
             const endDateValue = formatDateForInput(reservation.intended_end_date);
+            const startTimeValue = normalizeTimeForInput(reservation.intended_start_time || '');
+            const endTimeValue = normalizeTimeForInput(reservation.intended_end_time || '');
             
             const modal = `
                 <div class="modal-overlay" onclick="closeUpdateModal(event)">
@@ -1050,7 +1090,7 @@
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
                                         <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
                                     </div>
-                                    <input type="time" id="update-start-time" class="form-input" value="${reservation.intended_start_time || ''}">
+                                    <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}">
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Start date must be tomorrow or later</small>
                             </div>
@@ -1061,7 +1101,7 @@
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
                                         <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden');}">
                                     </div>
-                                    <input type="time" id="update-end-time" class="form-input" value="${reservation.intended_end_time || ''}">
+                                    <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
                                 </div>
                                 <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date</small>
                             </div>
@@ -1260,16 +1300,60 @@
             let startTimeValue = startTimeInput ? startTimeInput.value.trim() : '';
             let endTimeValue = endTimeInput ? endTimeInput.value.trim() : '';
             
-            // Convert empty strings to null for backend
-            const startTime = startTimeValue === '' ? null : startTimeValue;
-            const endTime = endTimeValue === '' ? null : endTimeValue;
+            console.log('Raw time values from inputs:', { startTimeValue, endTimeValue });
+            
+            // Normalize time format to HH:MM (remove seconds if present)
+            const normalizeTime = (timeStr) => {
+                if (!timeStr || timeStr === '') return null;
+                
+                // Remove any whitespace
+                timeStr = timeStr.trim();
+                
+                // If it's already in HH:MM format, return it
+                if (/^\d{2}:\d{2}$/.test(timeStr)) {
+                    return timeStr;
+                }
+                
+                // If it's in HH:MM:SS format, extract HH:MM
+                if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
+                    return timeStr.substring(0, 5); // Extract first 5 characters (HH:MM)
+                }
+                
+                // Try to parse and reformat
+                // Handle formats like "1:55 PM" or "13:55:00"
+                const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?/i);
+                if (timeMatch) {
+                    let hours = parseInt(timeMatch[1], 10);
+                    const minutes = timeMatch[2];
+                    const ampm = timeMatch[4] ? timeMatch[4].toUpperCase() : null;
+                    
+                    // Convert 12-hour to 24-hour if needed
+                    if (ampm === 'PM' && hours !== 12) {
+                        hours += 12;
+                    } else if (ampm === 'AM' && hours === 12) {
+                        hours = 0;
+                    }
+                    
+                    return `${String(hours).padStart(2, '0')}:${minutes}`;
+                }
+                
+                return null;
+            };
+            
+            // Normalize times
+            const startTime = normalizeTime(startTimeValue);
+            const endTime = normalizeTime(endTimeValue);
+            
+            console.log('Normalized time values:', { startTime, endTime });
             
             // Validate time format if provided (should be HH:MM)
             if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
+                console.error('Invalid start time format after normalization:', startTime);
                 showMessage('Invalid start time format. Please use HH:MM format (e.g., 13:55).', 'error');
                 return;
             }
             if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) {
+                console.error('Invalid end time format after normalization:', endTime);
                 showMessage('Invalid end time format. Please use HH:MM format (e.g., 13:55).', 'error');
                 return;
             }
