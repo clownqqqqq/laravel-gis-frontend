@@ -2,6 +2,63 @@
 let currentLocations = [];
 let currentSearch = '';
 
+// Global date formatting functions - must be available everywhere
+// Function to format date input as user types (mm/dd/yyyy)
+window.formatDateInput = function(input) {
+    if (!input) return;
+    let value = input.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length > 8) value = value.substring(0, 8);
+    
+    // Add slashes automatically
+    if (value.length > 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    if (value.length > 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5);
+    }
+    
+    input.value = value;
+};
+
+// Function to sync text input (mm/dd/yyyy) to hidden input (YYYY-MM-DD)
+window.syncDateInput = function(textInput, hiddenInputId) {
+    if (!textInput) return;
+    const hiddenInput = document.getElementById(hiddenInputId);
+    if (!hiddenInput) return;
+    
+    const value = textInput.value.trim();
+    if (!value) {
+        hiddenInput.value = '';
+        return;
+    }
+    
+    // Parse mm/dd/yyyy format
+    const parts = value.split('/');
+    if (parts.length !== 3) {
+        hiddenInput.value = '';
+        return;
+    }
+    
+    const month = parseInt(parts[0], 10);
+    const day = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    
+    if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
+        hiddenInput.value = '';
+        return;
+    }
+    
+    // Convert to YYYY-MM-DD format
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        hiddenInput.value = '';
+        return;
+    }
+    
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    hiddenInput.value = formattedDate;
+};
+
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Mark page load time for auth error handling
@@ -1129,59 +1186,7 @@ window.declareIntendedUse = async function(locationId) {
     modal.innerHTML = formModal;
     document.body.appendChild(modal);
 
-    // Function to format date input as user types (mm/dd/yyyy)
-    window.formatDateInput = function(input) {
-        let value = input.value.replace(/\D/g, ''); // Remove non-digits
-        if (value.length > 8) value = value.substring(0, 8);
-        
-        // Add slashes automatically
-        if (value.length > 2) {
-            value = value.substring(0, 2) + '/' + value.substring(2);
-        }
-        if (value.length > 5) {
-            value = value.substring(0, 5) + '/' + value.substring(5);
-        }
-        
-        input.value = value;
-    };
-
-    // Function to sync text input (mm/dd/yyyy) to hidden input (YYYY-MM-DD)
-    window.syncDateInput = function(textInput, hiddenInputId) {
-        const hiddenInput = document.getElementById(hiddenInputId);
-        if (!hiddenInput) return;
-        
-        const value = textInput.value.trim();
-        if (!value) {
-            hiddenInput.value = '';
-            return;
-        }
-        
-        // Parse mm/dd/yyyy format
-        const parts = value.split('/');
-        if (parts.length !== 3) {
-            hiddenInput.value = '';
-            return;
-        }
-        
-        const month = parseInt(parts[0], 10);
-        const day = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
-        
-        if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
-            hiddenInput.value = '';
-            return;
-        }
-        
-        // Convert to YYYY-MM-DD format
-        const date = new Date(year, month - 1, day);
-        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-            hiddenInput.value = '';
-            return;
-        }
-        
-        const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        hiddenInput.value = formattedDate;
-    };
+    // Date formatting functions are now defined globally at the top of the file
 
     // Set minimum end date based on start date and validate date+time
     const startDateInput = document.getElementById('start-date');
