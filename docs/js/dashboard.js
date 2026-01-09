@@ -1581,28 +1581,30 @@ window.viewIntendedUses = async function(locationId) {
                     </div>
                     ${use.description ? `<p style="margin: 8px 0; color: #475569;"><strong>Description:</strong> ${use.description}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Start:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_start_date) : (() => {
-                        // Parse date explicitly to avoid timezone issues
-                        const dateStr = use.intended_start_date.split('T')[0];
+                        // CRITICAL: Parse date directly from string components - NEVER use Date objects
+                        // This avoids all timezone conversion issues
+                        const dateStr = use.intended_start_date.split('T')[0]; // Extract YYYY-MM-DD
                         const parts = dateStr.split('-');
-                        const date = parts.length === 3 
-                            ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
-                            : new Date(use.intended_start_date);
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const year = String(date.getFullYear()); // Full year
-                        return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                        if (parts.length === 3) {
+                            const year = parts[0];   // YYYY
+                            const month = parts[1];  // MM
+                            const day = parts[2];    // DD
+                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                        }
+                        return dateStr; // Fallback to original if parsing fails
                     })()}${use.intended_start_time ? ' at ' + new Date('2000-01-01T' + use.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>
                     ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_end_date) : (() => {
-                        // Parse date explicitly to avoid timezone issues
-                        const dateStr = use.intended_end_date.split('T')[0];
+                        // CRITICAL: Parse date directly from string components - NEVER use Date objects
+                        // This avoids all timezone conversion issues
+                        const dateStr = use.intended_end_date.split('T')[0]; // Extract YYYY-MM-DD
                         const parts = dateStr.split('-');
-                        const date = parts.length === 3 
-                            ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
-                            : new Date(use.intended_end_date);
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const year = String(date.getFullYear()); // Full year
-                        return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                        if (parts.length === 3) {
+                            const year = parts[0];   // YYYY
+                            const month = parts[1];  // MM
+                            const day = parts[2];    // DD
+                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                        }
+                        return dateStr; // Fallback to original if parsing fails
                     })()}${use.intended_end_time ? ' at ' + new Date('2000-01-01T' + use.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Reserved by:</strong> ${use.user ? use.user.username : 'Unknown'}</p>
                     <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.created_at) : (() => {
