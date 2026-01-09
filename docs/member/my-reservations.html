@@ -1144,21 +1144,34 @@
         async function submitUpdate(event, id) {
             event.preventDefault();
 
-            // Get dates from hidden inputs (already in YYYY-MM-DD format)
-            const startDateHidden = document.getElementById('update-start-date-hidden').value;
-            const endDateHidden = document.getElementById('update-end-date-hidden').value;
+            // Sync dates to hidden inputs before submission
+            const startDateInput = document.getElementById('update-start-date');
+            const startDateHidden = document.getElementById('update-start-date-hidden');
+            const endDateInput = document.getElementById('update-end-date');
+            const endDateHidden = document.getElementById('update-end-date-hidden');
             
-            if (!startDateHidden) {
-                showMessage('Please enter a valid start date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
+            if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
+                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+            }
+            if (endDateInput && endDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
+                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+            }
+            
+            // Get dates from hidden inputs (already in YYYY-MM-DD format)
+            const startDate = startDateHidden ? startDateHidden.value : (startDateInput ? startDateInput.value : '');
+            const endDate = endDateHidden ? endDateHidden.value : (endDateInput ? endDateInput.value : '');
+            
+            if (!startDate) {
+                showMessage('Please select a valid start date', 'error');
                 return;
             }
             
             const formData = {
                 intended_type: document.getElementById('update-intended-type').value,
                 description: document.getElementById('update-description').value || null,
-                intended_start_date: startDateHidden, // Use hidden input value (YYYY-MM-DD format)
+                intended_start_date: startDate, // Use hidden input value (YYYY-MM-DD format)
                 intended_start_time: document.getElementById('update-start-time').value || null,
-                intended_end_date: endDateHidden || null, // Use hidden input value (YYYY-MM-DD format)
+                intended_end_date: endDate || null, // Use hidden input value (YYYY-MM-DD format)
                 intended_end_time: document.getElementById('update-end-time').value || null
             };
 
