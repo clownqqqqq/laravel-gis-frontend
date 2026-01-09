@@ -352,13 +352,24 @@
                         const imageUrl = suggestion.image 
                             ? `https://geocrud.bytevortexz.com/uploads/${suggestion.image}` 
                             : null;
-                        const submittedDate = new Date(suggestion.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit'
-                        });
+                        const submittedDate = typeof window.formatDisplayDate !== 'undefined' 
+                            ? window.formatDisplayDate(suggestion.created_at) 
+                            : (() => {
+                                const date = new Date(suggestion.created_at);
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const year = String(date.getFullYear()).slice(-2);
+                                return `${month}-${day}-${year}`;
+                            })();
+                        const submittedTime = (() => {
+                            const date = new Date(suggestion.created_at);
+                            const hours = date.getHours();
+                            const minutes = date.getMinutes();
+                            const ampm = hours >= 12 ? 'PM' : 'AM';
+                            const displayHours = hours % 12 || 12;
+                            const displayMinutes = minutes.toString().padStart(2, '0');
+                            return `${displayHours}:${displayMinutes} ${ampm}`;
+                        })();
 
                         html += `
                             <div class="card suggestion-card">
@@ -409,7 +420,7 @@
                                             
                                             <p style="margin: 0; color: #64748b;">
                                                 <strong>📅 Submitted:</strong> 
-                                                ${submittedDate}
+                                                ${submittedDate} ${submittedTime}
                                             </p>
                                         </div>
                                     </div>
