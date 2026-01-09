@@ -421,27 +421,11 @@
                         <button class="filter-tab" onclick="filterReservations('rejected')" id="tab-rejected">
                             ❌ Rejected (<span id="count-rejected">0</span>)
                         </button>
+                        <button class="filter-tab" onclick="filterReservations('cancelled')" id="tab-cancelled">
+                            🚫 Cancelled (<span id="count-cancelled">0</span>)
+                        </button>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0; padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e5e7eb; flex-wrap: wrap; gap: 12px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-weight: 600; color: #374151; font-size: 14px;">🔽 Sort by:</span>
-                            <select id="sort-select" onchange="applySorting()" style="padding: 8px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; color: #1e293b; cursor: pointer; font-weight: 500; min-width: 200px;">
-                                <option value="date-desc">Date (Newest First)</option>
-                                <option value="date-asc">Date (Oldest First)</option>
-                                <option value="location-asc">Location (A-Z)</option>
-                                <option value="location-desc">Location (Z-A)</option>
-                                <option value="status-asc">Status (A-Z)</option>
-                                <option value="user-asc">User Name (A-Z)</option>
-                                <option value="user-desc">User Name (Z-A)</option>
-                                <option value="start-date-desc">Start Date (Newest First)</option>
-                                <option value="start-date-asc">Start Date (Oldest First)</option>
-                            </select>
-                        </div>
-                        <div style="color: #6b7280; font-size: 13px; font-weight: 500;">
-                            Showing <span id="reservation-count">0</span> reservation(s)
-                        </div>
-                    </div>
 
                     <div id="reservations-container">
                         <div class="empty-state">
@@ -608,12 +592,6 @@
                 allReservations = response.data || [];
                 console.log('Loaded reservations:', allReservations.length, allReservations);
                 
-                // Ensure sort is initialized
-                const sortSelect = document.getElementById('sort-select');
-                if (sortSelect) {
-                    sortSelect.value = currentSort;
-                }
-                
                 updateCounts();
                 renderReservations();
             } catch (error) {
@@ -636,10 +614,15 @@
             const pending = allReservations.filter(r => (r.status || '').toLowerCase() === 'pending').length;
             const approved = allReservations.filter(r => (r.status || '').toLowerCase() === 'approved').length;
             const rejected = allReservations.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
+            const cancelled = allReservations.filter(r => (r.status || '').toLowerCase() === 'cancelled').length;
 
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-rejected').textContent = rejected;
+            const cancelledCountEl = document.getElementById('count-cancelled');
+            if (cancelledCountEl) {
+                cancelledCountEl.textContent = cancelled;
+            }
         }
 
         function filterReservations(status) {
@@ -656,8 +639,7 @@
         }
 
         function applySorting() {
-            const sortSelect = document.getElementById('sort-select');
-            currentSort = sortSelect.value;
+            // Sorting is now automatic by status priority
             renderReservations();
         }
 
@@ -715,17 +697,6 @@
             
             console.log('After sorting - Count:', filtered.length);
 
-            // Update count display
-            const countElement = document.getElementById('reservation-count');
-            if (countElement) {
-                countElement.textContent = filtered.length;
-            }
-            
-            // Ensure sort dropdown is set to current sort
-            const sortSelect = document.getElementById('sort-select');
-            if (sortSelect && sortSelect.value !== currentSort) {
-                sortSelect.value = currentSort;
-            }
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -883,11 +854,7 @@
         // Load reservations on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize sort dropdown to default value
-            const sortSelect = document.getElementById('sort-select');
-            if (sortSelect) {
-                sortSelect.value = currentSort;
-            }
-            loadReservations();
+                loadReservations();
         });
     </script>
 </body>
