@@ -1208,8 +1208,10 @@
             }
             
             // Get date values directly from date inputs (they're already in YYYY-MM-DD format)
-            const startDate = startDateInput ? startDateInput.value.trim() : '';
-            const endDate = endDateInput ? endDateInput.value.trim() : null;
+            let startDate = startDateInput ? startDateInput.value.trim() : '';
+            let endDate = endDateInput ? endDateInput.value.trim() : '';
+            
+            console.log('Raw date values from inputs:', { startDate, endDate });
             
             if (!startDate) {
                 showMessage('Please select a valid start date', 'error');
@@ -1217,18 +1219,42 @@
             }
             
             // Ensure dates are in YYYY-MM-DD format (date inputs should already be in this format)
+            // If somehow the date is not in the correct format, try to parse and reformat it
             let finalStartDate = startDate;
             let finalEndDate = endDate || null;
             
-            // Validate date format
+            // Validate and normalize date format
             if (!/^\d{4}-\d{2}-\d{2}$/.test(finalStartDate)) {
-                showMessage('Invalid start date format. Please select a date using the date picker.', 'error');
-                return;
+                // Try to parse as Date and reformat
+                const parsedDate = new Date(finalStartDate);
+                if (!isNaN(parsedDate.getTime())) {
+                    const year = parsedDate.getFullYear();
+                    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(parsedDate.getDate()).padStart(2, '0');
+                    finalStartDate = `${year}-${month}-${day}`;
+                    console.log('Reformatted start date:', finalStartDate);
+                } else {
+                    showMessage('Invalid start date format. Please select a date using the date picker.', 'error');
+                    return;
+                }
             }
+            
             if (finalEndDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalEndDate)) {
-                showMessage('Invalid end date format. Please select a date using the date picker.', 'error');
-                return;
+                // Try to parse as Date and reformat
+                const parsedDate = new Date(finalEndDate);
+                if (!isNaN(parsedDate.getTime())) {
+                    const year = parsedDate.getFullYear();
+                    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(parsedDate.getDate()).padStart(2, '0');
+                    finalEndDate = `${year}-${month}-${day}`;
+                    console.log('Reformatted end date:', finalEndDate);
+                } else {
+                    showMessage('Invalid end date format. Please select a date using the date picker.', 'error');
+                    return;
+                }
             }
+            
+            console.log('Final date values:', { finalStartDate, finalEndDate });
             
             // Get time values - convert empty strings to null
             let startTimeValue = startTimeInput ? startTimeInput.value.trim() : '';
@@ -1248,8 +1274,17 @@
                 return;
             }
             
+            // Get intended_type - ensure it's a valid value
+            const intendedTypeSelect = document.getElementById('update-intended-type');
+            const intendedType = intendedTypeSelect ? intendedTypeSelect.value : '';
+            
+            if (!intendedType || !['event', 'business', 'personal', 'future_development'].includes(intendedType)) {
+                showMessage('Please select a valid intended purpose', 'error');
+                return;
+            }
+            
             const formData = {
-                intended_type: document.getElementById('update-intended-type').value,
+                intended_type: intendedType,
                 description: document.getElementById('update-description').value || null,
                 intended_start_date: finalStartDate,
                 intended_start_time: startTime,
@@ -1260,12 +1295,30 @@
             console.log('Submitting update with formData:', formData);
 
             // Validate start date is tomorrow or later
-            const tomorrow = new Date();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(0, 0, 0, 0);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
-            if (formData.intended_start_date < tomorrowStr) {
+            console.log('Date validation:', {
+                today: today.toISOString().split('T')[0],
+                tomorrow: tomorrowStr,
+                startDate: formData.intended_start_date,
+                stringComparison: formData.intended_start_date < tomorrowStr
+            });
+            
+            // Compare dates properly using Date objects
+            const startDateObj = new Date(formData.intended_start_date + 'T00:00:00');
+            startDateObj.setHours(0, 0, 0, 0);
+            
+            console.log('Date object comparison:', {
+                startDateObj: startDateObj.toISOString(),
+                tomorrow: tomorrow.toISOString(),
+                isBeforeTomorrow: startDateObj < tomorrow
+            });
+            
+            if (startDateObj < tomorrow) {
                 showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                 return;
             }
@@ -1297,9 +1350,20 @@
                     // Show detailed error message if available
                     const errorMsg = response?.message || response?.error || 'Failed to update reservation';
                     const errors = response?.errors;
+                    
+                    console.error('Update failed - Response:', response);
+                    console.error('Validation errors:', errors);
+                    
                     if (errors && typeof errors === 'object') {
-                        const errorDetails = Object.values(errors).flat().join(', ');
-                        showMessage(`${errorMsg}: ${errorDetails}`, 'error');
+                        // Format validation errors nicely
+                        const errorDetails = Object.entries(errors)
+                            .map(([field, messages]) => {
+                                const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                const msgArray = Array.isArray(messages) ? messages : [messages];
+                                return `${fieldName}: ${msgArray.join(', ')}`;
+                            })
+                            .join('; ');
+                        showMessage(`${errorMsg}\n${errorDetails}`, 'error');
                     } else {
                         showMessage(errorMsg, 'error');
                     }
