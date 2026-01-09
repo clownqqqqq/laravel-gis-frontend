@@ -695,7 +695,6 @@ function renderLocations(locations) {
                         <h3 class="location-name">
                             ${locationName}
                             ${statusBadge}
-                            ${canReserve ? '<span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px;">✓ Available for Reservation</span>' : ''}
                         </h3>
                         <p class="location-coords">
                             Lat: ${latitude} &nbsp;&nbsp;&nbsp;&nbsp; Lng: ${longitude}
