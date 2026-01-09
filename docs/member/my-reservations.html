@@ -1045,36 +1045,22 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
-                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
-                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${startDateValue ? (() => {
-                                            const date = new Date(reservation.intended_start_date);
-                                            const month = date.getMonth() + 1;
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
-                                            return `${month}/${day}/${year}`;
-                                        })() : ''}</span>
+                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
                                     </div>
                                     <input type="time" id="update-start-time" class="form-input" value="${reservation.intended_start_time || ''}">
                                 </div>
-                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date (displays as mm/dd/yyyy). Start date must be tomorrow or later</small>
+                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date. Start date must be tomorrow or later</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">End Date & Time (Optional)</label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');}">
-                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${endDateValue ? (() => {
-                                            const date = new Date(reservation.intended_end_date);
-                                            const month = date.getMonth() + 1;
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
-                                            return `${month}/${day}/${year}`;
-                                        })() : ''}</span>
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden');}">
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${reservation.intended_end_time || ''}">
                                 </div>
-                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date (displays as mm/dd/yyyy)</small>
+                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date</small>
                             </div>
                             <div style="display: flex; gap: 10px; margin-top: 24px;">
                                 <button type="button" onclick="closeUpdateModal()" class="btn" style="flex: 1; background: #6c757d;">Cancel</button>
@@ -1125,7 +1111,7 @@
                     showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                     startDateInput.value = tomorrowStr;
                     if (typeof window.updateDateDisplayFromPicker === 'function') {
-                        window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                        window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden');
                     }
                     return false;
                 }
@@ -1164,12 +1150,12 @@
                 return true;
             }
             
-            // Initialize date displays on load
-            if (startDateInput && startDateInput.value) {
-                updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+            // Initialize hidden inputs on load (no display overlay for update form)
+            if (startDateInput && startDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
+                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden');
             }
-            if (endDateInput && endDateInput.value) {
-                updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+            if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
+                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden');
             }
             
             // Update end date min when start date changes
@@ -1178,7 +1164,7 @@
                     endDateInput.min = this.value;
                 }
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');
+                    window.updateDateDisplayFromPicker(this, 'update-start-date-hidden');
                 }
                 validateUpdateStartDate();
             });
@@ -1186,7 +1172,7 @@
             startTimeInput.addEventListener('change', validateUpdateDateTime);
             endDateInput.addEventListener('change', function() {
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');
+                    window.updateDateDisplayFromPicker(this, 'update-end-date-hidden');
                 }
                 validateUpdateDateTime();
             });
@@ -1209,10 +1195,10 @@
             const endDateHidden = document.getElementById('update-end-date-hidden');
             
             if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden');
             }
             if (endDateInput && endDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden');
             }
             
             // Get dates from hidden inputs (already in YYYY-MM-DD format)
