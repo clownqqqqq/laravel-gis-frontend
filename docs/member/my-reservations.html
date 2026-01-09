@@ -529,9 +529,9 @@
             window.API_BASE_URL = 'https://geocrud.bytevortexz.com/api';
         }
         var API_BASE_URL = window.API_BASE_URL; // Use var instead of const to avoid redeclaration errors
-        let allReservations = [];
-        let currentFilter = 'all';
-        let currentSort = 'date-desc'; // Default sort: newest first
+        var allReservations = [];
+        var currentFilter = 'all';
+        var currentSort = 'date-desc'; // Default sort: newest first
 
         function getUserData() {
             try {
