@@ -47,13 +47,29 @@ function removeUserData() {
 
 // Global date formatting function: formats dates to mm-dd-yy format
 // This function should be used for all date displays from the API
+// IMPORTANT: This formats as mm-dd-yy (month-day-year), NOT dd-mm-yy
 if (typeof window.formatDisplayDate === 'undefined') {
     window.formatDisplayDate = function(dateString) {
         if (!dateString) return 'N/A';
         
-        const date = new Date(dateString);
+        // Parse the date string - handle YYYY-MM-DD format from API
+        let date;
+        if (typeof dateString === 'string' && dateString.includes('-')) {
+            // If it's in YYYY-MM-DD format, parse it explicitly to avoid timezone issues
+            const parts = dateString.split('T')[0].split('-'); // Handle datetime strings
+            if (parts.length === 3) {
+                // Create date in UTC to avoid timezone conversion issues
+                date = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+            } else {
+                date = new Date(dateString);
+            }
+        } else {
+            date = new Date(dateString);
+        }
+        
         if (isNaN(date.getTime())) return 'N/A';
         
+        // Format as mm-dd-yy (month-day-year)
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
