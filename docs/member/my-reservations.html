@@ -218,6 +218,17 @@
         .filter-tab:hover {
             color: #0d6efd;
         }
+        #sort-select {
+            transition: all 0.2s ease;
+        }
+        #sort-select:hover {
+            border-color: #0d6efd;
+        }
+        #sort-select:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+        }
         .alert {
             padding: 16px 20px;
             border-radius: 10px;
@@ -334,6 +345,11 @@
 
             .page-header h1 {
                 font-size: 20px !important;
+            }
+
+            #sort-select {
+                width: 100% !important;
+                min-width: auto !important;
             }
 
             .card {
@@ -474,6 +490,25 @@
                         <button class="filter-tab" onclick="filterReservations('cancelled')" id="tab-cancelled">
                             🚫 Cancelled (<span id="count-cancelled">0</span>)
                         </button>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label for="sort-select" style="font-weight: 600; color: #1e293b;">Sort by:</label>
+                            <select id="sort-select" onchange="applySorting()" style="padding: 8px 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white; color: #1e293b; cursor: pointer; font-weight: 500; min-width: 200px;">
+                                <option value="date-desc">Date (Newest First)</option>
+                                <option value="date-asc">Date (Oldest First)</option>
+                                <option value="location-asc">Location (A-Z)</option>
+                                <option value="location-desc">Location (Z-A)</option>
+                                <option value="status-asc">Status (A-Z)</option>
+                                <option value="status-desc">Status (Z-A)</option>
+                                <option value="start-date-desc">Start Date (Newest First)</option>
+                                <option value="start-date-asc">Start Date (Oldest First)</option>
+                            </select>
+                        </div>
+                        <div style="color: #6b7280; font-size: 14px; font-weight: 500;">
+                            Showing <span id="reservation-count">0</span> reservation(s)
+                        </div>
                     </div>
 
                     <div id="reservations-container">
@@ -656,6 +691,12 @@
 
                 console.log('Final allReservations:', allReservations.length, allReservations);
                 
+                // Ensure sort is initialized
+                const sortSelect = document.getElementById('sort-select');
+                if (sortSelect) {
+                    sortSelect.value = currentSort;
+                }
+                
                 updateCounts();
                 renderReservations();
             } catch (error) {
@@ -693,9 +734,117 @@
             
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
+            const tabId = `tab-${status}`;
+            const activeTab = document.getElementById(tabId);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
 
             renderReservations();
+        }
+
+        function applySorting() {
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect) {
+                currentSort = sortSelect.value;
+            }
+            renderReservations();
+        }
+
+        function sortReservations(reservations) {
+            if (!reservations || reservations.length === 0) {
+                return reservations;
+            }
+            
+            const sorted = [...reservations];
+            
+            console.log('Sorting reservations by:', currentSort, 'Total:', sorted.length);
+            
+            switch (currentSort) {
+                case 'date-desc':
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateB - dateA;
+                    });
+                    break;
+                case 'date-asc':
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateA - dateB;
+                    });
+                    break;
+                case 'location-asc':
+                    sorted.sort((a, b) => {
+                        const locA = (a.location?.location || '').toLowerCase();
+                        const locB = (b.location?.location || '').toLowerCase();
+                        return locA.localeCompare(locB);
+                    });
+                    break;
+                case 'location-desc':
+                    sorted.sort((a, b) => {
+                        const locA = (a.location?.location || '').toLowerCase();
+                        const locB = (b.location?.location || '').toLowerCase();
+                        return locB.localeCompare(locA);
+                    });
+                    break;
+                case 'status-asc':
+                    sorted.sort((a, b) => {
+                        const statusA = (a.status || '').toLowerCase();
+                        const statusB = (b.status || '').toLowerCase();
+                        return statusA.localeCompare(statusB);
+                    });
+                    break;
+                case 'status-desc':
+                    sorted.sort((a, b) => {
+                        const statusA = (a.status || '').toLowerCase();
+                        const statusB = (b.status || '').toLowerCase();
+                        return statusB.localeCompare(statusA);
+                    });
+                    break;
+                case 'start-date-desc':
+                    sorted.sort((a, b) => {
+                        try {
+                            const dateA = a.intended_start_date 
+                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
+                                : new Date(0);
+                            const dateB = b.intended_start_date 
+                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
+                                : new Date(0);
+                            return dateB - dateA;
+                        } catch (e) {
+                            console.error('Error sorting by start date:', e);
+                            return 0;
+                        }
+                    });
+                    break;
+                case 'start-date-asc':
+                    sorted.sort((a, b) => {
+                        try {
+                            const dateA = a.intended_start_date 
+                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
+                                : new Date(0);
+                            const dateB = b.intended_start_date 
+                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
+                                : new Date(0);
+                            return dateA - dateB;
+                        } catch (e) {
+                            console.error('Error sorting by start date:', e);
+                            return 0;
+                        }
+                    });
+                    break;
+                default:
+                    // Default to date-desc
+                    sorted.sort((a, b) => {
+                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                        return dateB - dateA;
+                    });
+            }
+            
+            return sorted;
         }
 
         function renderReservations() {
@@ -716,6 +865,25 @@
             let filtered = allReservations;
             if (currentFilter !== 'all') {
                 filtered = allReservations.filter(r => r && r.status === currentFilter);
+            }
+
+            console.log('Before sorting - Filter:', currentFilter, 'Count:', filtered.length);
+            
+            // Apply sorting
+            filtered = sortReservations(filtered);
+            
+            console.log('After sorting - Count:', filtered.length);
+
+            // Update count display
+            const countElement = document.getElementById('reservation-count');
+            if (countElement) {
+                countElement.textContent = filtered.length;
+            }
+            
+            // Ensure sort dropdown is set to current sort
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect && sortSelect.value !== currentSort) {
+                sortSelect.value = currentSort;
             }
 
             console.log('Filtered reservations:', filtered.length, filtered);
