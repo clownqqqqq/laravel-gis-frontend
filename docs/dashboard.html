@@ -927,6 +927,25 @@
             outline: none;
         }
 
+        #reservation-modal input[type="time"]::-webkit-calendar-picker-indicator {
+            display: none;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        #reservation-modal input[type="time"]::-webkit-inner-spin-button,
+        #reservation-modal input[type="time"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        #reservation-modal input[type="time"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
         #reservation-modal select:focus {
             outline: none;
         }
