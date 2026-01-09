@@ -127,6 +127,23 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            #change-password-form > div {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #change-password-form input[type="password"] {
+                padding: 12px 14px !important;
+                font-size: 16px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .card {
+                padding: 20px !important;
+            }
         }
     </style>
 </head>
@@ -211,22 +228,43 @@
                             </select>
                         </div>
 
-                        <div style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                            <h4 style="margin-bottom: 8px;">Change Password (optional)</h4>
-                            <p style="margin: 0 0 10px; font-size: 13px; color: #64748b;">
-                                Leave password fields blank if you do not want to change this user's password.
-                            </p>
-                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
-                                <div>
-                                    <label for="password">New Password</label>
-                                    <input type="password" id="password" name="password" minlength="6">
-                                </div>
-                                <div>
-                                    <label for="password_confirmation">Confirm New Password</label>
-                                    <input type="password" id="password_confirmation" name="password_confirmation" minlength="6">
-                                </div>
+                    </form>
+                </div>
+
+                <!-- Change Password Section -->
+                <div class="card" style="margin-top: 30px; border: 1px solid #d1d5db;">
+                    <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 28px;">🔒</span> Change Password (optional)
+                    </h4>
+                    <p style="margin: 0 0 20px; font-size: 14px; color: #64748b;">
+                        Leave password fields blank if you do not want to change this user's password.
+                    </p>
+                    <form id="change-password-form" onsubmit="return false;">
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+                            <div>
+                                <label for="password">New Password</label>
+                                <input type="password" id="password" name="password" minlength="6" 
+                                       placeholder="Enter new password (min. 6 characters)">
+                            </div>
+                            <div>
+                                <label for="password_confirmation">Confirm New Password</label>
+                                <input type="password" id="password_confirmation" name="password_confirmation" minlength="6" 
+                                       placeholder="Confirm new password">
                             </div>
                         </div>
+                    </form>
+                </div>
+
+                <div class="card" style="margin-top: 20px; background: transparent; box-shadow: none; padding: 0;">
+                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                        <a href="users.html" class="btn" style="background: #6c757d; color: white; text-decoration: none;">
+                            Cancel
+                        </a>
+                        <button type="submit" form="edit-user-form" class="btn" style="background: #0d6efd; color: white;">
+                            💾 Save Changes
+                        </button>
+                    </div>
+                </div>
 
                         <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                             <a href="users.html" class="btn" style="background: #6c757d; color: white; text-decoration: none;">
