@@ -563,6 +563,40 @@
                 hiddenInput.value = formattedDate;
             };
         }
+
+        // Function to update date display from date picker (YYYY-MM-DD to mm/dd/yyyy)
+        if (typeof window.updateDateDisplayFromPicker === 'undefined') {
+            window.updateDateDisplayFromPicker = function(dateInput, displayId, hiddenInputId) {
+                const displayElement = document.getElementById(displayId);
+                const hiddenInput = document.getElementById(hiddenInputId);
+                
+                if (!dateInput || !dateInput.value) {
+                    if (displayElement) displayElement.textContent = '';
+                    if (hiddenInput) hiddenInput.value = '';
+                    return;
+                }
+                
+                // Date input already has YYYY-MM-DD format, store it in hidden input
+                if (hiddenInput) {
+                    hiddenInput.value = dateInput.value;
+                }
+                
+                // Convert to mm/dd/yyyy for display
+                const date = new Date(dateInput.value + 'T00:00:00');
+                if (isNaN(date.getTime())) {
+                    if (displayElement) displayElement.textContent = '';
+                    return;
+                }
+                
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const year = date.getFullYear();
+                
+                if (displayElement) {
+                    displayElement.textContent = `${month}/${day}/${year}`;
+                }
+            };
+        }
     </script>
     <script>
         // Use window.API_BASE_URL if already defined (from config.js or inline script), otherwise define it
@@ -628,6 +662,24 @@
                         success: false,
                         error: errorData.error || 'Forbidden',
                         message: errorData.message || 'You do not have permission to access this resource.'
+                    };
+                }
+
+                // Handle 422 Validation errors
+                if (response.status === 422) {
+                    const errorText = await response.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { error: 'Validation failed', message: errorText || 'Validation error occurred' };
+                    }
+                    console.error('422 Validation Error - Response:', errorData);
+                    return {
+                        success: false,
+                        error: errorData.error || 'Validation failed',
+                        message: errorData.message || 'Validation error occurred',
+                        errors: errorData.errors || {}
                     };
                 }
 
@@ -993,7 +1045,7 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
-                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px;" onchange="updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden'); validateUpdateStartDate();">
+                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
                                         <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${startDateValue ? (() => {
                                             const date = new Date(reservation.intended_start_date);
                                             const month = date.getMonth() + 1;
@@ -1011,7 +1063,7 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');">
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');}">
                                         <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${endDateValue ? (() => {
                                             const date = new Date(reservation.intended_end_date);
                                             const month = date.getMonth() + 1;
@@ -1072,7 +1124,9 @@
                     const tomorrowStr = tomorrow.toISOString().split('T')[0];
                     showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                     startDateInput.value = tomorrowStr;
-                    updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                    if (typeof window.updateDateDisplayFromPicker === 'function') {
+                        window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                    }
                     return false;
                 }
                 
@@ -1123,13 +1177,17 @@
                 if (this.value) {
                     endDateInput.min = this.value;
                 }
-                updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');
+                if (typeof window.updateDateDisplayFromPicker === 'function') {
+                    window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');
+                }
                 validateUpdateStartDate();
             });
             
             startTimeInput.addEventListener('change', validateUpdateDateTime);
             endDateInput.addEventListener('change', function() {
-                updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');
+                if (typeof window.updateDateDisplayFromPicker === 'function') {
+                    window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');
+                }
                 validateUpdateDateTime();
             });
             endTimeInput.addEventListener('change', validateUpdateDateTime);
@@ -1166,14 +1224,36 @@
                 return;
             }
             
+            // Ensure dates are in YYYY-MM-DD format
+            let finalStartDate = startDate;
+            let finalEndDate = endDate || null;
+            
+            // If we got the date from the date input directly, it's already in YYYY-MM-DD format
+            // But let's make sure it's properly formatted
+            if (finalStartDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalStartDate)) {
+                // Try to parse and reformat
+                const date = new Date(finalStartDate);
+                if (!isNaN(date.getTime())) {
+                    finalStartDate = date.toISOString().split('T')[0];
+                }
+            }
+            if (finalEndDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalEndDate)) {
+                const date = new Date(finalEndDate);
+                if (!isNaN(date.getTime())) {
+                    finalEndDate = date.toISOString().split('T')[0];
+                }
+            }
+            
             const formData = {
                 intended_type: document.getElementById('update-intended-type').value,
                 description: document.getElementById('update-description').value || null,
-                intended_start_date: startDate, // Use hidden input value (YYYY-MM-DD format)
+                intended_start_date: finalStartDate, // Use hidden input value (YYYY-MM-DD format)
                 intended_start_time: document.getElementById('update-start-time').value || null,
-                intended_end_date: endDate || null, // Use hidden input value (YYYY-MM-DD format)
+                intended_end_date: finalEndDate, // Use hidden input value (YYYY-MM-DD format)
                 intended_end_time: document.getElementById('update-end-time').value || null
             };
+            
+            console.log('Submitting update with formData:', formData);
 
             // Validate start date is tomorrow or later
             const tomorrow = new Date();
@@ -1210,11 +1290,31 @@
                     showMessage(response.message || 'Reservation updated successfully', 'success');
                     loadReservations();
                 } else {
-                    showMessage(response?.message || 'Failed to update reservation', 'error');
+                    // Show detailed error message if available
+                    const errorMsg = response?.message || response?.error || 'Failed to update reservation';
+                    const errors = response?.errors;
+                    if (errors && typeof errors === 'object') {
+                        const errorDetails = Object.values(errors).flat().join(', ');
+                        showMessage(`${errorMsg}: ${errorDetails}`, 'error');
+                    } else {
+                        showMessage(errorMsg, 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Error updating reservation:', error);
-                showMessage('Error updating reservation: ' + (error.message || 'Unknown error'), 'error');
+                let errorMsg = 'Failed to update reservation';
+                if (error.response) {
+                    const response = error.response;
+                    if (response.errors) {
+                        const errors = Object.values(response.errors).flat().join(', ');
+                        errorMsg = `${response.message || errorMsg}: ${errors}`;
+                    } else if (response.message) {
+                        errorMsg = response.message;
+                    }
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                showMessage(errorMsg, 'error');
             }
         }
 
