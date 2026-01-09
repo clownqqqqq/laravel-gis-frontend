@@ -428,6 +428,18 @@
             border-color: #0d6efd;
             box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
         }
+        /* Date picker styling - show custom mm/dd/yyyy display overlay */
+        input[type="date"] {
+            position: relative;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 1;
+            position: absolute;
+            right: 100px;
+            width: 20px;
+            height: 20px;
+        }
     </style>
 </head>
 <body>
@@ -980,35 +992,37 @@
                                 <label class="form-label">Start Date & Time *</label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
-                                        <input type="hidden" id="update-start-date-hidden">
-                                        <input type="text" id="update-start-date" class="form-input" placeholder="mm/dd/yyyy" required value="${startDateValue ? (() => {
+                                        <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
+                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px;" onchange="updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden'); validateUpdateStartDate();">
+                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${startDateValue ? (() => {
                                             const date = new Date(reservation.intended_start_date);
                                             const month = date.getMonth() + 1;
                                             const day = date.getDate();
                                             const year = date.getFullYear();
                                             return `${month}/${day}/${year}`;
-                                        })() : ''}" oninput="formatDateInput(this)" onblur="syncDateInput(this, 'update-start-date-hidden'); validateUpdateStartDate();" maxlength="10">
+                                        })() : ''}</span>
                                     </div>
                                     <input type="time" id="update-start-time" class="form-input" value="${reservation.intended_start_time || ''}">
                                 </div>
-                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Enter date in mm/dd/yyyy format (e.g., 1/10/2026). Start date must be tomorrow or later</small>
+                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date (displays as mm/dd/yyyy). Start date must be tomorrow or later</small>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">End Date & Time (Optional)</label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
-                                        <input type="hidden" id="update-end-date-hidden">
-                                        <input type="text" id="update-end-date" class="form-input" placeholder="mm/dd/yyyy" value="${endDateValue ? (() => {
+                                        <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');">
+                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;">${endDateValue ? (() => {
                                             const date = new Date(reservation.intended_end_date);
                                             const month = date.getMonth() + 1;
                                             const day = date.getDate();
                                             const year = date.getFullYear();
                                             return `${month}/${day}/${year}`;
-                                        })() : ''}" oninput="formatDateInput(this)" onblur="syncDateInput(this, 'update-end-date-hidden');" maxlength="10">
+                                        })() : ''}</span>
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${reservation.intended_end_time || ''}">
                                 </div>
-                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Enter date in mm/dd/yyyy format (e.g., 1/15/2026)</small>
+                                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">Select date (displays as mm/dd/yyyy)</small>
                             </div>
                             <div style="display: flex; gap: 10px; margin-top: 24px;">
                                 <button type="button" onclick="closeUpdateModal()" class="btn" style="flex: 1; background: #6c757d;">Cancel</button>
@@ -1042,27 +1056,11 @@
             
             // Function to validate start date is tomorrow or later
             window.validateUpdateStartDate = function() {
-                const startDateText = startDateInput.value.trim();
-                if (!startDateText) return true;
+                if (!startDateInput || !startDateInput.value) return true;
                 
-                const parts = startDateText.split('/');
-                if (parts.length !== 3) {
-                    showMessage('Please enter date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
-                    return false;
-                }
-                
-                const month = parseInt(parts[0], 10);
-                const day = parseInt(parts[1], 10);
-                const year = parseInt(parts[2], 10);
-                
-                if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
-                    showMessage('Invalid date. Please enter date in mm/dd/yyyy format', 'error');
-                    return false;
-                }
-                
-                const startDate = new Date(year, month - 1, day);
-                if (startDate.getFullYear() !== year || startDate.getMonth() !== month - 1 || startDate.getDate() !== day) {
-                    showMessage('Invalid date. Please check the date you entered.', 'error');
+                const startDate = new Date(startDateInput.value + 'T00:00:00');
+                if (isNaN(startDate.getTime())) {
+                    showMessage('Invalid date selected', 'error');
                     return false;
                 }
                 
@@ -1071,10 +1069,10 @@
                 tomorrow.setHours(0, 0, 0, 0);
                 
                 if (startDate < tomorrow) {
-                    const tomorrowStr = `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}/${tomorrow.getFullYear()}`;
+                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
                     showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                     startDateInput.value = tomorrowStr;
-                    syncDateInput(startDateInput, 'update-start-date-hidden');
+                    updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
                     return false;
                 }
                 
@@ -1082,48 +1080,18 @@
             };
             
             function validateUpdateDateTime() {
-                const endDateText = endDateInput.value.trim();
-                if (!endDateText && !endTimeInput.value) return true;
+                if (!endDateInput.value && !endTimeInput.value) return true;
                 
-                if (!endDateText) {
+                if (!endDateInput.value) {
                     return true; // End date is optional
                 }
                 
-                const endParts = endDateText.split('/');
-                if (endParts.length !== 3) {
-                    showMessage('Please enter end date in mm/dd/yyyy format', 'error');
+                if (!startDateInput.value) {
                     return false;
                 }
                 
-                const endMonth = parseInt(endParts[0], 10);
-                const endDay = parseInt(endParts[1], 10);
-                const endYear = parseInt(endParts[2], 10);
-                
-                if (isNaN(endMonth) || isNaN(endDay) || isNaN(endYear)) {
-                    return false;
-                }
-                
-                const endDate = new Date(endYear, endMonth - 1, endDay);
-                const startDateText = startDateInput.value.trim();
-                
-                if (!startDateText) {
-                    return false;
-                }
-                
-                const startParts = startDateText.split('/');
-                if (startParts.length !== 3) {
-                    return false;
-                }
-                
-                const startMonth = parseInt(startParts[0], 10);
-                const startDay = parseInt(startParts[1], 10);
-                const startYear = parseInt(startParts[2], 10);
-                
-                if (isNaN(startMonth) || isNaN(startDay) || isNaN(startYear)) {
-                    return false;
-                }
-                
-                const startDate = new Date(startYear, startMonth - 1, startDay);
+                const startDate = new Date(startDateInput.value + 'T00:00:00');
+                const endDate = new Date(endDateInput.value + 'T00:00:00');
                 const startTime = startTimeInput.value || '00:00';
                 const endTime = endTimeInput.value || '23:59';
                 
@@ -1142,9 +1110,26 @@
                 return true;
             }
             
+            // Initialize date displays on load
+            if (startDateInput && startDateInput.value) {
+                updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+            }
+            if (endDateInput && endDateInput.value) {
+                updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+            }
+            
+            // Update end date min when start date changes
+            startDateInput.addEventListener('change', function() {
+                if (this.value) {
+                    endDateInput.min = this.value;
+                }
+                updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');
+                validateUpdateStartDate();
+            });
+            
             startTimeInput.addEventListener('change', validateUpdateDateTime);
-            endDateInput.addEventListener('blur', function() {
-                syncDateInput(this, 'update-end-date-hidden');
+            endDateInput.addEventListener('change', function() {
+                updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');
                 validateUpdateDateTime();
             });
             endTimeInput.addEventListener('change', validateUpdateDateTime);
