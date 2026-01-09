@@ -454,6 +454,7 @@
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
+            text-align: left !important;
         }
     </style>
 </head>
@@ -1154,7 +1155,7 @@
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
                                         <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
-                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: center;"></span>
+                                        <span id="update-start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
                                     </div>
                                     <input type="time" id="update-start-time" class="form-input" value="${startTimeValue}">
                                 </div>
@@ -1166,7 +1167,7 @@
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
                                         <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
-                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: center;"></span>
+                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: left;"></span>
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
                                 </div>
