@@ -1003,17 +1003,17 @@
                                     <div>
                                         <span class="info-label">Start:</span>
                                         <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_start_date) : (reservation.intended_start_date ? (() => {
-                                            // Parse date explicitly to avoid timezone issues
-                                            const dateStr = reservation.intended_start_date.split('T')[0];
+                                            // CRITICAL: Parse date directly from string components - NEVER use Date objects
+                                            // This avoids all timezone conversion issues
+                                            const dateStr = reservation.intended_start_date.split('T')[0]; // Extract YYYY-MM-DD
                                             const parts = dateStr.split('-');
-                                            const date = parts.length === 3 
-                                                ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
-                                                : new Date(reservation.intended_start_date);
-                                            // Use UTC methods to match Date.UTC() creation and avoid timezone shifts
-                                            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                                            const day = String(date.getUTCDate()).padStart(2, '0');
-                                            const year = String(date.getUTCFullYear()); // Full year
-                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            if (parts.length === 3) {
+                                                const year = parts[0];   // YYYY
+                                                const month = parts[1];  // MM
+                                                const day = parts[2];    // DD
+                                                return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            }
+                                            return dateStr; // Fallback to original if parsing fails
                                         })() : 'N/A')}${reservation.intended_start_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
                                             let timeStr = reservation.intended_start_time;
@@ -1036,17 +1036,17 @@
                                     <div>
                                         <span class="info-label">End:</span>
                                         <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_end_date) : (() => {
-                                            // Parse date explicitly to avoid timezone issues
-                                            const dateStr = reservation.intended_end_date.split('T')[0];
+                                            // CRITICAL: Parse date directly from string components - NEVER use Date objects
+                                            // This avoids all timezone conversion issues
+                                            const dateStr = reservation.intended_end_date.split('T')[0]; // Extract YYYY-MM-DD
                                             const parts = dateStr.split('-');
-                                            const date = parts.length === 3 
-                                                ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
-                                                : new Date(reservation.intended_end_date);
-                                            // Use UTC methods to match Date.UTC() creation and avoid timezone shifts
-                                            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-                                            const day = String(date.getUTCDate()).padStart(2, '0');
-                                            const year = String(date.getUTCFullYear()); // Full year
-                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            if (parts.length === 3) {
+                                                const year = parts[0];   // YYYY
+                                                const month = parts[1];  // MM
+                                                const day = parts[2];    // DD
+                                                return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            }
+                                            return dateStr; // Fallback to original if parsing fails
                                         })()}${reservation.intended_end_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
                                             let timeStr = reservation.intended_end_time;
