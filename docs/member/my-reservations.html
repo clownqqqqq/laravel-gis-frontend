@@ -1155,10 +1155,23 @@
                 return '';
             };
             
+            // Parse dates using same method as display to ensure consistency
             const startDateValue = formatDateForInput(reservation.intended_start_date);
             const endDateValue = formatDateForInput(reservation.intended_end_date);
             const startTimeValue = normalizeTimeForInput(reservation.intended_start_time || '');
             const endTimeValue = normalizeTimeForInput(reservation.intended_end_time || '');
+            
+            // Debug: Log the parsed values to verify they match the display
+            console.log('Update Reservation - Parsed values:', {
+                original_start_date: reservation.intended_start_date,
+                parsed_start_date: startDateValue,
+                original_start_time: reservation.intended_start_time,
+                parsed_start_time: startTimeValue,
+                original_end_date: reservation.intended_end_date,
+                parsed_end_date: endDateValue,
+                original_end_time: reservation.intended_end_time,
+                parsed_end_time: endTimeValue
+            });
             
             const modal = `
                 <div class="modal-overlay" onclick="closeUpdateModal(event)">
@@ -1231,11 +1244,20 @@
             const endDateHidden = document.getElementById('update-end-date-hidden');
             const endTimeInput = document.getElementById('update-end-time');
             
+            // CRITICAL: Set date input values FIRST before any initialization
+            // This ensures the date inputs have the correct YYYY-MM-DD values
+            if (startDateInput && startDateValue) {
+                startDateInput.value = startDateValue;
+            }
+            if (endDateInput && endDateValue) {
+                endDateInput.value = endDateValue;
+            }
+            
             // Initialize hidden inputs with YYYY-MM-DD format
-            if (startDateValue) {
+            if (startDateValue && startDateHidden) {
                 startDateHidden.value = startDateValue;
             }
-            if (endDateValue) {
+            if (endDateValue && endDateHidden) {
                 endDateHidden.value = endDateValue;
             }
             
@@ -1337,8 +1359,27 @@
             };
             
             // Initialize immediately and after DOM is ready
-            initDateDisplays();
-            setTimeout(initDateDisplays, 50);
+            // Use multiple timeouts to ensure DOM is fully ready and date inputs have values
+            const forceInit = () => {
+                // Re-ensure date inputs have values (in case they were cleared)
+                if (startDateInput && startDateValue && !startDateInput.value) {
+                    startDateInput.value = startDateValue;
+                }
+                if (endDateInput && endDateValue && !endDateInput.value) {
+                    endDateInput.value = endDateValue;
+                }
+                initDateDisplays();
+            };
+            
+            forceInit();
+            setTimeout(forceInit, 10);
+            setTimeout(forceInit, 50);
+            setTimeout(forceInit, 100);
+            
+            // Also initialize when modal is fully rendered
+            requestAnimationFrame(() => {
+                forceInit();
+            });
             
             // Update end date min when start date changes
             startDateInput.addEventListener('change', function() {
