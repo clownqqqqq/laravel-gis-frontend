@@ -601,12 +601,11 @@
         // SINGLE SOURCE OF TRUTH: This is the ONLY function that formats dates for display
         // Converts YYYY-MM-DD (from date input) to MM-DD-YYYY (for display overlay)
         // All date formatting must go through this function - NO duplicates, NO inline formatting
-        // IMPORTANT: Parameter order matches dashboard.js: (dateInput, displayId, hiddenInputId)
         if (typeof window.updateDateDisplayFromPicker === 'undefined') {
-            window.updateDateDisplayFromPicker = function(dateInput, displayId, hiddenInputId) {
+            window.updateDateDisplayFromPicker = function(dateInput, hiddenInputId, displayId) {
                 // Get elements
+                const hiddenInput = document.getElementById(hiddenInputId);
                 const displayElement = displayId ? document.getElementById(displayId) : null;
-                const hiddenInput = hiddenInputId ? document.getElementById(hiddenInputId) : null;
                 
                 // Validate input
                 if (!dateInput || !dateInput.value) {
@@ -616,14 +615,11 @@
                 }
                 
                 // Store YYYY-MM-DD format in hidden input (for API submission)
-                // CRITICAL: Use the value directly from dateInput without any Date object conversion
-                // to avoid timezone shift issues
                 if (hiddenInput) {
                     hiddenInput.value = dateInput.value;
                 }
                 
                 // Format as MM-DD-YYYY for display overlay - THIS IS THE ONLY FORMATTING
-                // CRITICAL: Parse directly from string components to avoid timezone conversion
                 if (displayElement) {
                     const dateStr = dateInput.value.split('T')[0]; // Get date part only (YYYY-MM-DD)
                     const parts = dateStr.split('-');
@@ -1131,38 +1127,26 @@
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
             
             // Format dates for date input (YYYY-MM-DD format required)
-            // CRITICAL: Always parse dates directly from string components to avoid timezone conversion issues
-            // Never use new Date() constructor on date-only strings as it can shift dates by timezone offset
+            // Use same parsing method as display to avoid timezone issues
             const formatDateForInput = (dateString) => {
                 if (!dateString) return '';
-                
-                // Extract date part only (remove time if present)
+                // Parse date explicitly to avoid timezone issues (same as display function)
                 const dateStr = dateString.split('T')[0];
-                
-                // Parse directly from string components (YYYY-MM-DD format)
                 const parts = dateStr.split('-');
                 if (parts.length === 3) {
+                    // Use UTC to avoid timezone conversion
                     const year = parts[0];
                     const month = parts[1];
                     const day = parts[2];
-                    
-                    // Validate the parts are valid numbers
-                    if (/^\d{4}$/.test(year) && /^\d{2}$/.test(month) && /^\d{2}$/.test(day)) {
-                        // Return directly without any Date object conversion
-                        // This prevents timezone shift issues
-                        return `${year}-${month}-${day}`;
-                    }
+                    return `${year}-${month}-${day}`;
                 }
-                
-                // If format is unexpected, try to extract YYYY-MM-DD pattern
-                const dateMatch = dateString.match(/(\d{4})-(\d{2})-(\d{2})/);
-                if (dateMatch) {
-                    return `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`;
-                }
-                
-                // Last resort: return empty string (don't use Date constructor to avoid timezone issues)
-                console.warn('Could not parse date format:', dateString);
-                return '';
+                // Fallback to Date parsing if format is different
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             };
             
             // Normalize time for time input (HH:MM format required)
@@ -1245,7 +1229,7 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-start-date-hidden" value="${startDateValue}">
-                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
+                                        <input type="date" id="update-start-date" class="form-input" required min="${tomorrowStr}" value="${startDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');} if(typeof window.validateUpdateStartDate==='function'){window.validateUpdateStartDate();}">
                                         <span id="update-start-date-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 75px; text-align: left;"></span>
                                     </div>
                                     <div style="position: relative;">
@@ -1260,7 +1244,7 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding: 8px 85px 8px 12px; font-size: 14px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');} if(typeof window.validateUpdateDateTime==='function'){window.validateUpdateDateTime();}">
                                         <span id="update-end-date-display" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 75px; text-align: left;"></span>
                                     </div>
                                     <div style="position: relative;">
@@ -1328,7 +1312,7 @@
                     showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                     startDateInput.value = tomorrowStr;
                     if (typeof window.updateDateDisplayFromPicker === 'function') {
-                        window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                        window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
                     }
                     return false;
                 }
@@ -1391,10 +1375,10 @@
             // SINGLE SOURCE OF TRUTH: Only updateDateDisplayFromPicker formats dates for display
             const initDateDisplays = () => {
                 if (startDateInput && startDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                    window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
                 }
                 if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+                    window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
                 }
                 // Initialize time displays
                 if (startTimeInput && typeof window.updateTimeDisplay === 'function') {
@@ -1434,7 +1418,7 @@
                     endDateInput.min = this.value;
                 }
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(this, 'update-start-date-display', 'update-start-date-hidden');
+                    window.updateDateDisplayFromPicker(this, 'update-start-date-hidden', 'update-start-date-display');
                 }
                 validateUpdateStartDate();
             });
@@ -1445,7 +1429,7 @@
             });
             endDateInput.addEventListener('change', function() {
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
-                    window.updateDateDisplayFromPicker(this, 'update-end-date-display', 'update-end-date-hidden');
+                    window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');
                 }
                 validateUpdateDateTime();
             });
@@ -1474,10 +1458,10 @@
             
             // Sync dates to hidden inputs and update displays before submission (if function exists)
             if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-display', 'update-start-date-hidden');
+                window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
             }
             if (endDateInput && endDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
-                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-display', 'update-end-date-hidden');
+                window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
             }
             
             // Get date values directly from date inputs (they're already in YYYY-MM-DD format)
