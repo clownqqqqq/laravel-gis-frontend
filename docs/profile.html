@@ -246,6 +246,7 @@
                         <button type="button" onclick="document.getElementById('profile_picture').click()" class="btn btn-outline">
                             <span>📷</span> Change Picture
                         </button>
+                        <small style="display: block; margin-top: 8px; color: #6b7280; font-size: 12px;">Max file size: 10MB</small>
                     </div>
 
                     <!-- Right Column - Form -->
@@ -296,7 +297,7 @@
                     </h4>
                     <form id="change-password-form" onsubmit="changePassword(event); return false;">
                         <div class="form-group">
-                            <label for="current_password">Current Password </label>
+                            <label for="current_password">Current Password (optional)</label>
                             <input type="password" id="current_password" name="current_password" 
                                    placeholder="Enter your current password (optional)">
                         </div>
@@ -403,6 +404,21 @@
         function handleProfilePictureChange(event) {
             const file = event.target.files[0];
             if (file) {
+                // Validate file size (10MB = 10 * 1024 * 1024 bytes)
+                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                if (file.size > maxSize) {
+                    showMessage('Profile picture size must be less than 10MB. Please choose a smaller image.', 'error');
+                    event.target.value = ''; // Clear the file input
+                    return;
+                }
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showMessage('Please select a valid image file.', 'error');
+                    event.target.value = ''; // Clear the file input
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('profile-picture-img').src = e.target.result;
@@ -569,5 +585,4 @@
     </script>
 </body>
 </html>
-
 
