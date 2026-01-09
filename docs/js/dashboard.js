@@ -59,6 +59,38 @@ window.syncDateInput = function(textInput, hiddenInputId) {
     hiddenInput.value = formattedDate;
 };
 
+// Function to update date display from date picker (YYYY-MM-DD to mm/dd/yyyy)
+window.updateDateDisplayFromPicker = function(dateInput, displayId, hiddenInputId) {
+    const displayElement = document.getElementById(displayId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    
+    if (!dateInput || !dateInput.value) {
+        if (displayElement) displayElement.textContent = '';
+        if (hiddenInput) hiddenInput.value = '';
+        return;
+    }
+    
+    // Date input already has YYYY-MM-DD format, store it in hidden input
+    if (hiddenInput) {
+        hiddenInput.value = dateInput.value;
+    }
+    
+    // Convert to mm/dd/yyyy for display
+    const date = new Date(dateInput.value + 'T00:00:00');
+    if (isNaN(date.getTime())) {
+        if (displayElement) displayElement.textContent = '';
+        return;
+    }
+    
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    if (displayElement) {
+        displayElement.textContent = `${month}/${day}/${year}`;
+    }
+};
+
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Mark page load time for auth error handling
@@ -1111,15 +1143,16 @@ window.declareIntendedUse = async function(locationId) {
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="start-date-hidden" name="intended_start_date">
-                                        <input type="text" id="start-date" placeholder="mm/dd/yyyy" required style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; syncDateInput(this, 'start-date-hidden');" oninput="formatDateInput(this)" maxlength="10">
+                                        <input type="date" id="start-date" required min="${tomorrowStr}" style="width: 100%; padding: 14px 16px 14px 120px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';" onchange="updateDateDisplayFromPicker(this, 'start-date-display', 'start-date-hidden');">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                        <span id="start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="start-time" name="intended_start_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Enter date in mm/dd/yyyy format (e.g., 1/10/2026). Time is optional, defaults to 12:00 AM</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as mm/dd/yyyy). Time is optional, defaults to 12:00 AM</small>
                             </div>
                             
                             <!-- End Date and Time -->
@@ -1130,15 +1163,16 @@ window.declareIntendedUse = async function(locationId) {
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="end-date-hidden" name="intended_end_date">
-                                        <input type="text" id="end-date" placeholder="mm/dd/yyyy" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; syncDateInput(this, 'end-date-hidden');" oninput="formatDateInput(this)" maxlength="10">
+                                        <input type="date" id="end-date" style="width: 100%; padding: 14px 16px 14px 120px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';" onchange="updateDateDisplayFromPicker(this, 'end-date-display', 'end-date-hidden');">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                        <span id="end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="end-time" name="intended_end_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Enter date in mm/dd/yyyy format (e.g., 1/15/2026). Must be after start date/time. Time defaults to 11:59 PM if not specified</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date (displays as mm/dd/yyyy). Must be after start date/time. Time defaults to 11:59 PM if not specified</small>
                             </div>
                         </div>
                         
@@ -1185,38 +1219,21 @@ window.declareIntendedUse = async function(locationId) {
     const endDateHidden = document.getElementById('end-date-hidden');
     const endTimeInput = document.getElementById('end-time');
     
-    // Ensure inputs are text type (not date)
-    if (startDateInput && startDateInput.type !== 'text') {
-        startDateInput.type = 'text';
+    // Initialize date displays if values exist
+    if (startDateInput && startDateInput.value) {
+        updateDateDisplayFromPicker(startDateInput, 'start-date-display', 'start-date-hidden');
     }
-    if (endDateInput && endDateInput.type !== 'text') {
-        endDateInput.type = 'text';
+    if (endDateInput && endDateInput.value) {
+        updateDateDisplayFromPicker(endDateInput, 'end-date-display', 'end-date-hidden');
     }
     
     // Function to validate start date/time must be tomorrow or later
     function validateStartDateTime() {
-        const startDateText = startDateInput.value.trim();
-        if (!startDateText) return true;
+        if (!startDateInput || !startDateInput.value) return true;
         
-        // Parse mm/dd/yyyy format
-        const parts = startDateText.split('/');
-        if (parts.length !== 3) {
-            showMessage('Please enter date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
-            return false;
-        }
-        
-        const month = parseInt(parts[0], 10);
-        const day = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
-        
-        if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
-            showMessage('Invalid date. Please enter date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
-            return false;
-        }
-        
-        const startDate = new Date(year, month - 1, day);
-        if (startDate.getFullYear() !== year || startDate.getMonth() !== month - 1 || startDate.getDate() !== day) {
-            showMessage('Invalid date. Please check the date you entered.', 'error');
+        const startDate = new Date(startDateInput.value + 'T00:00:00');
+        if (isNaN(startDate.getTime())) {
+            showMessage('Invalid date selected', 'error');
             return false;
         }
         
@@ -1226,29 +1243,32 @@ window.declareIntendedUse = async function(locationId) {
         
         // Check if date is today or in the past (must be tomorrow or later)
         if (startDate < tomorrow) {
-            const tomorrowStr = `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}/${tomorrow.getFullYear()}`;
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
             showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
             startDateInput.value = tomorrowStr;
-            syncDateInput(startDateInput, 'start-date-hidden');
+            updateDateDisplayFromPicker(startDateInput, 'start-date-display', 'start-date-hidden');
             startTimeInput.value = '';
             return false;
         }
         
         // Sync to hidden input
-        syncDateInput(startDateInput, 'start-date-hidden');
+        updateDateDisplayFromPicker(startDateInput, 'start-date-display', 'start-date-hidden');
         return true;
     }
     
     // Update end date validation when start date changes
-    startDateInput.addEventListener('blur', function() {
+    startDateInput.addEventListener('change', function() {
         validateStartDateTime();
+        if (this.value) {
+            endDateInput.min = this.value;
+        }
         if (endDateInput.value) {
             validateEndDateTime();
         }
     });
     
-    endDateInput.addEventListener('blur', function() {
-        syncDateInput(this, 'end-date-hidden');
+    endDateInput.addEventListener('change', function() {
+        updateDateDisplayFromPicker(this, 'end-date-display', 'end-date-hidden');
         validateEndDateTime();
     });
     
@@ -1259,57 +1279,19 @@ window.declareIntendedUse = async function(locationId) {
     
     // Validate end date/time when changed
     function validateEndDateTime() {
-        const endDateText = endDateInput.value.trim();
-        if (!endDateText && !endTimeInput.value) return true;
+        if (!endDateInput.value && !endTimeInput.value) return true;
         
-        if (!endDateText) {
-            showMessage('Please enter an end date in mm/dd/yyyy format', 'error');
+        if (!endDateInput.value) {
+            return true; // End date is optional
+        }
+        
+        if (!startDateInput.value) {
+            showMessage('Please select a start date first', 'error');
             return false;
         }
         
-        // Parse end date
-        const endParts = endDateText.split('/');
-        if (endParts.length !== 3) {
-            showMessage('Please enter end date in mm/dd/yyyy format (e.g., 1/15/2026)', 'error');
-            return false;
-        }
-        
-        const endMonth = parseInt(endParts[0], 10);
-        const endDay = parseInt(endParts[1], 10);
-        const endYear = parseInt(endParts[2], 10);
-        
-        if (isNaN(endMonth) || isNaN(endDay) || isNaN(endYear) || endMonth < 1 || endMonth > 12 || endDay < 1 || endDay > 31) {
-            showMessage('Invalid end date. Please enter date in mm/dd/yyyy format', 'error');
-            return false;
-        }
-        
-        const endDate = new Date(endYear, endMonth - 1, endDay);
-        if (endDate.getFullYear() !== endYear || endDate.getMonth() !== endMonth - 1 || endDate.getDate() !== endDay) {
-            showMessage('Invalid end date. Please check the date you entered.', 'error');
-            return false;
-        }
-        
-        // Parse start date
-        const startDateText = startDateInput.value.trim();
-        if (!startDateText) {
-            showMessage('Please enter a start date first', 'error');
-            return false;
-        }
-        
-        const startParts = startDateText.split('/');
-        if (startParts.length !== 3) {
-            return false;
-        }
-        
-        const startMonth = parseInt(startParts[0], 10);
-        const startDay = parseInt(startParts[1], 10);
-        const startYear = parseInt(startParts[2], 10);
-        
-        if (isNaN(startMonth) || isNaN(startDay) || isNaN(startYear)) {
-            return false;
-        }
-        
-        const startDate = new Date(startYear, startMonth - 1, startDay);
+        const startDate = new Date(startDateInput.value + 'T00:00:00');
+        const endDate = new Date(endDateInput.value + 'T00:00:00');
         const startTime = startTimeInput.value || '00:00';
         const endTime = endTimeInput.value || '23:59';
         
@@ -1437,19 +1419,19 @@ window.submitReservation = async function(event, locationId) {
     const endDateInput = document.getElementById('end-date');
     const endDateHidden = document.getElementById('end-date-hidden');
     
-    if (startDateInput && startDateHidden && typeof window.syncDateInput === 'function') {
-        window.syncDateInput(startDateInput, 'start-date-hidden');
+    if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
+        window.updateDateDisplayFromPicker(startDateInput, 'start-date-display', 'start-date-hidden');
     }
-    if (endDateInput && endDateHidden && typeof window.syncDateInput === 'function') {
-        window.syncDateInput(endDateInput, 'end-date-hidden');
+    if (endDateInput && endDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
+        window.updateDateDisplayFromPicker(endDateInput, 'end-date-display', 'end-date-hidden');
     }
     
     // Get dates from hidden inputs (already in YYYY-MM-DD format)
-    const startDate = startDateHidden ? startDateHidden.value : '';
-    const endDate = endDateHidden ? endDateHidden.value : '';
+    const startDate = startDateHidden ? startDateHidden.value : (startDateInput ? startDateInput.value : '');
+    const endDate = endDateHidden ? endDateHidden.value : (endDateInput ? endDateInput.value : '');
     
     if (!startDate) {
-        const errorMsg = 'Please enter a valid start date in mm/dd/yyyy format (e.g., 1/10/2026)';
+        const errorMsg = 'Please select a valid start date';
         showModalError(errorMsg);
         showMessage(errorMsg, 'error');
         return;
