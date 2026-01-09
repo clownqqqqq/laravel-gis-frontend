@@ -737,12 +737,24 @@
                                     </div>
                                     <div>
                                         <span class="info-label">Start:</span>
-                                        <span class="info-value">${new Date(reservation.intended_start_date).toLocaleDateString()}${reservation.intended_start_time ? ' ' + new Date('2000-01-01T' + reservation.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
+                                        <span class="info-value">${(() => {
+                                            const date = new Date(reservation.intended_start_date);
+                                            const month = date.getMonth() + 1;
+                                            const day = date.getDate();
+                                            const year = date.getFullYear();
+                                            return `${month}/${day}/${year}`;
+                                        })()}${reservation.intended_start_time ? ' ' + new Date('2000-01-01T' + reservation.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
                                     </div>
                                     ${reservation.intended_end_date ? `
                                     <div>
                                         <span class="info-label">End:</span>
-                                        <span class="info-value">${new Date(reservation.intended_end_date).toLocaleDateString()}${reservation.intended_end_time ? ' ' + new Date('2000-01-01T' + reservation.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
+                                        <span class="info-value">${(() => {
+                                            const date = new Date(reservation.intended_end_date);
+                                            const month = date.getMonth() + 1;
+                                            const day = date.getDate();
+                                            const year = date.getFullYear();
+                                            return `${month}/${day}/${year}`;
+                                        })()}${reservation.intended_end_time ? ' ' + new Date('2000-01-01T' + reservation.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</span>
                                     </div>
                                     ` : ''}
                                 </div>
