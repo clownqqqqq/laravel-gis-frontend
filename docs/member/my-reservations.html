@@ -937,7 +937,15 @@
                                             const day = String(date.getDate()).padStart(2, '0');
                                             const year = String(date.getFullYear()).slice(-2);
                                             return `${month}-${day}-${year}`;
-                                        })() : 'N/A')}${reservation.intended_start_time ? ' ' + (reservation.intended_start_time.includes(':') ? reservation.intended_start_time.substring(0, 5) : reservation.intended_start_time) : ''}</span>
+                                        })() : 'N/A')}${reservation.intended_start_time ? (() => {
+                                            // Convert 24-hour format to 12-hour format for display
+                                            const timeStr = reservation.intended_start_time.includes(':') ? reservation.intended_start_time.substring(0, 5) : reservation.intended_start_time;
+                                            const [hours, minutes] = timeStr.split(':');
+                                            const hour24 = parseInt(hours, 10);
+                                            const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                                            return ` ${hour12}:${minutes} ${ampm}`;
+                                        })() : ''}</span>
                                     </div>
                                     ${reservation.intended_end_date ? `
                                     <div>
@@ -948,7 +956,15 @@
                                             const day = String(date.getDate()).padStart(2, '0');
                                             const year = String(date.getFullYear()).slice(-2);
                                             return `${month}-${day}-${year}`;
-                                        })()}${reservation.intended_end_time ? ' ' + (reservation.intended_end_time.includes(':') ? reservation.intended_end_time.substring(0, 5) : reservation.intended_end_time) : ''}</span>
+                                        })()}${reservation.intended_end_time ? (() => {
+                                            // Convert 24-hour format to 12-hour format for display
+                                            const timeStr = reservation.intended_end_time.includes(':') ? reservation.intended_end_time.substring(0, 5) : reservation.intended_end_time;
+                                            const [hours, minutes] = timeStr.split(':');
+                                            const hour24 = parseInt(hours, 10);
+                                            const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                                            return ` ${hour12}:${minutes} ${ampm}`;
+                                        })() : ''}</span>
                                     </div>
                                     ` : ''}
                                 </div>
@@ -1296,31 +1312,30 @@
             
             console.log('Final date values:', { finalStartDate, finalEndDate });
             
-            // Get time values - convert empty strings to null
+            // Get time values from HTML5 time inputs (they always return HH:MM format in 24-hour)
             let startTimeValue = startTimeInput ? startTimeInput.value.trim() : '';
             let endTimeValue = endTimeInput ? endTimeInput.value.trim() : '';
             
             console.log('Raw time values from inputs:', { startTimeValue, endTimeValue });
             
-            // Normalize time format to HH:MM (remove seconds if present)
-            const normalizeTime = (timeStr) => {
+            // HTML5 time inputs always return HH:MM format (24-hour), but let's ensure it's correct
+            const normalizeTimeTo24Hour = (timeStr) => {
                 if (!timeStr || timeStr === '') return null;
                 
                 // Remove any whitespace
                 timeStr = timeStr.trim();
                 
-                // If it's already in HH:MM format, return it
+                // HTML5 time input should already be in HH:MM format
                 if (/^\d{2}:\d{2}$/.test(timeStr)) {
                     return timeStr;
                 }
                 
                 // If it's in HH:MM:SS format, extract HH:MM
                 if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
-                    return timeStr.substring(0, 5); // Extract first 5 characters (HH:MM)
+                    return timeStr.substring(0, 5);
                 }
                 
-                // Try to parse and reformat
-                // Handle formats like "1:55 PM" or "13:55:00"
+                // If somehow we get a 12-hour format (shouldn't happen with HTML5 time input, but handle it)
                 const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?/i);
                 if (timeMatch) {
                     let hours = parseInt(timeMatch[1], 10);
@@ -1337,24 +1352,26 @@
                     return `${String(hours).padStart(2, '0')}:${minutes}`;
                 }
                 
+                // If we can't parse it, return null
+                console.warn('Could not parse time format:', timeStr);
                 return null;
             };
             
-            // Normalize times
-            const startTime = normalizeTime(startTimeValue);
-            const endTime = normalizeTime(endTimeValue);
+            // Normalize times to 24-hour format (HH:MM)
+            const startTime = normalizeTimeTo24Hour(startTimeValue);
+            const endTime = normalizeTimeTo24Hour(endTimeValue);
             
-            console.log('Normalized time values:', { startTime, endTime });
+            console.log('Normalized time values (24-hour):', { startTime, endTime });
             
-            // Validate time format if provided (should be HH:MM)
+            // Validate time format if provided (must be HH:MM in 24-hour format)
             if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
                 console.error('Invalid start time format after normalization:', startTime);
-                showMessage('Invalid start time format. Please use HH:MM format (e.g., 13:55).', 'error');
+                showMessage('Invalid start time format. The time input should be in HH:MM format (24-hour).', 'error');
                 return;
             }
             if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) {
                 console.error('Invalid end time format after normalization:', endTime);
-                showMessage('Invalid end time format. Please use HH:MM format (e.g., 13:55).', 'error');
+                showMessage('Invalid end time format. The time input should be in HH:MM format (24-hour).', 'error');
                 return;
             }
             
