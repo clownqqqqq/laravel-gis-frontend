@@ -1583,27 +1583,27 @@ window.viewIntendedUses = async function(locationId) {
                         <span style="background: ${use.status === 'approved' ? '#10b981' : use.status === 'rejected' ? '#ef4444' : '#f59e0b'}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: capitalize;">${use.status}</span>
                     </div>
                     ${use.description ? `<p style="margin: 8px 0; color: #475569;"><strong>Description:</strong> ${use.description}</p>` : ''}
-                    <p style="margin: 5px 0; color: #64748b;"><strong>Start:</strong> ${(() => {
+                    <p style="margin: 5px 0; color: #64748b;"><strong>Start:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_start_date) : (() => {
                         const date = new Date(use.intended_start_date);
-                        const month = date.getMonth() + 1;
-                        const day = date.getDate();
-                        const year = date.getFullYear();
-                        return `${month}/${day}/${year}`;
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const year = String(date.getFullYear()).slice(-2);
+                        return `${month}-${day}-${year}`;
                     })()}${use.intended_start_time ? ' at ' + new Date('2000-01-01T' + use.intended_start_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>
-                    ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End:</strong> ${(() => {
+                    ${use.intended_end_date ? `<p style="margin: 5px 0; color: #64748b;"><strong>End:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.intended_end_date) : (() => {
                         const date = new Date(use.intended_end_date);
-                        const month = date.getMonth() + 1;
-                        const day = date.getDate();
-                        const year = date.getFullYear();
-                        return `${month}/${day}/${year}`;
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const year = String(date.getFullYear()).slice(-2);
+                        return `${month}-${day}-${year}`;
                     })()}${use.intended_end_time ? ' at ' + new Date('2000-01-01T' + use.intended_end_time).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : ''}</p>` : ''}
                     <p style="margin: 5px 0; color: #64748b;"><strong>Reserved by:</strong> ${use.user ? use.user.username : 'Unknown'}</p>
-                    <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${(() => {
+                    <p style="margin: 5px 0; color: #64748b; font-size: 12px;"><strong>Submitted:</strong> ${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(use.created_at) : (() => {
                         const date = new Date(use.created_at);
-                        const month = date.getMonth() + 1;
-                        const day = date.getDate();
-                        const year = date.getFullYear();
-                        return `${month}/${day}/${year}`;
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const year = String(date.getFullYear()).slice(-2);
+                        return `${month}-${day}-${year}`;
                     })()}</p>
                 </div>
             `;
