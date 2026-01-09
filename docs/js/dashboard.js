@@ -1156,20 +1156,9 @@ window.declareIntendedUse = async function(locationId) {
             </div>
         </div>
         <style>
-            /* Custom date input styling for better calendar appearance */
-            input[type="date"]::-webkit-calendar-picker-indicator {
-                cursor: pointer;
-                opacity: 0;
-                position: absolute;
-                right: 0;
-                width: 100%;
-                height: 100%;
-            }
-            input[type="date"] {
-                position: relative;
-            }
-            input[type="date"]:hover {
-                border-color: #0d6efd !important;
+            /* Text input styling for date fields */
+            #start-date, #end-date {
+                font-family: monospace;
             }
         </style>
     `;
@@ -1195,6 +1184,14 @@ window.declareIntendedUse = async function(locationId) {
     const endDateInput = document.getElementById('end-date');
     const endDateHidden = document.getElementById('end-date-hidden');
     const endTimeInput = document.getElementById('end-time');
+    
+    // Ensure inputs are text type (not date)
+    if (startDateInput && startDateInput.type !== 'text') {
+        startDateInput.type = 'text';
+    }
+    if (endDateInput && endDateInput.type !== 'text') {
+        endDateInput.type = 'text';
+    }
     
     // Function to validate start date/time must be tomorrow or later
     function validateStartDateTime() {
@@ -1434,12 +1431,34 @@ window.closeReservationModal = function(event) {
 window.submitReservation = async function(event, locationId) {
     event.preventDefault();
     
+    // Sync date inputs to hidden inputs before submission
+    const startDateInput = document.getElementById('start-date');
+    const startDateHidden = document.getElementById('start-date-hidden');
+    const endDateInput = document.getElementById('end-date');
+    const endDateHidden = document.getElementById('end-date-hidden');
+    
+    if (startDateInput && startDateHidden && typeof window.syncDateInput === 'function') {
+        window.syncDateInput(startDateInput, 'start-date-hidden');
+    }
+    if (endDateInput && endDateHidden && typeof window.syncDateInput === 'function') {
+        window.syncDateInput(endDateInput, 'end-date-hidden');
+    }
+    
+    // Get dates from hidden inputs (already in YYYY-MM-DD format)
+    const startDate = startDateHidden ? startDateHidden.value : '';
+    const endDate = endDateHidden ? endDateHidden.value : '';
+    
+    if (!startDate) {
+        const errorMsg = 'Please enter a valid start date in mm/dd/yyyy format (e.g., 1/10/2026)';
+        showModalError(errorMsg);
+        showMessage(errorMsg, 'error');
+        return;
+    }
+    
     const form = document.getElementById('reservation-form');
     const formData = new FormData(form);
     
-    const startDate = formData.get('intended_start_date');
     const startTime = formData.get('intended_start_time') || '00:00';
-    const endDate = formData.get('intended_end_date');
     const endTime = formData.get('intended_end_time') || '23:59';
     
     // Validate dates
