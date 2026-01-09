@@ -397,7 +397,7 @@
                         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect fill='%23e0e0e0' width='80' height='80'/%3E%3Ctext x='50%25' y='50%25' font-size='32' text-anchor='middle' dy='.3em' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" alt="Default Profile" id="preview-image">
                     </div>
                     <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
-                    <small>Upload a profile picture to personalize your account, or use the default</small>
+                    <small>Upload a profile picture to personalize your account (Max: 10MB), or use the default</small>
                 </div>
 
                 <button type="submit" class="btn-primary">
@@ -438,10 +438,25 @@
         localStorage.clear();
         console.log('localStorage cleared on register page');
         
-        // Profile picture preview
+        // Profile picture preview with validation
         document.getElementById('profile_picture').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
+                // Validate file size (10MB = 10 * 1024 * 1024 bytes)
+                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                if (file.size > maxSize) {
+                    alert('Profile picture size must be less than 10MB. Please choose a smaller image.');
+                    e.target.value = ''; // Clear the file input
+                    return;
+                }
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    e.target.value = ''; // Clear the file input
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('preview-image').src = e.target.result;
