@@ -1053,16 +1053,16 @@ window.declareIntendedUse = async function(locationId) {
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
-                                        <input type="date" id="start-date" name="intended_start_date" required min="${tomorrow}" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'" onchange="updateDateDisplay(this, 'start-date-display')">
+                                        <input type="hidden" id="start-date-hidden" name="intended_start_date">
+                                        <input type="text" id="start-date" placeholder="mm/dd/yyyy" required style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; syncDateInput(this, 'start-date-hidden');" oninput="formatDateInput(this)" maxlength="10">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
-                                        <span id="start-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="start-time" name="intended_start_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Select date and time (time is optional, defaults to 12:00 AM)</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Enter date in mm/dd/yyyy format (e.g., 1/10/2026). Time is optional, defaults to 12:00 AM</small>
                             </div>
                             
                             <!-- End Date and Time -->
@@ -1072,16 +1072,16 @@ window.declareIntendedUse = async function(locationId) {
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
-                                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'" onchange="updateDateDisplay(this, 'end-date-display')">
+                                        <input type="hidden" id="end-date-hidden" name="intended_end_date">
+                                        <input type="text" id="end-date" placeholder="mm/dd/yyyy" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'; syncDateInput(this, 'end-date-hidden');" oninput="formatDateInput(this)" maxlength="10">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
-                                        <span id="end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="end-time" name="intended_end_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date/time (time defaults to 11:59 PM if not specified) - Format: mm/dd/yyyy</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Enter date in mm/dd/yyyy format (e.g., 1/15/2026). Must be after start date/time. Time defaults to 11:59 PM if not specified</small>
                             </div>
                         </div>
                         
@@ -1129,92 +1129,125 @@ window.declareIntendedUse = async function(locationId) {
     modal.innerHTML = formModal;
     document.body.appendChild(modal);
 
-    // Function to update date display in mm/dd/yyyy format (must be global for onchange)
-    window.updateDateDisplay = function(dateInput, displayId) {
-        const displayElement = document.getElementById(displayId);
-        if (!displayElement || !dateInput.value) {
-            if (displayElement) displayElement.textContent = '';
+    // Function to format date input as user types (mm/dd/yyyy)
+    window.formatDateInput = function(input) {
+        let value = input.value.replace(/\D/g, ''); // Remove non-digits
+        if (value.length > 8) value = value.substring(0, 8);
+        
+        // Add slashes automatically
+        if (value.length > 2) {
+            value = value.substring(0, 2) + '/' + value.substring(2);
+        }
+        if (value.length > 5) {
+            value = value.substring(0, 5) + '/' + value.substring(5);
+        }
+        
+        input.value = value;
+    };
+
+    // Function to sync text input (mm/dd/yyyy) to hidden input (YYYY-MM-DD)
+    window.syncDateInput = function(textInput, hiddenInputId) {
+        const hiddenInput = document.getElementById(hiddenInputId);
+        if (!hiddenInput) return;
+        
+        const value = textInput.value.trim();
+        if (!value) {
+            hiddenInput.value = '';
             return;
         }
-        const date = new Date(dateInput.value + 'T00:00:00');
-        if (isNaN(date.getTime())) {
-            displayElement.textContent = '';
+        
+        // Parse mm/dd/yyyy format
+        const parts = value.split('/');
+        if (parts.length !== 3) {
+            hiddenInput.value = '';
             return;
         }
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const year = date.getFullYear();
-        displayElement.textContent = `${month}/${day}/${year}`;
+        
+        const month = parseInt(parts[0], 10);
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        
+        if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
+            hiddenInput.value = '';
+            return;
+        }
+        
+        // Convert to YYYY-MM-DD format
+        const date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+            hiddenInput.value = '';
+            return;
+        }
+        
+        const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        hiddenInput.value = formattedDate;
     };
 
     // Set minimum end date based on start date and validate date+time
     const startDateInput = document.getElementById('start-date');
+    const startDateHidden = document.getElementById('start-date-hidden');
     const startTimeInput = document.getElementById('start-time');
     const endDateInput = document.getElementById('end-date');
+    const endDateHidden = document.getElementById('end-date-hidden');
     const endTimeInput = document.getElementById('end-time');
-    
-    // Initialize date displays if values exist
-    if (startDateInput && startDateInput.value) {
-        updateDateDisplay(startDateInput, 'start-date-display');
-    }
-    if (endDateInput && endDateInput.value) {
-        updateDateDisplay(endDateInput, 'end-date-display');
-    }
     
     // Function to validate start date/time must be tomorrow or later
     function validateStartDateTime() {
-        const startDate = startDateInput.value;
-        const startTime = startTimeInput.value || '00:00';
+        const startDateText = startDateInput.value.trim();
+        if (!startDateText) return true;
         
-        if (!startDate) return true;
+        // Parse mm/dd/yyyy format
+        const parts = startDateText.split('/');
+        if (parts.length !== 3) {
+            showMessage('Please enter date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
+            return false;
+        }
+        
+        const month = parseInt(parts[0], 10);
+        const day = parseInt(parts[1], 10);
+        const year = parseInt(parts[2], 10);
+        
+        if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
+            showMessage('Invalid date. Please enter date in mm/dd/yyyy format (e.g., 1/10/2026)', 'error');
+            return false;
+        }
+        
+        const startDate = new Date(year, month - 1, day);
+        if (startDate.getFullYear() !== year || startDate.getMonth() !== month - 1 || startDate.getDate() !== day) {
+            showMessage('Invalid date. Please check the date you entered.', 'error');
+            return false;
+        }
         
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(0, 0, 0, 0);
-        const tomorrowStr = tomorrow.toISOString().split('T')[0];
-        const startDateTime = new Date(startDate + 'T' + startTime);
         
         // Check if date is today or in the past (must be tomorrow or later)
-        if (startDate < tomorrowStr) {
+        if (startDate < tomorrow) {
+            const tomorrowStr = `${tomorrow.getMonth() + 1}/${tomorrow.getDate()}/${tomorrow.getFullYear()}`;
             showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
             startDateInput.value = tomorrowStr;
+            syncDateInput(startDateInput, 'start-date-hidden');
             startTimeInput.value = '';
             return false;
         }
         
-        // If date is tomorrow, check if time is in the past
-        if (startDate === tomorrowStr && startDateTime < tomorrow) {
-            const errorMsg = 'Start time cannot be in the past. Please select a future time.';
-            showMessage(errorMsg, 'error');
-            // Set min time to midnight
-            startTimeInput.value = '00:00';
-            return false;
-        }
-        
-        // If date is today, set min time to current time
-        if (startDate === today) {
-            const currentHour = now.getHours().toString().padStart(2, '0');
-            const currentMinute = (now.getMinutes() + 1).toString().padStart(2, '0');
-            startTimeInput.min = `${currentHour}:${currentMinute}`;
-        } else {
-            // For future dates, remove min time restriction
-            startTimeInput.removeAttribute('min');
-        }
-        
+        // Sync to hidden input
+        syncDateInput(startDateInput, 'start-date-hidden');
         return true;
     }
     
-    // Update end date min when start date changes
-    startDateInput.addEventListener('change', function() {
+    // Update end date validation when start date changes
+    startDateInput.addEventListener('blur', function() {
         validateStartDateTime();
-        if (this.value) {
-            endDateInput.min = this.value; // End date can be same or after start date
+        if (endDateInput.value) {
+            validateEndDateTime();
         }
-        updateDateDisplay(this, 'start-date-display');
     });
     
-    endDateInput.addEventListener('change', function() {
-        updateDateDisplay(this, 'end-date-display');
+    endDateInput.addEventListener('blur', function() {
+        syncDateInput(this, 'end-date-hidden');
+        validateEndDateTime();
     });
     
     // When start time changes, validate it's not in the past
@@ -1224,29 +1257,76 @@ window.declareIntendedUse = async function(locationId) {
     
     // Validate end date/time when changed
     function validateEndDateTime() {
-        if (!endDateInput.value && !endTimeInput.value) return true;
+        const endDateText = endDateInput.value.trim();
+        if (!endDateText && !endTimeInput.value) return true;
         
-        const startDate = startDateInput.value;
+        if (!endDateText) {
+            showMessage('Please enter an end date in mm/dd/yyyy format', 'error');
+            return false;
+        }
+        
+        // Parse end date
+        const endParts = endDateText.split('/');
+        if (endParts.length !== 3) {
+            showMessage('Please enter end date in mm/dd/yyyy format (e.g., 1/15/2026)', 'error');
+            return false;
+        }
+        
+        const endMonth = parseInt(endParts[0], 10);
+        const endDay = parseInt(endParts[1], 10);
+        const endYear = parseInt(endParts[2], 10);
+        
+        if (isNaN(endMonth) || isNaN(endDay) || isNaN(endYear) || endMonth < 1 || endMonth > 12 || endDay < 1 || endDay > 31) {
+            showMessage('Invalid end date. Please enter date in mm/dd/yyyy format', 'error');
+            return false;
+        }
+        
+        const endDate = new Date(endYear, endMonth - 1, endDay);
+        if (endDate.getFullYear() !== endYear || endDate.getMonth() !== endMonth - 1 || endDate.getDate() !== endDay) {
+            showMessage('Invalid end date. Please check the date you entered.', 'error');
+            return false;
+        }
+        
+        // Parse start date
+        const startDateText = startDateInput.value.trim();
+        if (!startDateText) {
+            showMessage('Please enter a start date first', 'error');
+            return false;
+        }
+        
+        const startParts = startDateText.split('/');
+        if (startParts.length !== 3) {
+            return false;
+        }
+        
+        const startMonth = parseInt(startParts[0], 10);
+        const startDay = parseInt(startParts[1], 10);
+        const startYear = parseInt(startParts[2], 10);
+        
+        if (isNaN(startMonth) || isNaN(startDay) || isNaN(startYear)) {
+            return false;
+        }
+        
+        const startDate = new Date(startYear, startMonth - 1, startDay);
         const startTime = startTimeInput.value || '00:00';
-        const endDate = endDateInput.value || startDate;
         const endTime = endTimeInput.value || '23:59';
         
-        const startDateTime = new Date(startDate + 'T' + startTime);
-        const endDateTime = new Date(endDate + 'T' + endTime);
+        const startDateTime = new Date(startDate);
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        startDateTime.setHours(startHour, startMin, 0, 0);
+        
+        const endDateTime = new Date(endDate);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+        endDateTime.setHours(endHour, endMin, 59, 999);
         
         if (endDateTime <= startDateTime) {
             showMessage('End date/time must be after start date/time', 'error');
-            if (endDateInput.value === startDate) {
-                endTimeInput.value = '';
-            } else {
-                endDateInput.value = '';
-            }
             return false;
         }
+        
         return true;
     }
     
-    endDateInput.addEventListener('change', validateEndDateTime);
     endTimeInput.addEventListener('change', validateEndDateTime);
     startTimeInput.addEventListener('change', validateEndDateTime);
 }
