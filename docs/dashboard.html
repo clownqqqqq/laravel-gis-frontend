@@ -1133,8 +1133,8 @@
                     </div>
 
                     <!-- Change Password Section -->
-                    <div class="card" style="margin-top: 30px; border: 1px solid #d1d5db;">
-                        <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <div class="card" id="change-password-card" style="margin-top: 30px; border: 2px solid #0d6efd; background: #f8f9ff; display: block !important; visibility: visible !important;">
+                        <h4 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 22px; font-weight: 600;">
                             <span style="font-size: 28px;">🔒</span> Change Password
                         </h4>
                         <form id="change-password-form" onsubmit="changePassword(event); return false;">
@@ -1242,6 +1242,14 @@
         // Show profile section
         function showProfileSection() {
             // Hide locations section first
+            // Ensure change password section is visible
+            setTimeout(() => {
+                const changePasswordCard = document.getElementById('change-password-card');
+                if (changePasswordCard) {
+                    changePasswordCard.style.display = 'block';
+                    changePasswordCard.style.visibility = 'visible';
+                }
+            }, 100);
             document.getElementById('locations-section').style.display = 'none';
             
             // Hide staff dashboard immediately when showing profile - use multiple methods
@@ -1447,8 +1455,8 @@
             }
         }
 
-        // Change password
-        async function changePassword(e) {
+        // Change password - make it globally accessible
+        window.changePassword = async function changePassword(e) {
             e.preventDefault();
             const userData = getUserData();
             const userId = userData?.id;
