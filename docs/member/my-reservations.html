@@ -498,7 +498,6 @@
         var API_BASE_URL = window.API_BASE_URL; // Use var instead of const to avoid redeclaration errors
         var allReservations = [];
         var currentFilter = 'all';
-        var currentSort = 'date-desc'; // Default sort: newest first
 
         function getUserData() {
             try {
@@ -713,91 +712,31 @@
             
             const sorted = [...reservations];
             
-            console.log('Sorting reservations by:', currentSort, 'Total:', sorted.length);
+            // Status priority order: pending, approved, rejected, cancelled
+            const statusOrder = {
+                'pending': 1,
+                'approved': 2,
+                'rejected': 3,
+                'cancelled': 4
+            };
             
-            switch (currentSort) {
-                case 'date-desc':
-                    sorted.sort((a, b) => {
-                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
-                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-                        return dateB - dateA;
-                    });
-                    break;
-                case 'date-asc':
-                    sorted.sort((a, b) => {
-                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
-                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-                        return dateA - dateB;
-                    });
-                    break;
-                case 'location-asc':
-                    sorted.sort((a, b) => {
-                        const locA = (a.location?.location || '').toLowerCase();
-                        const locB = (b.location?.location || '').toLowerCase();
-                        return locA.localeCompare(locB);
-                    });
-                    break;
-                case 'location-desc':
-                    sorted.sort((a, b) => {
-                        const locA = (a.location?.location || '').toLowerCase();
-                        const locB = (b.location?.location || '').toLowerCase();
-                        return locB.localeCompare(locA);
-                    });
-                    break;
-                case 'status-asc':
-                    sorted.sort((a, b) => {
-                        const statusA = (a.status || '').toLowerCase();
-                        const statusB = (b.status || '').toLowerCase();
-                        return statusA.localeCompare(statusB);
-                    });
-                    break;
-                case 'status-desc':
-                    sorted.sort((a, b) => {
-                        const statusA = (a.status || '').toLowerCase();
-                        const statusB = (b.status || '').toLowerCase();
-                        return statusB.localeCompare(statusA);
-                    });
-                    break;
-                case 'start-date-desc':
-                    sorted.sort((a, b) => {
-                        try {
-                            const dateA = a.intended_start_date 
-                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
-                                : new Date(0);
-                            const dateB = b.intended_start_date 
-                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
-                                : new Date(0);
-                            return dateB - dateA;
-                        } catch (e) {
-                            console.error('Error sorting by start date:', e);
-                            return 0;
-                        }
-                    });
-                    break;
-                case 'start-date-asc':
-                    sorted.sort((a, b) => {
-                        try {
-                            const dateA = a.intended_start_date 
-                                ? new Date(a.intended_start_date + (a.intended_start_time ? 'T' + a.intended_start_time : ''))
-                                : new Date(0);
-                            const dateB = b.intended_start_date 
-                                ? new Date(b.intended_start_date + (b.intended_start_time ? 'T' + b.intended_start_time : ''))
-                                : new Date(0);
-                            return dateA - dateB;
-                        } catch (e) {
-                            console.error('Error sorting by start date:', e);
-                            return 0;
-                        }
-                    });
-                    break;
-                default:
-                    // Default to date-desc
-                    sorted.sort((a, b) => {
-                        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
-                        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-                        return dateB - dateA;
-                    });
-            }
+            sorted.sort((a, b) => {
+                const statusA = (a.status || '').toLowerCase();
+                const statusB = (b.status || '').toLowerCase();
+                
+                const orderA = statusOrder[statusA] || 99;
+                const orderB = statusOrder[statusB] || 99;
+                
+                // First sort by status priority
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                
+                // If same status, sort by date (newest first)
+                const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+                const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+                return dateB - dateA;
+            });
             
             return sorted;
         }
