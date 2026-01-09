@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -234,115 +233,144 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
         /* Responsive Styles */
         @media screen and (max-width: 768px) {
             .content-area {
                 padding: 20px 15px !important;
             }
+
             .top-nav .container {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 12px !important;
             }
+
             .top-nav .logo {
                 font-size: 20px !important;
             }
+
             .nav-buttons {
                 width: 100% !important;
                 flex-direction: column !important;
                 gap: 8px !important;
             }
+
             .nav-btn {
                 width: 100% !important;
                 text-align: center !important;
                 padding: 10px 16px !important;
             }
+
             .page-header {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 16px !important;
             }
+
             .page-header h1 {
                 font-size: 24px !important;
             }
+
             .card {
                 padding: 20px !important;
             }
+
             .filter-tabs {
                 flex-wrap: wrap !important;
                 overflow-x: auto !important;
             }
+
             .filter-tab {
                 padding: 10px 16px !important;
                 font-size: 14px !important;
                 white-space: nowrap !important;
             }
+
             .reservation-card {
                 padding: 16px !important;
             }
+
             .reservation-header {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 12px !important;
             }
+
             .reservation-actions {
                 width: 100% !important;
                 flex-direction: column !important;
             }
+
             .reservation-actions .btn {
                 width: 100% !important;
                 justify-content: center !important;
             }
+
             .info-row {
                 flex-direction: column !important;
                 gap: 4px !important;
             }
+
             .info-label {
                 min-width: auto !important;
                 font-size: 14px !important;
             }
+
             .info-value {
                 font-size: 14px !important;
             }
+
             .modal-content {
                 max-width: 95% !important;
                 margin: 10px !important;
             }
         }
+
         @media (max-width: 480px) {
             .content-area {
                 padding: 15px 10px !important;
             }
+
             .page-header h1 {
                 font-size: 20px !important;
             }
+
+
             .card {
                 padding: 15px !important;
             }
+
             .reservation-card {
                 padding: 12px !important;
             }
+
             .filter-tab {
                 padding: 8px 12px !important;
                 font-size: 12px !important;
             }
+
             .btn {
                 padding: 10px 16px !important;
                 font-size: 13px !important;
             }
+
             .top-nav .logo {
                 font-size: 18px !important;
             }
+
             .nav-btn {
                 padding: 8px 12px !important;
                 font-size: 12px !important;
             }
+
             .modal-content {
                 max-width: 100% !important;
                 margin: 5px !important;
                 padding: 15px !important;
             }
         }
+
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -400,9 +428,16 @@
             border-color: #0d6efd;
             box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
         }
-        /* Date picker styling - show custom mm/dd/yyyy display overlay */
+        /* Date picker styling - hide native text, show only MM-DD-YYYY overlay */
         input[type="date"] {
             position: relative;
+            color: transparent !important;
+        }
+        input[type="date"]:focus {
+            color: transparent !important;
+        }
+        input[type="date"]:valid {
+            color: transparent !important;
         }
         input[type="date"]::-webkit-calendar-picker-indicator {
             cursor: pointer;
@@ -428,9 +463,11 @@
                 </div>
             </div>
         </nav>
+
         <div class="content-area">
             <div class="container">
                 <div id="alert-container"></div>
+
                 <div class="page-header">
                     <h1 style="color: #0d6efd; display: flex; align-items: center; gap: 10px; margin: 0;">
                         <span style="font-size: 36px;">📋</span> My Reservations
@@ -439,6 +476,7 @@
                         🔄 Refresh
                     </button>
                 </div>
+
                 <div class="card">
                     <div class="filter-tabs">
                         <button class="filter-tab active" onclick="filterReservations('all')" id="tab-all">
@@ -457,6 +495,8 @@
                             🚫 Cancelled (<span id="count-cancelled">0</span>)
                         </button>
                     </div>
+
+
                     <div id="reservations-container">
                         <div class="empty-state">
                             <div class="empty-state-icon">⏳</div>
@@ -467,47 +507,26 @@
             </div>
         </div>
     </div>
+
     <script src="../js/auth.js"></script>
     <script>
         // Global date formatting functions - must be available everywhere
-        // SINGLE SOURCE OF TRUTH: This is the ONLY function that formats dates for display
-        // All date formatting must go through this function - no duplicates, no inline formatting
-        if (typeof window.formatDisplayDateTime === 'undefined') {
-            window.formatDisplayDateTime = function(dateTimeString) {
-                if (!dateTimeString) return 'N/A';
+        // Function to format date input as user types (mm/dd/yyyy)
+        if (typeof window.formatDateInput === 'undefined') {
+            window.formatDateInput = function(input) {
+                if (!input) return;
+                let value = input.value.replace(/\D/g, ''); // Remove non-digits
+                if (value.length > 8) value = value.substring(0, 8);
                 
-                // Handle date only or date+time
-                const dateStr = dateTimeString.split('T')[0];
-                const timeStr = dateTimeString.split('T')[1]?.split('Z')[0]?.split('.')[0] || '';
-                
-                // Parse date explicitly to avoid timezone issues
-                const parts = dateStr.split('-');
-                let formattedDate = '';
-                let formattedTime = '';
-                
-                if (parts.length === 3) {
-                    const year = parts[0]; // Full year (YYYY)
-                    const month = parts[1].padStart(2, '0');
-                    const day = parts[2].padStart(2, '0');
-                    formattedDate = `${month}-${day}-${year}`; // MM-DD-YYYY format
+                // Add slashes automatically
+                if (value.length > 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2);
+                }
+                if (value.length > 5) {
+                    value = value.substring(0, 5) + '/' + value.substring(5);
                 }
                 
-                // Format time to 12-hour if present
-                if (timeStr) {
-                    // Handle formats like "16:55:00" or "16:55"
-                    let timeOnly = timeStr.includes(':') ? timeStr.split(':').slice(0, 2).join(':') : '';
-                    const [hours, minutes] = timeOnly.split(':');
-                    const hour24 = parseInt(hours, 10);
-                    if (!isNaN(hour24) && !isNaN(parseInt(minutes, 10))) {
-                        const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
-                        const ampm = hour24 >= 12 ? 'PM' : 'AM';
-                        formattedTime = ` ${hour12}:${minutes} ${ampm}`;
-                    } else {
-                        formattedTime = ` ${timeStr}`;
-                    }
-                }
-                
-                return formattedDate + formattedTime;
+                input.value = value;
             };
         }
 
@@ -517,69 +536,70 @@
                 if (!textInput) return;
                 const hiddenInput = document.getElementById(hiddenInputId);
                 if (!hiddenInput) return;
-               
+                
                 const value = textInput.value.trim();
                 if (!value) {
                     hiddenInput.value = '';
                     return;
                 }
-               
+                
                 // Parse mm/dd/yyyy format
                 const parts = value.split('/');
                 if (parts.length !== 3) {
                     hiddenInput.value = '';
                     return;
                 }
-               
+                
                 const month = parseInt(parts[0], 10);
                 const day = parseInt(parts[1], 10);
                 const year = parseInt(parts[2], 10);
-               
+                
                 if (isNaN(month) || isNaN(day) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
                     hiddenInput.value = '';
                     return;
                 }
-               
+                
                 // Convert to YYYY-MM-DD format
                 const date = new Date(year, month - 1, day);
                 if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
                     hiddenInput.value = '';
                     return;
                 }
-               
+                
                 const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 hiddenInput.value = formattedDate;
             };
         }
-        // Function to update date display from date picker (YYYY-MM-DD to mm/dd/yyyy)
+
         // SINGLE SOURCE OF TRUTH: This is the ONLY function that formats dates for display
-        // All date formatting must go through this function - no duplicates, no inline formatting
+        // Converts YYYY-MM-DD (from date input) to MM-DD-YYYY (for display overlay)
+        // All date formatting must go through this function - NO duplicates, NO inline formatting
         if (typeof window.updateDateDisplayFromPicker === 'undefined') {
             window.updateDateDisplayFromPicker = function(dateInput, hiddenInputId, displayId) {
-                // Get elements - support both signatures
+                // Get elements
                 const hiddenInput = document.getElementById(hiddenInputId);
                 const displayElement = displayId ? document.getElementById(displayId) : null;
-               
+                
                 // Validate input
                 if (!dateInput || !dateInput.value) {
                     if (displayElement) displayElement.textContent = '';
                     if (hiddenInput) hiddenInput.value = '';
                     return;
                 }
-               
+                
                 // Store YYYY-MM-DD format in hidden input (for API submission)
                 if (hiddenInput) {
                     hiddenInput.value = dateInput.value;
                 }
-               
-                // Format as MM-DD-YYYY for display overlay (SINGLE SOURCE OF TRUTH)
+                
+                // Format as MM-DD-YYYY for display overlay - THIS IS THE ONLY FORMATTING
                 if (displayElement) {
-                    const dateStr = dateInput.value.split('T')[0]; // Get date part only
+                    const dateStr = dateInput.value.split('T')[0]; // Get date part only (YYYY-MM-DD)
                     const parts = dateStr.split('-');
                     if (parts.length === 3) {
-                        const month = parts[1].padStart(2, '0');
-                        const day = parts[2].padStart(2, '0');
-                        const year = parts[0]; // Full year (YYYY)
+                        const month = parts[1].padStart(2, '0');  // MM
+                        const day = parts[2].padStart(2, '0');      // DD
+                        const year = parts[0];                     // YYYY (full year)
                         displayElement.textContent = `${month}-${day}-${year}`; // MM-DD-YYYY format
                     } else {
                         displayElement.textContent = '';
@@ -596,6 +616,7 @@
         var API_BASE_URL = window.API_BASE_URL; // Use var instead of const to avoid redeclaration errors
         var allReservations = [];
         var currentFilter = 'all';
+
         function getUserData() {
             try {
                 const userData = localStorage.getItem('user_data');
@@ -604,15 +625,18 @@
                 return null;
             }
         }
+
         function getAuthToken() {
             return localStorage.getItem('auth_token');
         }
+
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 localStorage.clear();
                 window.location.href = '../login.html';
             }
         }
+
         async function apiRequest(url, options = {}) {
             const token = getAuthToken();
             const headers = {
@@ -621,16 +645,19 @@
                 'Content-Type': 'application/json',
                 ...options.headers
             };
+
             try {
                 const response = await fetch(url, {
                     ...options,
                     headers
                 });
+
                 if (response.status === 401) {
                     showMessage('Session expired. Please login again.', 'error');
                     setTimeout(() => window.location.href = '../login.html', 2000);
                     return { success: false, error: 'Unauthorized', message: 'Authentication required' };
                 }
+
                 // Handle 403 Forbidden (authorization error)
                 if (response.status === 403) {
                     const errorText = await response.text();
@@ -647,6 +674,7 @@
                         message: errorData.message || 'You do not have permission to access this resource.'
                     };
                 }
+
                 // Handle 422 Validation errors
                 if (response.status === 422) {
                     const errorText = await response.text();
@@ -664,6 +692,7 @@
                         errors: errorData.errors || {}
                     };
                 }
+
                 // Handle other error status codes
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -680,6 +709,7 @@
                         message: errorData.message || errorData.error || 'An error occurred'
                     };
                 }
+
                 const data = await response.json();
                 console.log('Parsed response data:', data);
                 return data;
@@ -688,6 +718,7 @@
                 throw error;
             }
         }
+
         function showMessage(message, type = 'success') {
             const container = document.getElementById('alert-container');
             const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
@@ -696,11 +727,12 @@
                 container.innerHTML = '';
             }, 5000);
         }
+
         async function loadReservations() {
             const userData = getUserData();
             console.log('User data:', userData);
             console.log('User role:', userData?.role);
-           
+            
             // Show loading state
             document.getElementById('reservations-container').innerHTML = `
                 <div class="empty-state">
@@ -708,25 +740,26 @@
                     <p>Loading reservations...</p>
                 </div>
             `;
+
             try {
                 console.log('Loading reservations from:', `${API_BASE_URL}/member/my-intended-uses`);
                 const response = await apiRequest(`${API_BASE_URL}/member/my-intended-uses`);
-               
+                
                 console.log('API Response:', response);
                 console.log('Response type:', typeof response);
                 console.log('Response keys:', response ? Object.keys(response) : 'null');
-               
+                
                 if (!response) {
                     throw new Error('No response from server. Please check your authentication.');
                 }
-               
+                
                 // Check for authentication/authorization errors from backend
                 if (response.error && (response.error.includes('Unauthorized') || response.error.includes('401'))) {
                     showMessage('Authentication required. Please log in again.', 'error');
                     setTimeout(() => window.location.href = '../login.html', 2000);
                     return;
                 }
-               
+                
                 // Handle both success:true format and direct array format
                 if (response.success === true) {
                     allReservations = response.data || [];
@@ -743,8 +776,8 @@
                     // Handle errors
                     const errorMsg = response?.message || response?.error || 'Failed to load reservations';
                     // If it's a permission/authorization error from backend, show helpful message
-                    if (errorMsg.toLowerCase().includes('permission') ||
-                        errorMsg.toLowerCase().includes('denied') ||
+                    if (errorMsg.toLowerCase().includes('permission') || 
+                        errorMsg.toLowerCase().includes('denied') || 
                         errorMsg.toLowerCase().includes('unauthorized') ||
                         errorMsg.toLowerCase().includes('403') ||
                         errorMsg.toLowerCase().includes('member only')) {
@@ -758,8 +791,9 @@
                     allReservations = [];
                     console.log('No reservations found in response');
                 }
+
                 console.log('Final allReservations:', allReservations.length, allReservations);
-               
+                
                 updateCounts();
                 renderReservations();
             } catch (error) {
@@ -777,21 +811,24 @@
                 `;
             }
         }
+
         function updateCounts() {
             const all = allReservations.length;
             const pending = allReservations.filter(r => (r.status || '').toLowerCase() === 'pending').length;
             const approved = allReservations.filter(r => (r.status || '').toLowerCase() === 'approved').length;
             const rejected = allReservations.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
             const cancelled = allReservations.filter(r => (r.status || '').toLowerCase() === 'cancelled').length;
+
             document.getElementById('count-all').textContent = all;
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
             document.getElementById('count-rejected').textContent = rejected;
             document.getElementById('count-cancelled').textContent = cancelled;
         }
+
         function filterReservations(status) {
             currentFilter = status;
-           
+            
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
             const tabId = `tab-${status}`;
@@ -799,15 +836,18 @@
             if (activeTab) {
                 activeTab.classList.add('active');
             }
+
             renderReservations();
         }
+
+
         function sortReservations(reservations) {
             if (!reservations || reservations.length === 0) {
                 return reservations;
             }
-           
+            
             const sorted = [...reservations];
-           
+            
             // Status priority order: pending, approved, rejected, cancelled
             const statusOrder = {
                 'pending': 1,
@@ -815,54 +855,59 @@
                 'rejected': 3,
                 'cancelled': 4
             };
-           
+            
             sorted.sort((a, b) => {
                 // Normalize status to lowercase
                 const statusA = (a.status || 'pending').toLowerCase().trim();
                 const statusB = (b.status || 'pending').toLowerCase().trim();
-               
+                
                 const orderA = statusOrder[statusA] || 99;
                 const orderB = statusOrder[statusB] || 99;
-               
+                
                 // First sort by status priority
                 if (orderA !== orderB) {
                     return orderA - orderB;
                 }
-               
+                
                 // If same status, sort by date (newest first)
                 const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
                 const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
                 return dateB - dateA;
             });
-           
+            
             return sorted;
         }
+
         function renderReservations() {
             console.log('renderReservations called, allReservations:', allReservations);
             const container = document.getElementById('reservations-container');
-           
+            
             if (!container) {
                 console.error('reservations-container element not found!');
                 return;
             }
-           
+            
             // Ensure allReservations is an array
             if (!Array.isArray(allReservations)) {
                 console.error('allReservations is not an array:', allReservations);
                 allReservations = [];
             }
-           
+            
             let filtered = allReservations;
             if (currentFilter !== 'all') {
                 filtered = allReservations.filter(r => r && (r.status || '').toLowerCase() === currentFilter.toLowerCase());
             }
+
             console.log('Before sorting - Filter:', currentFilter, 'Count:', filtered.length);
-           
+            
             // Apply sorting
             filtered = sortReservations(filtered);
-           
+            
             console.log('After sorting - Count:', filtered.length);
+
+
             console.log('Filtered reservations:', filtered.length, filtered);
+
             if (filtered.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -873,12 +918,14 @@
                 `;
                 return;
             }
+
             container.innerHTML = filtered.map(reservation => {
                 const statusClass = reservation.status || 'pending';
                 const statusBadgeClass = `status-${reservation.status || 'pending'}`;
                 const location = reservation.location || {};
-               
+                
                 console.log('Rendering reservation:', reservation);
+
                 return `
                     <div class="reservation-card ${statusClass}">
                         <div class="reservation-header">
@@ -894,12 +941,66 @@
                                     </div>
                                     <div>
                                         <span class="info-label">Start:</span>
-                                        <span class="info-value">${typeof window.formatDisplayDateTime === 'undefined' ? 'N/A' : window.formatDisplayDateTime(reservation.intended_start_date + (reservation.intended_start_time ? 'T' + reservation.intended_start_time : ''))}</span>
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_start_date) : (reservation.intended_start_date ? (() => {
+                                            // Parse date explicitly to avoid timezone issues
+                                            const dateStr = reservation.intended_start_date.split('T')[0];
+                                            const parts = dateStr.split('-');
+                                            const date = parts.length === 3 
+                                                ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
+                                                : new Date(reservation.intended_start_date);
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()); // Full year
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                        })() : 'N/A')}${reservation.intended_start_time ? (() => {
+                                            // Convert 24-hour format to 12-hour format for display
+                                            let timeStr = reservation.intended_start_time;
+                                            // Handle formats like "16:55:00" or "16:55"
+                                            if (timeStr.includes(':')) {
+                                                const parts = timeStr.split(':');
+                                                timeStr = `${parts[0]}:${parts[1]}`; // Get HH:MM
+                                            }
+                                            const [hours, minutes] = timeStr.split(':');
+                                            const hour24 = parseInt(hours, 10);
+                                            if (isNaN(hour24) || isNaN(parseInt(minutes, 10))) {
+                                                return ` ${timeStr}`; // Return original if parsing fails
+                                            }
+                                            const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                                            return ` ${hour12}:${minutes} ${ampm}`;
+                                        })() : ''}</span>
                                     </div>
                                     ${reservation.intended_end_date ? `
                                     <div>
                                         <span class="info-label">End:</span>
-                                        <span class="info-value">${typeof window.formatDisplayDateTime === 'undefined' ? 'N/A' : window.formatDisplayDateTime(reservation.intended_end_date + (reservation.intended_end_time ? 'T' + reservation.intended_end_time : ''))}</span>
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.intended_end_date) : (() => {
+                                            // Parse date explicitly to avoid timezone issues
+                                            const dateStr = reservation.intended_end_date.split('T')[0];
+                                            const parts = dateStr.split('-');
+                                            const date = parts.length === 3 
+                                                ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
+                                                : new Date(reservation.intended_end_date);
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()); // Full year
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                        })()}${reservation.intended_end_time ? (() => {
+                                            // Convert 24-hour format to 12-hour format for display
+                                            let timeStr = reservation.intended_end_time;
+                                            // Handle formats like "18:55:00" or "18:55"
+                                            if (timeStr.includes(':')) {
+                                                const parts = timeStr.split(':');
+                                                timeStr = `${parts[0]}:${parts[1]}`; // Get HH:MM
+                                            }
+                                            const [hours, minutes] = timeStr.split(':');
+                                            const hour24 = parseInt(hours, 10);
+                                            if (isNaN(hour24) || isNaN(parseInt(minutes, 10))) {
+                                                return ` ${timeStr}`; // Return original if parsing fails
+                                            }
+                                            const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+                                            const ampm = hour24 >= 12 ? 'PM' : 'AM';
+                                            return ` ${hour12}:${minutes} ${ampm}`;
+                                        })() : ''}</span>
                                     </div>
                                     ` : ''}
                                 </div>
@@ -914,7 +1015,26 @@
                                 <div class="info-row">
                                     <div>
                                         <span class="info-label">Submitted:</span>
-                                        <span class="info-value">${typeof window.formatDisplayDateTime === 'undefined' ? 'N/A' : window.formatDisplayDateTime(reservation.created_at)}</span>
+                                        <span class="info-value">${typeof window.formatDisplayDate !== 'undefined' ? window.formatDisplayDate(reservation.created_at) : (() => {
+                                            // Parse date explicitly to avoid timezone issues
+                                            const dateStr = reservation.created_at.split('T')[0];
+                                            const parts = dateStr.split('-');
+                                            const date = parts.length === 3 
+                                                ? new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)))
+                                                : new Date(reservation.created_at);
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const year = String(date.getFullYear()).slice(-2);
+                                            return `${month}-${day}-${year}`; // mm-dd-yy format
+                                        })()} ${(() => {
+                                            const date = new Date(reservation.created_at);
+                                            const hours = date.getHours();
+                                            const minutes = date.getMinutes();
+                                            const ampm = hours >= 12 ? 'PM' : 'AM';
+                                            const displayHours = hours % 12 || 12;
+                                            const displayMinutes = minutes.toString().padStart(2, '0');
+                                            return `${displayHours}:${displayMinutes} ${ampm}`;
+                                        })()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -936,15 +1056,17 @@
                 `;
             }).join('');
         }
+
         async function updateReservation(id) {
             const reservation = allReservations.find(r => r.id === id);
             if (!reservation) return;
+
             // Calculate tomorrow for minimum date
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             tomorrow.setHours(0, 0, 0, 0);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
-           
+            
             // Format dates for date input (YYYY-MM-DD format required)
             const formatDateForInput = (dateString) => {
                 if (!dateString) return '';
@@ -955,50 +1077,50 @@
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             };
-           
+            
             // Normalize time for time input (HH:MM format required)
             const normalizeTimeForInput = (timeString) => {
                 if (!timeString) return '';
-               
+                
                 // Remove whitespace
                 timeString = timeString.trim();
-               
+                
                 // If already in HH:MM format, return it
                 if (/^\d{2}:\d{2}$/.test(timeString)) {
                     return timeString;
                 }
-               
+                
                 // If in HH:MM:SS format, extract HH:MM
                 if (/^\d{2}:\d{2}:\d{2}$/.test(timeString)) {
                     return timeString.substring(0, 5);
                 }
-               
+                
                 // Try to parse various formats
                 const timeMatch = timeString.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?/i);
                 if (timeMatch) {
                     let hours = parseInt(timeMatch[1], 10);
                     const minutes = timeMatch[2];
                     const ampm = timeMatch[4] ? timeMatch[4].toUpperCase() : null;
-                   
+                    
                     // Convert 12-hour to 24-hour if needed
                     if (ampm === 'PM' && hours !== 12) {
                         hours += 12;
                     } else if (ampm === 'AM' && hours === 12) {
                         hours = 0;
                     }
-                   
+                    
                     return `${String(hours).padStart(2, '0')}:${minutes}`;
                 }
-               
+                
                 // If we can't parse it, return empty string
                 return '';
             };
-           
+            
             const startDateValue = formatDateForInput(reservation.intended_start_date);
             const endDateValue = formatDateForInput(reservation.intended_end_date);
             const startTimeValue = normalizeTimeForInput(reservation.intended_start_time || '');
             const endTimeValue = normalizeTimeForInput(reservation.intended_end_time || '');
-           
+            
             const modal = `
                 <div class="modal-overlay" onclick="closeUpdateModal(event)">
                     <div class="modal-content" onclick="event.stopPropagation()">
@@ -1035,8 +1157,8 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                     <div style="position: relative;">
                                         <input type="hidden" id="update-end-date-hidden" value="${endDateValue}">
-                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');}">
-                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10;"></span>
+                                        <input type="date" id="update-end-date" class="form-input" min="${startDateValue || tomorrowStr}" value="${endDateValue}" style="padding-right: 100px; color: transparent !important;" onchange="if(typeof window.updateDateDisplayFromPicker==='function'){window.updateDateDisplayFromPicker(this, 'update-end-date-hidden', 'update-end-date-display');}">
+                                        <span id="update-end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 600; color: #0d6efd; pointer-events: none; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid #e5e7eb; z-index: 10; min-width: 80px; text-align: center;"></span>
                                     </div>
                                     <input type="time" id="update-end-time" class="form-input" value="${endTimeValue}">
                                 </div>
@@ -1050,10 +1172,12 @@
                     </div>
                 </div>
             `;
+
             const modalDiv = document.createElement('div');
             modalDiv.id = 'update-modal';
             modalDiv.innerHTML = modal;
             document.body.appendChild(modalDiv);
+
             // Set min end date based on start date and validate date+time
             const startDateInput = document.getElementById('update-start-date');
             const startDateHidden = document.getElementById('update-start-date-hidden');
@@ -1061,7 +1185,7 @@
             const endDateInput = document.getElementById('update-end-date');
             const endDateHidden = document.getElementById('update-end-date-hidden');
             const endTimeInput = document.getElementById('update-end-time');
-           
+            
             // Initialize hidden inputs with YYYY-MM-DD format
             if (startDateValue) {
                 startDateHidden.value = startDateValue;
@@ -1069,21 +1193,21 @@
             if (endDateValue) {
                 endDateHidden.value = endDateValue;
             }
-           
+            
             // Function to validate start date is tomorrow or later
             window.validateUpdateStartDate = function() {
                 if (!startDateInput || !startDateInput.value) return true;
-               
+                
                 const startDate = new Date(startDateInput.value + 'T00:00:00');
                 if (isNaN(startDate.getTime())) {
                     showMessage('Invalid date selected', 'error');
                     return false;
                 }
-               
+                
                 const tomorrow = new Date();
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 tomorrow.setHours(0, 0, 0, 0);
-               
+                
                 if (startDate < tomorrow) {
                     const tomorrowStr = tomorrow.toISOString().split('T')[0];
                     showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
@@ -1093,52 +1217,56 @@
                     }
                     return false;
                 }
-               
+                
                 return true;
             };
-           
+            
             function validateUpdateDateTime() {
                 if (!endDateInput.value && !endTimeInput.value) return true;
-               
+                
                 if (!endDateInput.value) {
                     return true; // End date is optional
                 }
-               
+                
                 if (!startDateInput.value) {
                     return false;
                 }
-               
+                
                 const startDate = new Date(startDateInput.value + 'T00:00:00');
                 const endDate = new Date(endDateInput.value + 'T00:00:00');
                 const startTime = startTimeInput.value || '00:00';
                 const endTime = endTimeInput.value || '23:59';
-               
+                
                 const startDateTime = new Date(startDate);
                 const [startHour, startMin] = startTime.split(':').map(Number);
                 startDateTime.setHours(startHour, startMin, 0, 0);
-               
+                
                 const endDateTime = new Date(endDate);
                 const [endHour, endMin] = endTime.split(':').map(Number);
                 endDateTime.setHours(endHour, endMin, 59, 999);
-               
+                
                 if (endDateTime <= startDateTime) {
                     showMessage('End date/time must be after start date/time', 'error');
                     return false;
                 }
                 return true;
             }
-           
+            
             // Initialize hidden inputs and display overlays on load
             // SINGLE SOURCE OF TRUTH: Only updateDateDisplayFromPicker formats dates for display
-            setTimeout(() => {
+            const initDateDisplays = () => {
                 if (startDateInput && startDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
                     window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
                 }
                 if (endDateInput && endDateInput.value && typeof window.updateDateDisplayFromPicker === 'function') {
                     window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
                 }
-            }, 10);
-           
+            };
+            
+            // Initialize immediately and after DOM is ready
+            initDateDisplays();
+            setTimeout(initDateDisplays, 50);
+            
             // Update end date min when start date changes
             startDateInput.addEventListener('change', function() {
                 if (this.value) {
@@ -1149,7 +1277,7 @@
                 }
                 validateUpdateStartDate();
             });
-           
+            
             startTimeInput.addEventListener('change', validateUpdateDateTime);
             endDateInput.addEventListener('change', function() {
                 if (typeof window.updateDateDisplayFromPicker === 'function') {
@@ -1159,13 +1287,16 @@
             });
             endTimeInput.addEventListener('change', validateUpdateDateTime);
         }
+
         function closeUpdateModal(event) {
             if (event && event.target !== event.currentTarget) return;
             const modal = document.getElementById('update-modal');
             if (modal) modal.remove();
         }
+
         async function submitUpdate(event, id) {
             event.preventDefault();
+
             // Get form elements
             const startDateInput = document.getElementById('update-start-date');
             const startDateHidden = document.getElementById('update-start-date-hidden');
@@ -1173,7 +1304,7 @@
             const endDateHidden = document.getElementById('update-end-date-hidden');
             const startTimeInput = document.getElementById('update-start-time');
             const endTimeInput = document.getElementById('update-end-time');
-           
+            
             // Sync dates to hidden inputs and update displays before submission (if function exists)
             if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
                 window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden', 'update-start-date-display');
@@ -1181,23 +1312,23 @@
             if (endDateInput && endDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
                 window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden', 'update-end-date-display');
             }
-           
+            
             // Get date values directly from date inputs (they're already in YYYY-MM-DD format)
             let startDate = startDateInput ? startDateInput.value.trim() : '';
             let endDate = endDateInput ? endDateInput.value.trim() : '';
-           
+            
             console.log('Raw date values from inputs:', { startDate, endDate });
-           
+            
             if (!startDate) {
                 showMessage('Please select a valid start date', 'error');
                 return;
             }
-           
+            
             // Ensure dates are in YYYY-MM-DD format (date inputs should already be in this format)
             // If somehow the date is not in the correct format, try to parse and reformat it
             let finalStartDate = startDate;
             let finalEndDate = endDate || null;
-           
+            
             // Validate and normalize date format
             if (!/^\d{4}-\d{2}-\d{2}$/.test(finalStartDate)) {
                 // Try to parse as Date and reformat
@@ -1213,7 +1344,7 @@
                     return;
                 }
             }
-           
+            
             if (finalEndDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalEndDate)) {
                 // Try to parse as Date and reformat
                 const parsedDate = new Date(finalEndDate);
@@ -1228,60 +1359,60 @@
                     return;
                 }
             }
-           
+            
             console.log('Final date values:', { finalStartDate, finalEndDate });
-           
+            
             // Get time values from HTML5 time inputs (they always return HH:MM format in 24-hour)
             let startTimeValue = startTimeInput ? startTimeInput.value.trim() : '';
             let endTimeValue = endTimeInput ? endTimeInput.value.trim() : '';
-           
+            
             console.log('Raw time values from inputs:', { startTimeValue, endTimeValue });
-           
+            
             // HTML5 time inputs always return HH:MM format (24-hour), but let's ensure it's correct
             const normalizeTimeTo24Hour = (timeStr) => {
                 if (!timeStr || timeStr === '') return null;
-               
+                
                 // Remove any whitespace
                 timeStr = timeStr.trim();
-               
+                
                 // HTML5 time input should already be in HH:MM format
                 if (/^\d{2}:\d{2}$/.test(timeStr)) {
                     return timeStr;
                 }
-               
+                
                 // If it's in HH:MM:SS format, extract HH:MM
                 if (/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
                     return timeStr.substring(0, 5);
                 }
-               
+                
                 // If somehow we get a 12-hour format (shouldn't happen with HTML5 time input, but handle it)
                 const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM))?/i);
                 if (timeMatch) {
                     let hours = parseInt(timeMatch[1], 10);
                     const minutes = timeMatch[2];
                     const ampm = timeMatch[4] ? timeMatch[4].toUpperCase() : null;
-                   
+                    
                     // Convert 12-hour to 24-hour if needed
                     if (ampm === 'PM' && hours !== 12) {
                         hours += 12;
                     } else if (ampm === 'AM' && hours === 12) {
                         hours = 0;
                     }
-                   
+                    
                     return `${String(hours).padStart(2, '0')}:${minutes}`;
                 }
-               
+                
                 // If we can't parse it, return null
                 console.warn('Could not parse time format:', timeStr);
                 return null;
             };
-           
+            
             // Normalize times to 24-hour format (HH:MM)
             const startTime = normalizeTimeTo24Hour(startTimeValue);
             const endTime = normalizeTimeTo24Hour(endTimeValue);
-           
+            
             console.log('Normalized time values (24-hour):', { startTime, endTime });
-           
+            
             // Validate time format if provided (must be HH:MM in 24-hour format)
             if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
                 console.error('Invalid start time format after normalization:', startTime);
@@ -1293,16 +1424,16 @@
                 showMessage('Invalid end time format. The time input should be in HH:MM format (24-hour).', 'error');
                 return;
             }
-           
+            
             // Get intended_type - ensure it's a valid value
             const intendedTypeSelect = document.getElementById('update-intended-type');
             const intendedType = intendedTypeSelect ? intendedTypeSelect.value : '';
-           
+            
             if (!intendedType || !['event', 'business', 'personal', 'future_development'].includes(intendedType)) {
                 showMessage('Please select a valid intended purpose', 'error');
                 return;
             }
-           
+            
             const formData = {
                 intended_type: intendedType,
                 description: document.getElementById('update-description').value || null,
@@ -1311,53 +1442,57 @@
                 intended_end_date: finalEndDate,
                 intended_end_time: endTime
             };
-           
+            
             console.log('Submitting update with formData:', formData);
+
             // Validate start date is tomorrow or later
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const tomorrowStr = tomorrow.toISOString().split('T')[0];
-           
+            
             console.log('Date validation:', {
                 today: today.toISOString().split('T')[0],
                 tomorrow: tomorrowStr,
                 startDate: formData.intended_start_date,
                 stringComparison: formData.intended_start_date < tomorrowStr
             });
-           
+            
             // Compare dates properly using Date objects
             const startDateObj = new Date(formData.intended_start_date + 'T00:00:00');
             startDateObj.setHours(0, 0, 0, 0);
-           
+            
             console.log('Date object comparison:', {
                 startDateObj: startDateObj.toISOString(),
                 tomorrow: tomorrow.toISOString(),
                 isBeforeTomorrow: startDateObj < tomorrow
             });
-           
+            
             if (startDateObj < tomorrow) {
                 showMessage('Start date must be tomorrow or later. Reservations cannot be made for today.', 'error');
                 return;
             }
+
             // Validate date+time
             const validationStartTime = formData.intended_start_time || '00:00';
             const validationEndTime = formData.intended_end_time || '23:59';
             const startDateTime = new Date(formData.intended_start_date + 'T' + validationStartTime);
-            const endDateTime = formData.intended_end_date
+            const endDateTime = formData.intended_end_date 
                 ? new Date(formData.intended_end_date + 'T' + validationEndTime)
                 : new Date(formData.intended_start_date + 'T' + validationEndTime);
-           
+            
             if (endDateTime <= startDateTime) {
                 showMessage('End date/time must be after start date/time', 'error');
                 return;
             }
+
             try {
                 const response = await apiRequest(`${API_BASE_URL}/member/intended-uses/${id}`, {
                     method: 'PUT',
                     body: JSON.stringify(formData)
                 });
+
                 if (response && response.success) {
                     closeUpdateModal();
                     showMessage(response.message || 'Reservation updated successfully', 'success');
@@ -1366,10 +1501,10 @@
                     // Show detailed error message if available
                     const errorMsg = response?.message || response?.error || 'Failed to update reservation';
                     const errors = response?.errors;
-                   
+                    
                     console.error('Update failed - Response:', response);
                     console.error('Validation errors:', errors);
-                   
+                    
                     if (errors && typeof errors === 'object') {
                         // Format validation errors nicely
                         const errorDetails = Object.entries(errors)
@@ -1401,14 +1536,17 @@
                 showMessage(errorMsg, 'error');
             }
         }
+
         async function cancelReservation(id) {
             if (!confirm('Are you sure you want to cancel this reservation?')) {
                 return;
             }
+
             try {
                 const response = await apiRequest(`${API_BASE_URL}/member/intended-uses/${id}/cancel`, {
                     method: 'POST'
                 });
+
                 if (response && response.success) {
                     showMessage(response.message || 'Reservation cancelled successfully', 'success');
                     loadReservations();
@@ -1420,22 +1558,24 @@
                 showMessage('Error cancelling reservation: ' + (error.message || 'Unknown error'), 'error');
             }
         }
+
         function viewLocation(locationId) {
             // Open dashboard in same window, filtered to show only this location
             window.location.href = `../dashboard.html?location=${locationId}`;
         }
+
         // Load reservations on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Verify user is authenticated as a member
             const userData = getUserData();
             const token = getAuthToken();
-           
+            
             if (!token) {
                 showMessage('Please log in to view your reservations.', 'error');
                 setTimeout(() => window.location.href = '../login.html', 2000);
                 return;
             }
-           
+            
             // Note: We don't check role here - let the backend API handle authorization
             // This allows the page to load and show proper error messages from the API
             console.log('Page loaded for user:', userData);
@@ -1444,4 +1584,4 @@
     </script>
 </body>
 </html>
-```
+
