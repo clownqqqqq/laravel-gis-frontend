@@ -45,9 +45,9 @@ function removeUserData() {
     localStorage.removeItem('user_data');
 }
 
-// Global date formatting function: formats dates to mm-dd-yy format
+// Global date formatting function: formats dates to MM-DD-YYYY format
 // This function should be used for all date displays from the API
-// IMPORTANT: This formats as mm-dd-yy (month-day-year), NOT dd-mm-yy
+// IMPORTANT: This formats as MM-DD-YYYY (month-day-year with full year)
 if (typeof window.formatDisplayDate === 'undefined') {
     window.formatDisplayDate = function(dateString) {
         if (!dateString) return 'N/A';
@@ -69,10 +69,10 @@ if (typeof window.formatDisplayDate === 'undefined') {
         
         if (isNaN(date.getTime())) return 'N/A';
         
-        // Format as mm-dd-yy (month-day-year)
+        // Format as MM-DD-YYYY (month-day-year with full year)
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
+        const year = String(date.getFullYear()); // Full year
         
         return `${month}-${day}-${year}`;
     };
