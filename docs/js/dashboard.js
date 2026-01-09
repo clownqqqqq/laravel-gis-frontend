@@ -1071,15 +1071,16 @@ window.declareIntendedUse = async function(locationId) {
                                 </label>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                                     <div style="position: relative;">
-                                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                                        <input type="date" id="end-date" name="intended_end_date" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'" onchange="updateDateDisplay(this, 'end-date-display')">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">📅</span>
+                                        <span id="end-date-display" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #64748b; pointer-events: none; background: white; padding: 0 4px;"></span>
                                     </div>
                                     <div style="position: relative;">
                                         <input type="time" id="end-time" name="intended_end_time" style="width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 16px; background: white; color: #1e293b; cursor: pointer; transition: all 0.2s;" onfocus="this.style.borderColor='#0d6efd'; this.style.boxShadow='0 0 0 3px rgba(13, 110, 253, 0.1)'" onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                                         <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; pointer-events: none;">🕐</span>
                                     </div>
                                 </div>
-                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date/time (time defaults to 11:59 PM if not specified)</small>
+                                <small style="color: #64748b; display: block; margin-top: 6px; font-size: 13px;">Must be after start date/time (time defaults to 11:59 PM if not specified) - Format: mm/dd/yyyy</small>
                             </div>
                         </div>
                         
@@ -1182,6 +1183,11 @@ window.declareIntendedUse = async function(locationId) {
         if (this.value) {
             endDateInput.min = this.value; // End date can be same or after start date
         }
+        updateDateDisplay(this, 'start-date-display');
+    });
+    
+    endDateInput.addEventListener('change', function() {
+        updateDateDisplay(this, 'end-date-display');
     });
     
     // When start time changes, validate it's not in the past
