@@ -582,14 +582,14 @@
                     hiddenInput.value = dateInput.value;
                 }
                 
-                // Convert to mm-dd-yy for display overlay
+                // Convert to MM-DD-YYYY for display overlay
                 if (displayElement) {
                     const dateStr = dateInput.value.split('T')[0];
                     const parts = dateStr.split('-');
                     if (parts.length === 3) {
-                        const month = parts[1];
-                        const day = parts[2];
-                        const year = parts[0].slice(-2);
+                        const month = parts[1].padStart(2, '0');
+                        const day = parts[2].padStart(2, '0');
+                        const year = parts[0]; // Full year
                         displayElement.textContent = `${month}-${day}-${year}`;
                     } else {
                         displayElement.textContent = '';
@@ -940,8 +940,8 @@
                                                 : new Date(reservation.intended_start_date);
                                             const month = String(date.getMonth() + 1).padStart(2, '0');
                                             const day = String(date.getDate()).padStart(2, '0');
-                                            const year = String(date.getFullYear()).slice(-2);
-                                            return `${month}-${day}-${year}`; // mm-dd-yy format
+                                            const year = String(date.getFullYear()); // Full year
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
                                         })() : 'N/A')}${reservation.intended_start_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
                                             let timeStr = reservation.intended_start_time;
@@ -972,8 +972,8 @@
                                                 : new Date(reservation.intended_end_date);
                                             const month = String(date.getMonth() + 1).padStart(2, '0');
                                             const day = String(date.getDate()).padStart(2, '0');
-                                            const year = String(date.getFullYear()).slice(-2);
-                                            return `${month}-${day}-${year}`; // mm-dd-yy format
+                                            const year = String(date.getFullYear()); // Full year
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
                                         })()}${reservation.intended_end_time ? (() => {
                                             // Convert 24-hour format to 12-hour format for display
                                             let timeStr = reservation.intended_end_time;
@@ -1140,9 +1140,9 @@
                                             const dateStr = startDateValue.split('T')[0];
                                             const parts = dateStr.split('-');
                                             if (parts.length === 3) {
-                                                const month = parts[1];
-                                                const day = parts[2];
-                                                const year = parts[0].slice(-2);
+                                                const month = parts[1].padStart(2, '0');
+                                                const day = parts[2].padStart(2, '0');
+                                                const year = parts[0]; // Full year
                                                 return `${month}-${day}-${year}`;
                                             }
                                             return '';
@@ -1162,9 +1162,9 @@
                                             const dateStr = endDateValue.split('T')[0];
                                             const parts = dateStr.split('-');
                                             if (parts.length === 3) {
-                                                const month = parts[1];
-                                                const day = parts[2];
-                                                const year = parts[0].slice(-2);
+                                                const month = parts[1].padStart(2, '0');
+                                                const day = parts[2].padStart(2, '0');
+                                                const year = parts[0]; // Full year
                                                 return `${month}-${day}-${year}`;
                                             }
                                             return '';
