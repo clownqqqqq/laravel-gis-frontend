@@ -132,27 +132,57 @@
         }
 
         @media screen and (max-width: 768px) {
+            .content-area {
+                padding: 20px 15px !important;
+            }
+
+            .top-nav .container {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+
+            .top-nav .logo {
+                font-size: 20px !important;
+            }
+
+            .nav-buttons {
+                width: 100% !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .nav-btn {
+                width: 100% !important;
+                text-align: center !important;
+                padding: 10px 16px !important;
+            }
+
             .page-header {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 16px !important;
             }
 
             .page-header h1 {
-                font-size: 24px;
+                font-size: 24px !important;
             }
 
             .page-header h1 span {
-                font-size: 28px;
+                font-size: 28px !important;
             }
 
             .page-header > div {
-                width: 100%;
+                width: 100% !important;
             }
 
             .page-header .btn {
-                flex: 1;
-                min-width: 140px;
-                justify-content: center;
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .card {
+                padding: 20px !important;
             }
 
             .location-grid {
@@ -289,13 +319,24 @@
                         const imageUrl = location.image 
                             ? `https://geocrud.bytevortexz.com/uploads/${location.image}` 
                             : null;
-                        const submittedDate = new Date(location.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit'
-                        });
+                        const submittedDate = typeof window.formatDisplayDate !== 'undefined' 
+                            ? window.formatDisplayDate(location.created_at) 
+                            : (() => {
+                                const date = new Date(location.created_at);
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const year = String(date.getFullYear()).slice(-2);
+                                return `${month}-${day}-${year}`;
+                            })();
+                        const submittedTime = (() => {
+                            const date = new Date(location.created_at);
+                            const hours = date.getHours();
+                            const minutes = date.getMinutes();
+                            const ampm = hours >= 12 ? 'PM' : 'AM';
+                            const displayHours = hours % 12 || 12;
+                            const displayMinutes = minutes.toString().padStart(2, '0');
+                            return `${displayHours}:${displayMinutes} ${ampm}`;
+                        })();
 
                         html += `
                             <div class="card location-card">
@@ -337,7 +378,7 @@
                                             
                                             <p style="margin: 0; color: #64748b;">
                                                 <strong>📅 Submitted:</strong> 
-                                                ${submittedDate}
+                                                ${submittedDate} ${submittedTime}
                                             </p>
                                             
                                             ${location.notes ? `
