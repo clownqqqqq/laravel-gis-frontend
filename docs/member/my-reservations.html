@@ -1188,12 +1188,15 @@
         async function submitUpdate(event, id) {
             event.preventDefault();
 
-            // Sync dates to hidden inputs before submission
+            // Get form elements
             const startDateInput = document.getElementById('update-start-date');
             const startDateHidden = document.getElementById('update-start-date-hidden');
             const endDateInput = document.getElementById('update-end-date');
             const endDateHidden = document.getElementById('update-end-date-hidden');
+            const startTimeInput = document.getElementById('update-start-time');
+            const endTimeInput = document.getElementById('update-end-time');
             
+            // Sync dates to hidden inputs before submission (if function exists)
             if (startDateInput && startDateHidden && typeof window.updateDateDisplayFromPicker === 'function') {
                 window.updateDateDisplayFromPicker(startDateInput, 'update-start-date-hidden');
             }
@@ -1201,42 +1204,54 @@
                 window.updateDateDisplayFromPicker(endDateInput, 'update-end-date-hidden');
             }
             
-            // Get dates from hidden inputs (already in YYYY-MM-DD format)
-            const startDate = startDateHidden ? startDateHidden.value : (startDateInput ? startDateInput.value : '');
-            const endDate = endDateHidden ? endDateHidden.value : (endDateInput ? endDateInput.value : '');
+            // Get date values directly from date inputs (they're already in YYYY-MM-DD format)
+            const startDate = startDateInput ? startDateInput.value.trim() : '';
+            const endDate = endDateInput ? endDateInput.value.trim() : null;
             
             if (!startDate) {
                 showMessage('Please select a valid start date', 'error');
                 return;
             }
             
-            // Ensure dates are in YYYY-MM-DD format
+            // Ensure dates are in YYYY-MM-DD format (date inputs should already be in this format)
             let finalStartDate = startDate;
             let finalEndDate = endDate || null;
             
-            // If we got the date from the date input directly, it's already in YYYY-MM-DD format
-            // But let's make sure it's properly formatted
-            if (finalStartDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalStartDate)) {
-                // Try to parse and reformat
-                const date = new Date(finalStartDate);
-                if (!isNaN(date.getTime())) {
-                    finalStartDate = date.toISOString().split('T')[0];
-                }
+            // Validate date format
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(finalStartDate)) {
+                showMessage('Invalid start date format. Please select a date using the date picker.', 'error');
+                return;
             }
             if (finalEndDate && !/^\d{4}-\d{2}-\d{2}$/.test(finalEndDate)) {
-                const date = new Date(finalEndDate);
-                if (!isNaN(date.getTime())) {
-                    finalEndDate = date.toISOString().split('T')[0];
-                }
+                showMessage('Invalid end date format. Please select a date using the date picker.', 'error');
+                return;
+            }
+            
+            // Get time values - convert empty strings to null
+            let startTimeValue = startTimeInput ? startTimeInput.value.trim() : '';
+            let endTimeValue = endTimeInput ? endTimeInput.value.trim() : '';
+            
+            // Convert empty strings to null for backend
+            const startTime = startTimeValue === '' ? null : startTimeValue;
+            const endTime = endTimeValue === '' ? null : endTimeValue;
+            
+            // Validate time format if provided (should be HH:MM)
+            if (startTime && !/^\d{2}:\d{2}$/.test(startTime)) {
+                showMessage('Invalid start time format. Please use HH:MM format (e.g., 13:55).', 'error');
+                return;
+            }
+            if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) {
+                showMessage('Invalid end time format. Please use HH:MM format (e.g., 13:55).', 'error');
+                return;
             }
             
             const formData = {
                 intended_type: document.getElementById('update-intended-type').value,
                 description: document.getElementById('update-description').value || null,
-                intended_start_date: finalStartDate, // Use hidden input value (YYYY-MM-DD format)
-                intended_start_time: document.getElementById('update-start-time').value || null,
-                intended_end_date: finalEndDate, // Use hidden input value (YYYY-MM-DD format)
-                intended_end_time: document.getElementById('update-end-time').value || null
+                intended_start_date: finalStartDate,
+                intended_start_time: startTime,
+                intended_end_date: finalEndDate,
+                intended_end_time: endTime
             };
             
             console.log('Submitting update with formData:', formData);
@@ -1253,12 +1268,12 @@
             }
 
             // Validate date+time
-            const startTime = formData.intended_start_time || '00:00';
-            const endTime = formData.intended_end_time || '23:59';
-            const startDateTime = new Date(formData.intended_start_date + 'T' + startTime);
+            const validationStartTime = formData.intended_start_time || '00:00';
+            const validationEndTime = formData.intended_end_time || '23:59';
+            const startDateTime = new Date(formData.intended_start_date + 'T' + validationStartTime);
             const endDateTime = formData.intended_end_date 
-                ? new Date(formData.intended_end_date + 'T' + endTime)
-                : new Date(formData.intended_start_date + 'T' + endTime);
+                ? new Date(formData.intended_end_date + 'T' + validationEndTime)
+                : new Date(formData.intended_start_date + 'T' + validationEndTime);
             
             if (endDateTime <= startDateTime) {
                 showMessage('End date/time must be after start date/time', 'error');
