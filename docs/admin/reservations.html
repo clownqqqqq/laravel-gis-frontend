@@ -94,6 +94,14 @@
             border-left: 5px solid #10b981;
             background: #f0fdf4;
         }
+        .reservation-card.used {
+            border-left: 5px solid #3b82f6;
+            background: #eff6ff;
+        }
+        .reservation-card.completed {
+            border-left: 5px solid #8b5cf6;
+            background: #f5f3ff;
+        }
         .reservation-card.rejected {
             border-left: 5px solid #ef4444;
             background: #fef2f2;
@@ -139,6 +147,22 @@
             background: #dc2626;
             transform: translateY(-2px);
         }
+        .btn-used {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-used:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn-complete {
+            background: #8b5cf6;
+            color: white;
+        }
+        .btn-complete:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
         .btn-view {
             background: #0d6efd;
             color: white;
@@ -160,6 +184,14 @@
         .status-approved {
             background: #d1fae5;
             color: #065f46;
+        }
+        .status-used {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .status-completed {
+            background: #ede9fe;
+            color: #5b21b6;
         }
         .status-rejected {
             background: #fee2e2;
@@ -418,6 +450,12 @@
                         <button class="filter-tab" onclick="filterReservations('approved')" id="tab-approved">
                             ✅ Approved (<span id="count-approved">0</span>)
                         </button>
+                        <button class="filter-tab" onclick="filterReservations('used')" id="tab-used">
+                            🔵 Used (<span id="count-used">0</span>)
+                        </button>
+                        <button class="filter-tab" onclick="filterReservations('completed')" id="tab-completed">
+                            ✅ Completed (<span id="count-completed">0</span>)
+                        </button>
                         <button class="filter-tab" onclick="filterReservations('rejected')" id="tab-rejected">
                             ❌ Rejected (<span id="count-rejected">0</span>)
                         </button>
@@ -614,12 +652,16 @@
             const all = allReservations.length;
             const pending = allReservations.filter(r => (r.status || '').toLowerCase() === 'pending').length;
             const approved = allReservations.filter(r => (r.status || '').toLowerCase() === 'approved').length;
+            const used = allReservations.filter(r => (r.status || '').toLowerCase() === 'used').length;
+            const completed = allReservations.filter(r => (r.status || '').toLowerCase() === 'completed').length;
             const rejected = allReservations.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
             const cancelled = allReservations.filter(r => (r.status || '').toLowerCase() === 'cancelled').length;
 
             document.getElementById('count-all').textContent = all;
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
+            document.getElementById('count-used').textContent = used;
+            document.getElementById('count-completed').textContent = completed;
             document.getElementById('count-rejected').textContent = rejected;
             document.getElementById('count-cancelled').textContent = cancelled;
         }
@@ -649,12 +691,14 @@
             
             const sorted = [...reservations];
             
-            // Status priority order: pending, approved, rejected, cancelled
+            // Status priority order: pending, approved, used, completed, rejected, cancelled
             const statusOrder = {
                 'pending': 1,
                 'approved': 2,
-                'rejected': 3,
-                'cancelled': 4
+                'used': 3,
+                'completed': 4,
+                'rejected': 5,
+                'cancelled': 6
             };
             
             console.log('Sorting reservations by status priority, then by date (newest first)');
@@ -796,6 +840,16 @@
                                     ❌ Reject
                                 </button>
                                 ` : ''}
+                                ${reservation.status === 'approved' ? `
+                                <button onclick="markAsUsed(${reservation.id})" class="btn btn-used">
+                                    🔵 Mark as Used
+                                </button>
+                                ` : ''}
+                                ${reservation.status === 'used' ? `
+                                <button onclick="markAsCompleted(${reservation.id})" class="btn btn-complete">
+                                    ✅ Mark as Completed
+                                </button>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -868,6 +922,72 @@
             } catch (error) {
                 console.error('Error rejecting reservation:', error);
                 showMessage('Error rejecting reservation: ' + (error.message || 'Unknown error'), 'error');
+            }
+        }
+
+        async function markAsUsed(id) {
+            if (!confirm('Are you sure you want to mark this reservation as used?')) {
+                return;
+            }
+
+            try {
+                const userData = getUserData();
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/mark-used`;
+                let response = await apiRequest(endpoint, {
+                    method: 'POST'
+                });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/mark-used`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
+
+                if (response && response.success) {
+                    showMessage(response.message || 'Reservation marked as used successfully', 'success');
+                    loadReservations();
+                } else {
+                    showMessage(response?.message || response?.error || 'Failed to mark reservation as used', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking reservation as used:', error);
+                showMessage('Error marking reservation as used: ' + (error.message || 'Unknown error'), 'error');
+            }
+        }
+
+        async function markAsCompleted(id) {
+            if (!confirm('Are you sure you want to mark this reservation as completed?')) {
+                return;
+            }
+
+            try {
+                const userData = getUserData();
+                // Default to admin endpoint, fallback to staff
+                let endpoint = `${API_BASE_URL}/admin/reservations/${id}/mark-completed`;
+                let response = await apiRequest(endpoint, {
+                    method: 'POST'
+                });
+                
+                // If admin fails and user is staff, try staff endpoint
+                if (response && !response.success && response.error && response.error.includes('permission') && userData.role === 'staff') {
+                    endpoint = `${API_BASE_URL}/staff/reservations/${id}/mark-completed`;
+                    response = await apiRequest(endpoint, {
+                        method: 'POST'
+                    });
+                }
+
+                if (response && response.success) {
+                    showMessage(response.message || 'Reservation marked as completed successfully', 'success');
+                    loadReservations();
+                } else {
+                    showMessage(response?.message || response?.error || 'Failed to mark reservation as completed', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking reservation as completed:', error);
+                showMessage('Error marking reservation as completed: ' + (error.message || 'Unknown error'), 'error');
             }
         }
 
