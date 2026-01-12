@@ -1013,6 +1013,17 @@
                 const statusBadgeClass = `status-${reservation.status || 'pending'}`;
                 const location = reservation.location || {};
                 
+                // Map status for display - "used" should display as "IN USED"
+                const statusDisplayMap = {
+                    'used': 'IN USED',
+                    'pending': 'PENDING',
+                    'approved': 'APPROVED',
+                    'completed': 'COMPLETED',
+                    'rejected': 'REJECTED',
+                    'cancelled': 'CANCELLED'
+                };
+                const statusDisplayText = statusDisplayMap[reservation.status?.toLowerCase()] || reservation.status?.toUpperCase() || 'PENDING';
+                
                 console.log('Rendering reservation:', reservation);
 
                 return `
@@ -1021,7 +1032,7 @@
                             <div class="reservation-info">
                                 <h3 style="margin: 0 0 8px 0; color: #1e293b;">
                                     ${location.location || 'Unknown Location'}
-                                    <span class="status-badge ${statusBadgeClass}">${reservation.status}</span>
+                                    <span class="status-badge ${statusBadgeClass}">${statusDisplayText}</span>
                                 </h3>
                                 <div class="info-row">
                                     <div>
