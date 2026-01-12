@@ -93,6 +93,10 @@
             border-left: 5px solid #10b981;
             background: #f0fdf4;
         }
+        .reservation-card.completed {
+            border-left: 5px solid #8b5cf6;
+            background: #f5f3ff;
+        }
         .reservation-card.rejected {
             border-left: 5px solid #ef4444;
             background: #fef2f2;
@@ -515,6 +519,9 @@
                         <button class="filter-tab" onclick="filterReservations('approved')" id="tab-approved">
                             ✅ Approved (<span id="count-approved">0</span>)
                         </button>
+                        <button class="filter-tab" onclick="filterReservations('completed')" id="tab-completed">
+                            ✅ Completed (<span id="count-completed">0</span>)
+                        </button>
                         <button class="filter-tab" onclick="filterReservations('rejected')" id="tab-rejected">
                             ❌ Rejected (<span id="count-rejected">0</span>)
                         </button>
@@ -877,12 +884,14 @@
             const all = allReservations.length;
             const pending = allReservations.filter(r => (r.status || '').toLowerCase() === 'pending').length;
             const approved = allReservations.filter(r => (r.status || '').toLowerCase() === 'approved').length;
+            const completed = allReservations.filter(r => (r.status || '').toLowerCase() === 'completed').length;
             const rejected = allReservations.filter(r => (r.status || '').toLowerCase() === 'rejected').length;
             const cancelled = allReservations.filter(r => (r.status || '').toLowerCase() === 'cancelled').length;
 
             document.getElementById('count-all').textContent = all;
             document.getElementById('count-pending').textContent = pending;
             document.getElementById('count-approved').textContent = approved;
+            document.getElementById('count-completed').textContent = completed;
             document.getElementById('count-rejected').textContent = rejected;
             document.getElementById('count-cancelled').textContent = cancelled;
         }
@@ -909,12 +918,13 @@
             
             const sorted = [...reservations];
             
-            // Status priority order: pending, approved, rejected, cancelled
+            // Status priority order: pending, approved, completed, rejected, cancelled
             const statusOrder = {
                 'pending': 1,
                 'approved': 2,
-                'rejected': 3,
-                'cancelled': 4
+                'completed': 3,
+                'rejected': 4,
+                'cancelled': 5
             };
             
             sorted.sort((a, b) => {
@@ -1011,7 +1021,7 @@
                                                 const year = parts[0];   // YYYY
                                                 const month = parts[1];  // MM
                                                 const day = parts[2];    // DD
-                                                return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
                                             }
                                             return dateStr; // Fallback to original if parsing fails
                                         })() : 'N/A')}${reservation.intended_start_time ? (() => {
@@ -1044,7 +1054,7 @@
                                                 const year = parts[0];   // YYYY
                                                 const month = parts[1];  // MM
                                                 const day = parts[2];    // DD
-                                                return `${month}-${day}-${year}`; // MM-DD-YYYY format
+                                            return `${month}-${day}-${year}`; // MM-DD-YYYY format
                                             }
                                             return dateStr; // Fallback to original if parsing fails
                                         })()}${reservation.intended_end_time ? (() => {
@@ -1150,8 +1160,8 @@
                     if (/^\d{4}$/.test(year) && /^\d{2}$/.test(month) && /^\d{2}$/.test(day)) {
                         // Return directly without any Date object conversion
                         // This prevents timezone shift issues
-                        return `${year}-${month}-${day}`;
-                    }
+                    return `${year}-${month}-${day}`;
+                }
                 }
                 
                 // If format is unexpected, try to extract YYYY-MM-DD pattern
@@ -1677,7 +1687,7 @@
                             renderReservations();
                         } else {
                             // If not found, reload all reservations
-                            loadReservations();
+                    loadReservations();
                         }
                     } else {
                         // If response doesn't include data, reload all reservations with force refresh
